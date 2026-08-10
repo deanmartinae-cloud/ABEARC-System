@@ -17,6 +17,7 @@ db.serialize(() => {
     direct_superior_user_id INTEGER,
     is_system_account INTEGER DEFAULT 0,
     hidden_from_workflows INTEGER DEFAULT 0,
+    must_change_password INTEGER DEFAULT 0,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
   )`);
   
@@ -791,15 +792,8 @@ db.serialize(() => {
     { tbl: 'Requestees', vals: [['Local Government Unit',1],['Department of Agriculture',2],['Private Entity',3]] }
   ];
   seeds.forEach(s => s.vals.forEach(v => db.run(`INSERT OR IGNORE INTO ${s.tbl} (name, order_index) VALUES (?, ?)`, v)));
-  db.get("SELECT COUNT(*) as cnt FROM Users", (err, row) => {
-    if (err || (row?.cnt || 0) > 0) return;
-    const stmt = db.prepare("INSERT INTO Users (username, password_hash, role) VALUES (?, ?, ?)");
-    // Create superadmin account
-    stmt.run(['superadmin', hashPassword('superadmin123'), 'superadmin']);
-    stmt.run(['admin', hashPassword('admin123'), 'admin']);
-    stmt.run(['user', hashPassword('user123'), 'user']);
-    stmt.finalize();
-  });
+  // The first administrator is created by the startup bootstrap migration.
+  // No accounts with built-in passwords are seeded here.
 
   // ===========================================
   // STEP 4: CREATE ALL INDEXES LAST

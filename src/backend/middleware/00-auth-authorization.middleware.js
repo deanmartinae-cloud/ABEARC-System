@@ -7,7 +7,7 @@ const attachAuthUser = (req, res, next) => {
   }
 
   db.get(`
-    SELECT u.id, u.username, u.role, u.is_system_account, u.hidden_from_workflows,
+    SELECT u.id, u.username, u.role, u.is_system_account, u.hidden_from_workflows, u.must_change_password,
            s.token, s.expires_at, s.created_at, s.last_activity_at
     FROM UserSessions s
     JOIN Users u ON u.id = s.user_id
@@ -52,6 +52,7 @@ const attachAuthUser = (req, res, next) => {
       role: row.role,
       is_system_account: Number(row.is_system_account || 0),
       hidden_from_workflows: Number(row.hidden_from_workflows || 0),
+      must_change_password: Number(row.must_change_password || 0),
       token: row.token,
       session_client_type: longLivedSession ? 'mobile' : 'web'
     };
@@ -67,6 +68,20 @@ const requireAuth = (req, res, next) => {
     if (req.authExpiredReason === 'absolute') return res.status(401).json({ error: 'Session expired.', code: 'SESSION_ABSOLUTE_EXPIRED' });
     if (req.authExpiredReason === 'inactivity') return res.status(401).json({ error: 'Session expired due to inactivity.', code: 'SESSION_INACTIVITY_EXPIRED' });
     return unauthorized(res, 'Please log in.');
+  }
+  if (Number(req.user.must_change_password) === 1) {
+    const requestPath = String(req.originalUrl || req.url || req.path || '').split('?')[0];
+    const allowedWhileChangingPassword = new Set([
+      '/api/auth/me',
+      '/api/auth/logout',
+      '/api/user/change-password'
+    ]);
+    if (!allowedWhileChangingPassword.has(requestPath)) {
+      return res.status(403).json({
+        error: 'You must change your temporary password before using ABEARC.',
+        code: 'PASSWORD_CHANGE_REQUIRED'
+      });
+    }
   }
   next();
 };
@@ -178,4 +193,3 @@ const getCalendarFilters = (req) => ({
   dueWithinDays: req.query.due_within_days ? Number(req.query.due_within_days) : null,
   forReviewOnly: req.query.for_review_only === 'true'
 });
-

@@ -1609,7 +1609,9 @@
     }
     async function showSettings(pushHistory = true, options = {}){ 
       // All authenticated users can access General Settings (Appearance and Change Password)
-      const targetSection = options.section || getFirstAvailableSettingsSection();
+      const targetSection = Number(currentUser?.must_change_password) === 1
+        ? 'change-password'
+        : (options.section || getFirstAvailableSettingsSection());
       if (!restoringHistoryState && appCurrentView === 'settings' && activeSettingsSection === 'requirements' && targetSection !== 'requirements' && !(await confirmLeaveRequirementsConfig())) return;
       
       // Save current dashboard filter state before navigating to settings
@@ -1680,7 +1682,7 @@
     // Apply sidebar navigation visibility based on privileges
     function applySettingsSidebarVisibility() {
       // First hide ALL settings nav items
-      const allNavItems = ['project-types', 'requestees', 'document-types', 'document-due-schedules', 'requirements', 'user-management', 'activity-logs', 'workload-analytics', 'backup-restore', 'downloads-forms', 'pending-confirmations', 'config-import-export', 'admin-maintenance'];
+      const allNavItems = ['appearance', 'change-password', 'mobile-qr-login', 'project-types', 'requestees', 'document-types', 'document-due-schedules', 'requirements', 'user-management', 'activity-logs', 'workload-analytics', 'backup-restore', 'downloads-forms', 'pending-confirmations', 'config-import-export', 'admin-maintenance', 'changelog'];
       for (const navId of allNavItems) {
         const navBtn = document.getElementById(`nav-${navId}`);
         if (navBtn) navBtn.classList.add('hidden');
@@ -1693,6 +1695,11 @@
       // Hide Configuration section by default
       const configSectionElements = document.querySelectorAll('[data-group="configuration"]');
       configSectionElements.forEach(el => el.style.display = 'none');
+
+      if (Number(currentUser?.must_change_password) === 1) {
+        document.getElementById('nav-change-password')?.classList.remove('hidden');
+        return;
+      }
       
       // Now show only authorized nav items
       let hasConfigPrivileges = false;

@@ -12,6 +12,7 @@
     }
 
     async function switchSettingsSection(section) {
+      if (Number(currentUser?.must_change_password) === 1) section = 'change-password';
       if (!restoringHistoryState && activeSettingsSection === 'requirements' && section !== 'requirements' && !(await confirmLeaveRequirementsConfig())) return;
       document.getElementById('settingsView')?.classList.toggle('settings-standalone-section', section === 'downloads-forms');
       // Check privilege for settings sections

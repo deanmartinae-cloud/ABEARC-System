@@ -1,3 +1,10 @@
+    async function showRequiredPasswordChange() {
+      document.querySelector('.password-change-required-notice')?.classList.remove('hidden');
+      updateRoleUi();
+      await showSettings(false, { section: 'change-password' });
+      history.replaceState(buildAppHistoryState('settings', { section: 'change-password' }), '', location.href);
+      toast('Change your temporary password to continue using ABEARC.', 'warning');
+    }
 
     async function restoreSession() {
       // Setup system theme listener for dynamic updates
@@ -41,6 +48,10 @@
       }
       
       updateRoleUi();
+      if (Number(currentUser.must_change_password) === 1) {
+        await showRequiredPasswordChange();
+        return;
+      }
       await loadReloadRequirementsOverrideSetting();
       try {
         await loadDash({ silent: true, preservePage: true });
@@ -120,6 +131,10 @@
         }
         
         updateRoleUi();
+        if (Number(currentUser.must_change_password) === 1) {
+          await showRequiredPasswordChange();
+          return;
+        }
         await loadNotifications();
         startNotificationStream();
         startLiveRefresh();
@@ -220,6 +235,10 @@
         }
         
         updateRoleUi();
+        if (Number(currentUser.must_change_password) === 1) {
+          await showRequiredPasswordChange();
+          return;
+        }
         await loadNotifications();
         // A 401 from any initialization request may have invalidated this
         // login. Do not continue or resurrect credentials after that happens.

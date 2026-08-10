@@ -206,8 +206,8 @@ const __routeController066 = (req, res) => {
   const passwordHash = hashPassword(password);
 
   const createUser = () => db.run(`INSERT INTO Users (
-      username, password_hash, role, direct_superior_user_id, is_system_account, hidden_from_workflows
-    ) VALUES (?, ?, ?, ?, ?, ?)`,
+      username, password_hash, role, direct_superior_user_id, is_system_account, hidden_from_workflows, must_change_password
+    ) VALUES (?, ?, ?, ?, ?, ?, 1)`,
     [username, passwordHash, role, directSuperiorUserId, role === 'system' ? 1 : 0, role === 'system' ? 1 : 0], function(err) {
     if (err) {
       if (err.message.includes('UNIQUE constraint')) return res.status(400).json({ error: 'Username already exists.' });
@@ -552,7 +552,7 @@ const __routeController069 = (req, res) => {
     }
     
     const passwordHash = hashPassword(password);
-    db.run(`UPDATE Users SET password_hash = ? WHERE id = ?`, [passwordHash, req.params.id], function(err) {
+    db.run(`UPDATE Users SET password_hash = ?, must_change_password = 1 WHERE id = ?`, [passwordHash, req.params.id], function(err) {
       if (err) return res.status(500).json({ error: err.message });
       try { 
         logActivity({
@@ -573,7 +573,10 @@ const __routeController069 = (req, res) => {
         targetKind: 'settings',
         targetMeta: { section: 'change-password' }
       });
-      res.json({ success: true, message: 'Password updated successfully.' });
+      db.run(`DELETE FROM UserSessions WHERE user_id = ?`, [req.params.id], (sessionErr) => {
+        if (sessionErr) console.error('Failed to revoke sessions after administrator password reset:', sessionErr);
+        res.json({ success: true, message: 'Temporary password set. The user must change it at next login.' });
+      });
     });
   });
 };
