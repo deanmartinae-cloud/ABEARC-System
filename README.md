@@ -6,6 +6,31 @@ ABEARC is a full-stack project management and field-monitoring platform for orga
 
 This repository contains the modular application source. It preserves the established API paths, database schema, migrations, storage conventions, privileges, and frontend element identifiers used by existing ABEARC deployments and companion Android applications.
 
+## Visual overview
+
+### Secure sign-in
+
+![ABEARC sign-in screen](docs/images/sign-in.png)
+
+### Workspace navigation and administration
+
+![ABEARC settings and workspace navigation](docs/images/settings-and-navigation.png)
+
+The left workspace navigation brings project control, schedules, established-asset monitoring, geotagging, documents, personal storage, and administration into one interface. Available entries and actions depend on the signed-in user's privileges.
+
+## How to use ABEARC
+
+The complete [ABEARC User Guide](docs/USER_GUIDE.md) explains the interface and the recommended workflow from project creation through monitoring, document review, completion, and backup. A short workflow is:
+
+1. Sign in using an ABEARC account provided by an administrator.
+2. Open **Dashboard** to review projects, stages, document status, assignments, and deadlines.
+3. Create a project with **New Project**, then complete its classification, requestee, schedule, and responsible-user details.
+4. Upload and review required documents as the project moves through Proposal, Implementation, Monitoring, Completed, and Disposition stages.
+5. Use **Calendar**, **My Schedule**, and **My Assignments** to manage due work.
+6. Use **Established Projects Monitoring** and **Geotag Map** for field verification, monitoring records, and mapped media.
+7. Use **My Drive** for personal files and controlled sharing with other ABEARC users.
+8. Administrators maintain configuration, users, privileges, approvals, and backups through **Settings**.
+
 ## Core capabilities
 
 - Project registry with proposal, implementation, monitoring, completion, and disposition workflows.
@@ -17,6 +42,21 @@ This repository contains the modular application source. It preserves the establ
 - Personal My Drive storage, folder management, sharing, trash, and file downloads.
 - Dashboards, analytics, feedback, configuration, backup, and maintenance tools.
 - QR-compatible authentication flows for supported ABEARC Android clients.
+
+## Feature areas
+
+| Area | Purpose |
+|---|---|
+| Dashboard | Filter projects by lifecycle stage and inspect document, assignment, deadline, and workload indicators. |
+| My Assignments | Focus on work assigned to the current user and the items that need attention. |
+| Work Assignment | Assign and balance work across authorized users. |
+| Calendar and My Schedule | Plan organizational and personal schedules, deadlines, and field activities. |
+| Established Projects Monitoring | Register established assets, record monitoring visits, manage tasks, and attach evidence. |
+| Geotag Map | Explore mapped projects and geotagged field media with filters and zoning context. |
+| For Review | Review submitted project documents and track review outcomes. |
+| My Drive | Organize private folders and files, share access, use Trash, and connect supported Android uploads. |
+| Forms & Tools | Access the forms, downloads, and operational tools made available by administrators. |
+| Settings and Approvals | Manage account preferences, system configuration, users, privileges, confirmations, and maintenance. |
 
 ## Technology
 
@@ -84,6 +124,7 @@ Backup restores inspect the archive's total uncompressed size before extraction.
 
 ## Documentation
 
+- [ABEARC User Guide](docs/USER_GUIDE.md)
 - [Architecture and maintenance rules](docs/ARCHITECTURE.md)
 - [Geotag Map storage and integration](docs/ABEARC_MAP.md)
 - [Established project asset monitoring](docs/ESTABLISHED_PROJECT_ASSET_MONITORING.md)
