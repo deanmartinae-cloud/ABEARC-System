@@ -1,0 +1,529 @@
+      <div id="mapPage" class="hidden flex-1 min-h-0 overflow-hidden bg-gray-100 dark:bg-gray-950">
+        <div class="abearc-map-workspace">
+          <header class="abearc-map-topbar hidden" aria-hidden="true">
+            <div class="abearc-map-title-group">
+              <span class="abearc-map-title-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="m9 18-6 3V6l6-3 6 3 6-3v15l-6 3-6-3Zm0 0V3m6 18V6"/>
+                </svg>
+              </span>
+              <div class="min-w-0">
+                <div class="flex items-center gap-2">
+                  <h1>Field Intelligence Map</h1>
+                  <span class="abearc-map-live-badge"><span></span> Live workspace</span>
+                </div>
+                <p>Davao City · geotag evidence, climate and hazards</p>
+              </div>
+            </div>
+
+            <div class="abearc-map-topbar-actions">
+              <button type="button" class="abearc-map-command abearc-map-fullpage-toggle" aria-hidden="true" tabindex="-1">
+                <svg data-map-fullpage-expand-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H3v5m13-5h5v5M8 21H3v-5m18 0v5h-5"/></svg>
+                <svg data-map-fullpage-collapse-icon class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8h5V3m13 5h-5V3M3 16h5v5m13-5h-5v5"/></svg>
+                <span data-map-fullpage-label>Full page</span>
+              </button>
+
+            </div>
+          </header>
+
+          <div class="abearc-map-shell">
+            <aside data-map-results-panel class="abearc-map-panel" aria-label="Geotag Map photo results">
+              <div class="abearc-map-results-head">
+                <div class="abearc-map-results-copy">
+                  <div class="abearc-map-results-title-line">
+                    <h3 data-map-results-title>Photo results</h3>
+                    <strong data-map-list-count>0</strong>
+                  </div>
+                  <span data-map-results-order>Newest first</span>
+                </div>
+                <div class="abearc-map-results-head-actions">
+                  <details class="abearc-map-results-menu">
+                    <summary aria-label="More actions" title="More actions">
+                      <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M6 10a2 2 0 1 0-4 0 2 2 0 0 0 4 0Zm6 0a2 2 0 1 0-4 0 2 2 0 0 0 4 0Zm6 0a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z"/></svg>
+                    </summary>
+                    <div class="abearc-map-results-menu-popover" role="menu">
+                      <button type="button" onclick="this.closest('details').removeAttribute('open'); beginAbearcMapPhotoSelection()" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="4" y="4" width="6" height="6" rx="1" stroke-width="2"/><rect x="14" y="4" width="6" height="6" rx="1" stroke-width="2"/><rect x="4" y="14" width="6" height="6" rx="1" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m15 17 2 2 4-5"/></svg>
+                        <span>Select multiple photos</span>
+                      </button>
+                      <div class="abearc-map-results-menu-separator" aria-hidden="true"></div>
+                      <button type="button" data-map-bulk-rename onclick="this.closest('details').removeAttribute('open'); renameAllAbearcMapCategories()" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"/></svg>
+                        <span>Rename all category</span>
+                      </button>
+                      <button type="button" data-map-bulk-download onclick="this.closest('details').removeAttribute('open'); downloadAllAbearcMapPhotos()" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+                        <span>Download all</span>
+                      </button>
+                      <div class="abearc-map-results-menu-separator" aria-hidden="true"></div>
+                      <button type="button" data-map-bulk-delete class="abearc-map-results-menu-danger" onclick="this.closest('details').removeAttribute('open'); deleteAllAbearcMapPhotos()" role="menuitem">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-8 0h10"/></svg>
+                        <span>Delete all</span>
+                      </button>
+                    </div>
+                  </details>
+                  <button type="button" onclick="toggleAbearcMapResults(false)" class="abearc-map-results-close" aria-label="Close photo results" title="Close">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 6 12 12M18 6 6 18"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div data-map-selection-toolbar class="abearc-map-selection-toolbar hidden" aria-live="polite">
+                <label title="Select all photos (Ctrl/Cmd+A)"><input type="checkbox" data-map-select-all onchange="toggleAllAbearcMapPhotos(this.checked)" aria-keyshortcuts="Control+A Meta+A"> <span>Select all</span></label>
+                <strong data-map-selection-count>0 selected</strong>
+                <div class="abearc-map-selection-actions">
+                  <button type="button" onclick="saveSelectedAbearcMapPhotos()" data-map-selection-save class="is-icon" aria-label="Save selected photos" title="Save selected photos" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.7L6 21V4.5Z"/></svg>
+                  </button>
+                  <button type="button" onclick="downloadSelectedAbearcMapPhotos()" data-map-selection-download class="is-icon" aria-label="Download selected photos" aria-keyshortcuts="Control+D Meta+D" title="Download selected photos (Ctrl/Cmd+D)" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+                  </button>
+                  <button type="button" onclick="renameSelectedAbearcMapPhotos()" data-map-selection-rename class="is-icon" aria-label="Rename selected photos" aria-keyshortcuts="F2" title="Rename selected photos (F2)" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"/></svg>
+                  </button>
+                  <button type="button" onclick="deleteSelectedAbearcMapPhotos()" data-map-selection-delete class="is-icon is-danger" aria-label="Delete selected photos" aria-keyshortcuts="Delete Backspace" title="Delete selected photos (Delete)" disabled>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-8 0h10"/></svg>
+                  </button>
+                  <button type="button" onclick="cancelAbearcMapPhotoSelection()" aria-keyshortcuts="Escape" title="Cancel selection (Esc)">Cancel</button>
+                </div>
+              </div>
+              <div id="abearcMapList" class="abearc-map-list" aria-live="polite"></div>
+            </aside>
+            <main class="abearc-map-stage">
+              <div id="abearcMapCanvas" class="absolute inset-0"></div>
+              <svg id="abearcMapLeaderLayer" class="abearc-map-leaders" aria-hidden="true"></svg>
+              <svg data-map-moved-photo-leader-layer class="abearc-map-leaders abearc-map-moved-photo-leaders" aria-hidden="true"></svg>
+
+              <button type="button" onclick="toggleAbearcMapFullPage()" class="abearc-map-fullpage-toggle abearc-map-fullpage-map-control" data-map-fullpage-toggle aria-pressed="false" aria-label="Expand map to full page" title="Full-page map">
+                <svg data-map-fullpage-expand-icon viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 3H3v5m13-5h5v5M8 21H3v-5m18 0v5h-5"/></svg>
+                <svg data-map-fullpage-collapse-icon class="hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8h5V3m13 5h-5V3M3 16h5v5m13-5h-5v5"/></svg>
+              </button>
+
+              <nav class="abearc-map-side-rail" aria-label="Map navigation">
+                <button type="button" class="abearc-map-rail-button is-menu" onclick="toggleAbearcMapResults()" aria-label="Map menu">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16"/></svg>
+                  <span>Menu</span>
+                </button>
+                <button type="button" class="abearc-map-rail-button" data-map-rail-saved onclick="showAbearcSavedPhotos()" aria-pressed="false" aria-label="Saved geotag photos">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.7L6 21V4.5Z"/></svg>
+                  <span>Saved</span>
+                  <strong data-map-saved-count class="hidden">0</strong>
+                </button>
+                <button type="button" class="abearc-map-rail-button" data-map-rail-photos onclick="showAbearcGeotagPhotos()" aria-pressed="true" aria-label="Geotag photos">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="3" y="5" width="18" height="15" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m7 16 3.2-3.2 2.5 2.5 2.1-2.1L19 17M8.5 9.5h.01"/></svg>
+                  <span>Geotag<br>photos</span>
+                  <strong data-map-rail-photo-count class="hidden">0</strong>
+                </button>
+                <button type="button" class="abearc-map-rail-button" data-map-rail-mine onclick="showAbearcMyGeotagPhotos()" aria-pressed="false" aria-label="My geotagged photos">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="8" cy="8" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="M3.5 18.5c.7-3 2.2-4.5 4.5-4.5s3.8 1.5 4.5 4.5"/><rect x="13" y="7" width="8" height="11" rx="1.5" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.7" d="m15 15 1.8-2 1.2 1.2 1-1 1 1.3"/></svg>
+                  <span>My geotag<br>photos</span>
+                  <strong data-map-rail-mine-count class="hidden">0</strong>
+                </button>
+                <button type="button" class="abearc-map-rail-button is-get-app" onclick="downloadAbearcGeoCamApp()" aria-label="Share ABEDGeoCam Android app">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><rect x="7" y="2.5" width="10" height="19" rx="2" stroke-width="2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 5h4m-3 13.5h2"/></svg>
+                  <span>Get app</span>
+                </button>
+              </nav>
+              <svg id="abearcMapMeasureLayer" class="abearc-map-measure-layer" aria-hidden="true"></svg>
+              <div id="abearcMapExplosionLayer" class="abearc-map-explosion-layer"></div>
+              <div id="abearcMapMeasureContextMenu" class="abearc-map-measure-context-menu hidden" role="menu" aria-label="Measurement actions">
+                <button type="button" onclick="showAbearcElevationProfile()" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 18 9 12l4 3 7-9M4 20h16"/></svg>
+                  <span>Show elevation profile</span>
+                </button>
+                <div class="abearc-map-results-menu-separator" aria-hidden="true"></div>
+                <button type="button" class="abearc-map-results-menu-danger" onclick="closeAbearcMapMeasureContextMenu(); clearAbearcMapMeasure()" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-8 0h10"/></svg>
+                  <span>Clear measurement</span>
+                </button>
+              </div>
+
+              <div data-map-photo-context-menu class="abearc-map-measure-context-menu abearc-map-photo-context-menu hidden" role="menu" aria-label="Photo thumbnail actions">
+                <button type="button" onclick="downloadAbearcMapPhotoFromContext()" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+                  <span>Download</span>
+                </button>
+                <button type="button" onclick="beginAbearcMapThumbnailMove()" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v18m0-18-3 3m3-3 3 3M12 21l-3-3m3 3 3-3M3 12h18M3 12l3-3m-3 3 3 3m15-3-3-3m3 3-3 3"/></svg>
+                  <span>Move thumbnail</span>
+                </button>
+              </div>
+
+              <div data-map-list-context-menu class="abearc-map-measure-context-menu abearc-map-list-context-menu hidden" role="menu" aria-label="Photo result actions">
+                <button type="button" data-map-list-menu-save data-map-save-photo-id="" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-3.7L6 21V4.5Z"/></svg>
+                  <span data-map-list-menu-save-label>Save photo</span>
+                </button>
+                <button type="button" data-map-list-menu-rename role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5Z"/></svg>
+                  <span>Rename</span>
+                </button>
+                <button type="button" data-map-list-menu-download role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+                  <span>Download</span>
+                </button>
+                <div class="abearc-map-results-menu-separator" aria-hidden="true"></div>
+                <button type="button" data-map-list-menu-delete class="abearc-map-results-menu-danger" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-8 0h10"/></svg>
+                  <span>Delete</span>
+                </button>
+              </div>
+
+              <div class="abearc-map-search-control">
+                <div class="abearc-map-search-wrap">
+                  <input id="mapSearchInput" oninput="handleAbearcMapSearchInput()" onkeydown="if (event.key === 'Enter') { event.preventDefault(); submitAbearcMapSearch(); }" class="abearc-map-input" placeholder="Search photos, remarks, stamp text - press Enter" aria-label="Search map photos">
+                  <button type="button" class="abearc-map-search-submit" onclick="submitAbearcMapSearch()" aria-label="Search" title="Search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="m20 20-4-4"/></svg>
+                  </button>
+                </div>
+                <button type="button" onclick="toggleAbearcMapFilters()" data-map-filter-button class="abearc-map-filter-icon" aria-expanded="false" aria-controls="abearcMapFilters" aria-label="Filters" title="Filters">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5h16M7 12h10m-7 7h4"/></svg>
+                </button>
+
+                <div id="abearcMapFilters" class="abearc-map-filter-popover hidden" aria-label="Geotag Map filters">
+                  <div class="abearc-map-filter-popover-head">
+                    <div><strong>Filters</strong><span data-map-active-filters>No active filters</span></div>
+                    <button type="button" onclick="toggleAbearcMapFilters(false)" aria-label="Close filters" title="Close">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 6 12 12M18 6 6 18"/></svg>
+                    </button>
+                  </div>
+                  <div class="abearc-map-filter-form">
+                    <div class="abearc-map-filter-grid">
+                      <label class="abearc-map-field"><span>Category</span><select id="mapCategoryFilter" onchange="reloadAbearcMapForSearch()" class="abearc-map-input"><option value="">All categories</option></select></label>
+                      <label class="abearc-map-field"><span>District</span><select id="mapDistrictFilter" onchange="reloadAbearcMapForSearch()" class="abearc-map-input"><option value="">All districts</option></select></label>
+                      <label class="abearc-map-field"><span>Barangay</span><select id="mapBarangayFilter" onchange="reloadAbearcMapForSearch()" class="abearc-map-input"><option value="">All barangays</option></select></label>
+                      <label class="abearc-map-field"><span>Location status</span><select id="mapLocationStatusFilter" onchange="reloadAbearcMapForSearch()" class="abearc-map-input"><option value="">Mapped photos</option><option value="valid">Valid</option><option value="low_accuracy">Low accuracy</option><option value="manual_location">Manual location</option><option value="missing_coordinates">Missing coordinates</option><option value="invalid_coordinates">Invalid coordinates</option></select></label>
+                    </div>
+                    <div class="abearc-map-filter-toggles">
+                      <label><input id="mapMyUploadsOnly" type="checkbox" onchange="reloadAbearcMapForSearch()"> <span>My uploads</span></label>
+                      <label><input id="mapUnlinkedOnly" type="checkbox" onchange="reloadAbearcMapForSearch()"> <span>Unlinked only</span></label>
+                    </div>
+                    <div class="abearc-map-filter-footer"><span data-map-filter-hint>Refine visible photos</span><button type="button" onclick="clearAbearcMapFilters()">Clear all</button></div>
+                  </div>
+                </div>
+              </div>
+
+              <button type="button" onclick="fitAbearcMapToDavaoCity()" class="abearc-map-extent-control" aria-label="Zoom to the full Davao City extent" title="Zoom to full Davao City">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 3.5H3.5V8m12.5-4.5h4.5V8M8 20.5H3.5V16m12.5 4.5h4.5V16"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.6" d="m9.2 8.1 3-1.1 2.6 1.7-.6 2.7 1.5 2.2-3 3-3.2-1.2-1.2-3.2 1.5-2.5-.6-1.6Z" fill="currentColor" fill-opacity=".2"/></svg>
+              </button>
+
+              <button type="button" onclick="resetAbearcMapView()" class="abearc-map-compass-control" aria-label="Reset orientation and return to top view" title="Reset orientation and return to top view">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke="currentColor" stroke-width="1.7"/><path d="m12 5 3.4 9.1L12 12.7 8.6 14.1 12 5Z" fill="currentColor"/><path d="m12 19-3.4-9.1 3.4 1.4 3.4-1.4L12 19Z" fill="currentColor" opacity=".35"/></svg>
+              </button>
+
+              <div class="abearc-map-measure-tools is-collapsed" role="toolbar" aria-label="Map measurement tools" data-map-measure-panel data-mode="off">
+                <button type="button" class="abearc-map-measure-head" onclick="toggleAbearcMapMeasureTools()" data-map-measure-toggle aria-expanded="false" title="Open measurement tools">
+                  <span class="abearc-map-measure-head-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="7.5" width="18" height="9" rx="1.7" stroke-width="2"/><path stroke-linecap="round" stroke-width="1.8" d="M7 8v3.5M10.5 8v2M14 8v3.5M17.5 8v2"/></svg>
+                  </span>
+                  <span class="abearc-map-measure-head-copy">
+                    <strong>Measure</strong>
+                    <small data-map-measure-status aria-live="polite">Choose a tool</small>
+                  </span>
+                  <svg class="abearc-map-measure-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 8 4 4 4-4"/></svg>
+                </button>
+                <div class="abearc-map-measure-actions" aria-hidden="true">
+                  <button type="button" onclick="setAbearcMapMeasureMode('distance')" class="abearc-map-tool-btn" data-map-measure-mode="distance" aria-pressed="false" title="Measure distance between map points">
+                    <span class="abearc-map-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M5 7v10m14-10v10M5 12h14"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m9 9-4 3 4 3m6-6 4 3-4 3"/></svg></span>
+                    <span class="abearc-map-tool-copy"><strong>Distance</strong><small>Line</small></span>
+                  </button>
+                  <button type="button" onclick="setAbearcMapMeasureMode('area')" class="abearc-map-tool-btn" data-map-measure-mode="area" aria-pressed="false" title="Measure an area using three or more map points">
+                    <span class="abearc-map-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 17 2-10 10-2 2 12-9 2-5-2Z"/><circle cx="7" cy="7" r="1.5" fill="currentColor" stroke="none"/><circle cx="17" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="17" r="1.5" fill="currentColor" stroke="none"/><circle cx="10" cy="19" r="1.5" fill="currentColor" stroke="none"/><circle cx="5" cy="17" r="1.5" fill="currentColor" stroke="none"/></svg></span>
+                    <span class="abearc-map-tool-copy"><strong>Area</strong><small>Polygon</small></span>
+                  </button>
+                  <button type="button" onclick="clearAbearcMapMeasure()" class="abearc-map-tool-btn abearc-map-tool-btn--clear" data-map-measure-clear disabled title="Clear all measurement points">
+                    <span class="abearc-map-tool-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0 1 16.138 21H7.862a2 2 0 0 1-1.995-1.858L5 7m5 4v6m4-6v6M9 7V4h6v3m-8 0h10"/></svg></span>
+                    <span class="abearc-map-tool-copy"><strong>Clear</strong><small>All points</small></span>
+                  </button>
+                </div>
+              </div>
+
+              <section id="abearcMapElevationProfile" class="abearc-map-elevation-profile hidden" aria-label="Elevation profile" aria-live="polite">
+                <div class="abearc-map-elevation-head">
+                  <div>
+                    <span class="abearc-map-elevation-kicker" data-map-elevation-kicker>Distance measurement</span>
+                    <strong>Elevation profile</strong>
+                  </div>
+                  <div class="abearc-map-elevation-head-actions">
+                    <span class="abearc-map-elevation-selected-source">
+                      <span class="abearc-map-elevation-source-prefix">Source:</span>
+                      <span class="abearc-map-elevation-source-value" data-map-elevation-selected-source title="Open Topo Data SRTM Radar DEM">Open Topo Data SRTM Radar DEM</span>
+                    </span>
+                    <details class="abearc-map-results-menu abearc-map-elevation-menu">
+                      <summary aria-label="Elevation sources" title="Elevation sources">
+                        <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path d="M10 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm0 6a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z"/></svg>
+                      </summary>
+                      <div class="abearc-map-results-menu-popover" role="menu" aria-label="Select elevation source">
+                        <div class="abearc-map-elevation-menu-title">Elevation source</div>
+                        <button type="button" data-map-elevation-source="aws-copernicus-glo30" onclick="this.closest('details').removeAttribute('open'); setAbearcElevationSource('aws-copernicus-glo30')" role="menuitemradio"><span><strong>AWS Copernicus GLO-30 DSM</strong><small>30 m resolution</small></span><svg class="abearc-map-elevation-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 10 3 3 7-7"/></svg></button>
+                        <button type="button" data-map-elevation-source="copernicus-glo90" onclick="this.closest('details').removeAttribute('open'); setAbearcElevationSource('copernicus-glo90')" role="menuitemradio"><span><strong>Copernicus GLO-90 DSM</strong><small>Approximately 90 m resolution</small></span><svg class="abearc-map-elevation-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 10 3 3 7-7"/></svg></button>
+                        <button type="button" data-map-elevation-source="aws-copernicus-glo90" onclick="this.closest('details').removeAttribute('open'); setAbearcElevationSource('aws-copernicus-glo90')" role="menuitemradio"><span><strong>AWS Copernicus GLO-90 DSM</strong><small>90 m resolution</small></span><svg class="abearc-map-elevation-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 10 3 3 7-7"/></svg></button>
+                        <button type="button" data-map-elevation-source="aws-mapzen" onclick="this.closest('details').removeAttribute('open'); setAbearcElevationSource('aws-mapzen')" role="menuitemradio"><span><strong>AWS Terrain Tiles (Mapzen)</strong><small>Approximately 30 m resolution</small></span><svg class="abearc-map-elevation-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 10 3 3 7-7"/></svg></button>
+                        <button type="button" data-map-elevation-source="opentopo-srtm30" onclick="this.closest('details').removeAttribute('open'); setAbearcElevationSource('opentopo-srtm30')" role="menuitemradio"><span><strong>Open Topo Data SRTM Radar DEM</strong><small>30 m resolution</small></span><svg class="abearc-map-elevation-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 10 3 3 7-7"/></svg></button>
+                        <button type="button" data-map-elevation-source="opentopo-mapzen" onclick="this.closest('details').removeAttribute('open'); setAbearcElevationSource('opentopo-mapzen')" role="menuitemradio"><span><strong>Open Topo Data Mapzen Terrain</strong><small>Approximately 30 m resolution</small></span><svg class="abearc-map-elevation-check" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m5 10 3 3 7-7"/></svg></button>
+                      </div>
+                    </details>
+                    <button type="button" class="abearc-map-elevation-close" onclick="closeAbearcElevationProfile()" title="Close elevation profile" aria-label="Close elevation profile">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 6 12 12M18 6 6 18"/></svg>
+                    </button>
+                  </div>
+                </div>
+                <div class="abearc-map-elevation-body" data-map-elevation-body>
+                  <div class="abearc-map-elevation-loading"><span></span>Loading terrain elevations...</div>
+                </div>
+              </section>
+
+              <div data-map-layer-label-menu class="abearc-map-measure-context-menu abearc-map-layer-label-context-menu hidden" role="menu" aria-label="Layer label options">
+                <div class="abearc-map-layer-label-context-title" data-map-layer-label-title>Layer labels</div>
+                <button type="button" data-map-layer-label-toggle role="menuitemcheckbox" aria-checked="true">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"/><circle cx="12" cy="12" r="2.5" stroke-width="2"/></svg>
+                  <span data-map-layer-label-action>Hide labels</span>
+                </button>
+                <div class="abearc-map-layer-label-context-hint">Right-click a layer thumbnail to change its labels.</div>
+              </div>
+
+              <div class="abearc-map-quick-layer-control">
+                <nav class="abearc-map-quick-layers hidden" aria-label="Map type and details">
+                  <header class="abearc-map-quick-layers-head">
+                    <strong>Map type</strong>
+                    <button type="button" onclick="toggleAbearcQuickLayers(false)" aria-label="Close layers" title="Close">&times;</button>
+                  </header>
+                  <div class="abearc-map-quick-layer-grid" role="radiogroup" aria-label="Map type">
+                    <button type="button" data-map-basemap="google-satellite" onclick="setAbearcMapBasemap('google-satellite')" class="abearc-map-quick-layer" role="radio" aria-label="Satellite basemap" title="Satellite">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--satellite" aria-hidden="true"></span>
+                      <strong>Satellite</strong>
+                    </button>
+                    <button type="button" data-map-basemap="google-terrain" onclick="setAbearcMapBasemap('google-terrain')" class="abearc-map-quick-layer" role="radio" aria-label="Terrain basemap" title="Terrain">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--terrain" aria-hidden="true"></span>
+                      <strong>Terrain</strong>
+                    </button>
+                    <button type="button" data-map-basemap="open-topo" onclick="setAbearcMapBasemap('open-topo')" class="abearc-map-quick-layer" role="radio" aria-label="TopoMap basemap" title="TopoMap">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--topomap" aria-hidden="true"></span>
+                      <strong>TopoMap</strong>
+                    </button>
+                    <button type="button" data-map-basemap="zoning" onclick="setAbearcMapBasemap('zoning')" class="abearc-map-quick-layer" role="radio" aria-label="Zoning basemap" title="Zoning">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--zoning" aria-hidden="true"></span>
+                      <strong>Zoning</strong>
+                    </button>
+                  </div>
+                  <section class="abearc-map-quick-details" aria-label="Map details">
+                    <h4>Map details</h4>
+                    <button type="button" data-map-quick-flood onclick="toggleAbearcNoahFloodLayer()" class="abearc-map-quick-detail" aria-pressed="false">
+                      <span class="abearc-map-quick-flood-preview" aria-hidden="true"></span>
+                      <span><strong>Flood Hazard</strong><small>Project NOAH</small></span>
+                      <i aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="abearc-map-quick-more" onclick="toggleAbearcQuickLayers(false); toggleAbearcMapLayerMenu(true)">
+                      <span>More layers</span><span aria-hidden="true">›</span>
+                    </button>
+                  </section>
+                </nav>
+                <button id="abearcMapBasemapSelect" type="button" data-map-quick-layer-toggle onclick="toggleAbearcQuickLayers()" class="abearc-map-quick-layer-launcher" aria-expanded="false" aria-label="Open layers" title="Layers">
+                  <span data-map-quick-thumbnail class="abearc-map-layer-preview abearc-map-layer-preview--satellite" aria-hidden="true"></span>
+                  <strong data-map-quick-label>Satellite</strong>
+                </button>
+              </div>
+
+              <div class="abearc-map-layer-control">
+                <div class="abearc-map-layer-menu hidden" role="dialog" aria-modal="false" aria-label="Map display settings">
+                  <header class="abearc-map-layer-drawer-head">
+                    <div>
+                      <span>Layers</span>
+                      <strong>Map details</strong>
+                    </div>
+                    <button type="button" onclick="toggleAbearcMapLayerMenu(false)" aria-label="Close map display" title="Close">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m6 6 12 12M18 6 6 18"/></svg>
+                    </button>
+                  </header>
+                  <section class="abearc-map-layer-group" aria-label="Basemap">
+                    <div class="abearc-map-layer-group-head">
+                      <div><span>01</span><strong>Basemap</strong></div>
+                      <button type="button" onclick="openAbearcMapLayerLabelMenu(event, window.abearcMapCurrentBasemap())">Labels</button>
+                    </div>
+                  <div class="abearc-map-layer-basemaps" aria-label="Base maps">
+                    <button type="button" data-map-basemap="google-satellite" onclick="setAbearcMapBasemap('google-satellite')" oncontextmenu="openAbearcMapLayerLabelMenu(event, 'google-satellite')" class="abearc-map-layer-option" role="menuitemradio" aria-label="Satellite" title="Satellite — right-click for label options">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--satellite" aria-hidden="true">
+                        <span class="abearc-map-layer-caption">Satellite</span>
+                      </span>
+                    </button>
+                    <button type="button" data-map-basemap="zoning" onclick="setAbearcMapBasemap('zoning')" oncontextmenu="openAbearcMapLayerLabelMenu(event, 'zoning')" class="abearc-map-layer-option" role="menuitemradio" aria-label="Zoning" title="Zoning — right-click for label options">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--zoning" aria-hidden="true">
+                        <span class="abearc-map-layer-caption">Zoning</span>
+                      </span>
+                    </button>
+                    <button type="button" data-map-basemap="google-terrain" onclick="setAbearcMapBasemap('google-terrain')" oncontextmenu="openAbearcMapLayerLabelMenu(event, 'google-terrain')" class="abearc-map-layer-option" role="menuitemradio" aria-label="Terrain" title="Terrain — right-click for label options">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--terrain" aria-hidden="true">
+                        <span class="abearc-map-layer-caption">Terrain</span>
+                      </span>
+                    </button>
+                    <button type="button" data-map-basemap="open-topo" onclick="setAbearcMapBasemap('open-topo')" oncontextmenu="openAbearcMapLayerLabelMenu(event, 'open-topo')" class="abearc-map-layer-option" role="menuitemradio" aria-label="TopoMap" title="TopoMap — right-click for label options">
+                      <span class="abearc-map-layer-preview abearc-map-layer-preview--topomap" aria-hidden="true">
+                        <span class="abearc-map-layer-caption">TopoMap</span>
+                      </span>
+                    </button>
+                  </div>
+                  </section>
+
+                  <section class="abearc-map-layer-group" aria-label="Map context">
+                    <div class="abearc-map-layer-group-head">
+                      <div><span>02</span><strong>Map context</strong></div>
+                    </div>
+                    <div class="abearc-map-context-layers">
+                      <section class="abearc-map-photo-layer-control" data-map-photo-visibility-control role="group" aria-label="Geotag photos">
+                        <span class="abearc-map-layer-symbol is-photo" aria-hidden="true"></span>
+                        <div>
+                          <strong>Geotag photos</strong>
+                          <span>Photo markers and clusters</span>
+                        </div>
+                        <label class="abearc-map-chirps-switch">
+                          <input data-map-photo-visibility-toggle type="checkbox" checked onchange="setAbearcMapPhotosVisible(this.checked)">
+                          <span>Show</span>
+                        </label>
+                      </section>
+                      <section class="abearc-map-photo-layer-control" data-map-davao-boundary-control role="group" aria-label="Davao City boundary">
+                        <span class="abearc-map-layer-symbol is-boundary" aria-hidden="true"></span>
+                        <div>
+                          <strong>Davao City boundary</strong>
+                          <span>PSA administrative extent</span>
+                        </div>
+                        <label class="abearc-map-chirps-switch">
+                          <input data-map-davao-boundary-toggle type="checkbox" checked onchange="setAbearcDavaoBoundaryVisible(this.checked)">
+                          <span>Show</span>
+                        </label>
+                      </section>
+                    </div>
+                  </section>
+
+                  <section class="abearc-map-layer-group" aria-label="Environmental data">
+                    <div class="abearc-map-layer-group-head">
+                      <div><span>03</span><strong>Environmental data</strong></div>
+                      <small>One climate overlay at a time</small>
+                    </div>
+                  <section data-map-noah-flood-panel class="abearc-map-chirps-panel abearc-map-noah-flood-panel" aria-label="Project NOAH 100-year flood hazard">
+                    <div class="abearc-map-chirps-heading">
+                      <div>
+                        <strong>NOAH flood hazard</strong>
+                        <span>100-year rainfall return period</span>
+                      </div>
+                      <label class="abearc-map-chirps-switch">
+                        <input data-map-noah-flood-toggle type="checkbox" onchange="setAbearcNoahFloodEnabled(this.checked)">
+                        <span>Show</span>
+                      </label>
+                    </div>
+                    <label class="abearc-map-chirps-opacity">
+                      <span>Opacity <output data-map-noah-flood-opacity-value>58%</output></span>
+                      <input data-map-noah-flood-opacity type="range" min="20" max="90" step="5" value="58" oninput="setAbearcNoahFloodOpacity(this.value)">
+                    </label>
+                    <div class="abearc-map-noah-flood-legend" aria-label="Flood hazard category legend">
+                      <span><i class="is-low" aria-hidden="true"></i>Low <small>generally 0–0.5 m</small></span>
+                      <span><i class="is-medium" aria-hidden="true"></i>Medium <small>&gt;0.5–1.5 m</small></span>
+                      <span><i class="is-high" aria-hidden="true"></i>High <small>&gt;1.5 m</small></span>
+                    </div>
+                    <p class="abearc-map-climate-hint">Select the map to inspect the hazard category. Velocity can raise a category above its depth-only level.</p>
+                    <p class="abearc-map-chirps-source">Project NOAH · DOST-PAGASA / University of the Philippines · ODbL</p>
+                  </section>
+
+                  <section data-map-climate-panel="chirps" class="abearc-map-chirps-panel" aria-labelledby="abearcChirpsTitle">
+                    <div class="abearc-map-chirps-heading">
+                      <div>
+                        <strong id="abearcChirpsTitle">CHIRPS rainfall</strong>
+                        <span>Accumulated precipitation overlay</span>
+                      </div>
+                      <label class="abearc-map-chirps-switch">
+                        <input id="abearcChirpsToggle" type="checkbox" onchange="setAbearcChirpsEnabled(this.checked)">
+                        <span>Show</span>
+                      </label>
+                    </div>
+                    <div class="abearc-map-chirps-dates">
+                      <label>
+                        <span>Start date</span>
+                        <span class="abearc-map-date-input"><input id="abearcChirpsStartDate" type="date"></span>
+                      </label>
+                      <label>
+                        <span>End date</span>
+                        <span class="abearc-map-date-input"><input id="abearcChirpsEndDate" type="date"></span>
+                      </label>
+                    </div>
+                    <div class="abearc-map-chirps-presets" aria-label="CHIRPS date presets">
+                      <button type="button" onclick="setAbearcChirpsPreset(7)">7 days</button>
+                      <button type="button" onclick="setAbearcChirpsPreset(30)">30 days</button>
+                      <button type="button" onclick="setAbearcChirpsPreset(90)">90 days</button>
+                      <button type="button" onclick="setAbearcChirpsPreset(365)">1 year</button>
+                    </div>
+                    <label class="abearc-map-chirps-opacity">
+                      <span>Opacity <output id="abearcChirpsOpacityValue">70%</output></span>
+                      <input id="abearcChirpsOpacity" type="range" min="20" max="100" step="5" value="70" oninput="setAbearcChirpsOpacity(this.value)">
+                    </label>
+                    <div class="abearc-map-chirps-actions">
+                      <button id="abearcChirpsApply" type="button" onclick="applyAbearcChirpsRange()">Apply date range</button>
+                      <span id="abearcChirpsStatus" role="status" aria-live="polite">Availability not checked</span>
+                    </div>
+                    <div class="abearc-map-chirps-legend" aria-label="Accumulated rainfall legend">
+                      <span class="abearc-map-chirps-gradient" aria-hidden="true"></span>
+                      <div><span>0</span><span>10</span><span>50</span><span>100</span><span>200+</span></div>
+                      <small>Accumulated rainfall (mm)</small>
+                    </div>
+                    <div class="abearc-map-climate-tools" aria-label="CHIRPS map actions">
+                      <button type="button" onclick="fitAbearcClimateToPhilippines()">View Philippines</button>
+                      <button type="button" onclick="startAbearcClimatePointSelection()">Select map point</button>
+                    </div>
+                    <p class="abearc-map-climate-hint">Select a point to open its rainfall graph, CSV, and PNG downloads.</p>
+                    <p class="abearc-map-chirps-source">CHIRPS v3 final data · 0.05° grid · Climate Hazards Center</p>
+                  </section>
+
+                  <section data-map-climate-panel="terraclimate" class="abearc-map-chirps-panel abearc-map-terraclimate-panel" aria-labelledby="abearcTerraClimateTitle">
+                    <div class="abearc-map-chirps-heading">
+                      <div>
+                        <strong id="abearcTerraClimateTitle">TerraClimate temperature</strong>
+                        <span>Mean monthly temperature overlay</span>
+                      </div>
+                      <label class="abearc-map-chirps-switch">
+                        <input id="abearcTerraClimateToggle" type="checkbox" onchange="setAbearcTerraClimateEnabled(this.checked)">
+                        <span>Show</span>
+                      </label>
+                    </div>
+                    <div class="abearc-map-chirps-dates">
+                      <label>
+                        <span>Start date</span>
+                        <span class="abearc-map-date-input"><input id="abearcTerraClimateStartDate" type="date"></span>
+                      </label>
+                      <label>
+                        <span>End date</span>
+                        <span class="abearc-map-date-input"><input id="abearcTerraClimateEndDate" type="date"></span>
+                      </label>
+                    </div>
+                    <div class="abearc-map-chirps-presets" aria-label="TerraClimate date presets">
+                      <button type="button" onclick="setAbearcTerraClimatePreset(3)">3 months</button>
+                      <button type="button" onclick="setAbearcTerraClimatePreset(6)">6 months</button>
+                      <button type="button" onclick="setAbearcTerraClimatePreset(12)">1 year</button>
+                    </div>
+                    <label class="abearc-map-chirps-opacity">
+                      <span>Opacity <output id="abearcTerraClimateOpacityValue">70%</output></span>
+                      <input id="abearcTerraClimateOpacity" type="range" min="20" max="100" step="5" value="70" oninput="setAbearcTerraClimateOpacity(this.value)">
+                    </label>
+                    <div class="abearc-map-chirps-actions">
+                      <button id="abearcTerraClimateApply" type="button" onclick="applyAbearcTerraClimateRange()">Apply date range</button>
+                      <span id="abearcTerraClimateStatus" role="status" aria-live="polite">Availability not checked</span>
+                    </div>
+                    <div class="abearc-map-chirps-legend" aria-label="Mean temperature legend">
+                      <span class="abearc-map-chirps-gradient abearc-map-terraclimate-gradient" aria-hidden="true"></span>
+                      <div><span>10</span><span>16</span><span>20</span><span>24</span><span>27</span><span>30</span><span>34+</span></div>
+                      <small>Mean temperature (°C)</small>
+                    </div>
+                    <div class="abearc-map-climate-tools" aria-label="TerraClimate map actions">
+                      <button type="button" onclick="fitAbearcClimateToPhilippines()">View Philippines</button>
+                      <button type="button" onclick="startAbearcClimatePointSelection()">Select map point</button>
+                    </div>
+                    <p class="abearc-map-climate-hint">Select a point to open its monthly temperature graph, CSV, and PNG downloads.</p>
+                    <p class="abearc-map-chirps-source">TerraClimate v1.1 · monthly · ~4 km grid · Climatology Lab</p>
+                  </section>
+                  </section>
+                </div>
+              </div>
+
+              <div id="abearcMapBasemapError" class="hidden abearc-map-error-banner">Basemap failed to load. Map photos remain available.</div>
+              <div id="abearcMapOriginalViewer" class="abearc-map-original-viewer hidden"></div>
+              <section id="abearcMapDetails" class="abearc-map-details hidden" aria-label="Photo details"></section>
+            </main>
+          </div>
+        </div>
+      </div>

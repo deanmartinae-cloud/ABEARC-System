@@ -1,0 +1,23 @@
+const mapMediaConfig = {
+  maxFileSizeBytes: Math.max(1, MAP_MEDIA_MAX_FILE_SIZE_MB) * 1024 * 1024,
+  lowAccuracyThresholdM: MAP_MEDIA_LOW_ACCURACY_THRESHOLD_M,
+  defaultVisibility: MAP_MEDIA_DEFAULT_VISIBILITY,
+  thumbnailMaxSize: MAP_MEDIA_THUMBNAIL_MAX_SIZE,
+  styleUrl: MAP_MEDIA_STYLE_URL,
+  defaultCenter: [MAP_MEDIA_DEFAULT_CENTER_LNG, MAP_MEDIA_DEFAULT_CENTER_LAT],
+  defaultZoom: MAP_MEDIA_DEFAULT_ZOOM,
+  batchConcurrency: Math.max(1, MAP_MEDIA_BATCH_CONCURRENCY),
+  cluster: {
+    radius: MAP_MEDIA_CLUSTER_RADIUS,
+    maxZoom: MAP_MEDIA_CLUSTER_MAX_ZOOM,
+    minPoints: MAP_MEDIA_CLUSTER_MIN_POINTS
+  },
+  explosion: {
+    minRadius: MAP_MEDIA_EXPLOSION_MIN_RADIUS,
+    maxRadius: MAP_MEDIA_EXPLOSION_MAX_RADIUS,
+    maxVisiblePhotos: MAP_MEDIA_EXPLOSION_MAX_VISIBLE_PHOTOS,
+    collapsePanThreshold: MAP_MEDIA_EXPLOSION_COLLAPSE_PAN_THRESHOLD,
+    collapseZoomThreshold: MAP_MEDIA_EXPLOSION_COLLAPSE_ZOOM_THRESHOLD,
+    closeRangeZoom: MAP_MEDIA_CLUSTER_MAX_ZOOM
+  }
+};

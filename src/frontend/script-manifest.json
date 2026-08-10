@@ -1,0 +1,16 @@
+[
+  "src/frontend/services/00-state-api.service.js",
+  "src/frontend/scripts/01-notifications-navigation.js",
+  "src/frontend/scripts/02-auth-dashboard.js",
+  "src/frontend/scripts/03-calendar.js",
+  "src/frontend/scripts/04-project-detail-documents.js",
+  "src/frontend/scripts/05-settings.js",
+  "src/frontend/scripts/06-feedback-users.js",
+  "src/frontend/scripts/07-backup.js",
+  "src/frontend/scripts/08-downloads-forms.js",
+  "src/frontend/scripts/09-my-drive.js",
+  "src/frontend/scripts/12-abearc-map.js",
+  "src/frontend/scripts/13-established-monitoring.js",
+  "src/frontend/scripts/10-mobile-and-config.js",
+  "src/frontend/scripts/11-session-activity-init.js"
+]

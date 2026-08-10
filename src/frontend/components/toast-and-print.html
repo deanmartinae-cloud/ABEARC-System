@@ -1,0 +1,17 @@
+  <div id="toastContainer" class="fixed bottom-6 left-6 z-[120] pointer-events-none"></div>
+  <div id="printPreviewOverlay" class="hidden fixed inset-0 z-[70] bg-gray-100/95 dark:bg-gray-950/95 overflow-y-auto p-3 sm:p-6">
+    <div id="printPreviewShell" class="max-w-[210mm] mx-auto bg-white text-gray-900 rounded-lg shadow-2xl border border-gray-200 overflow-hidden">
+      <div class="print-preview-actions sticky top-0 z-10 flex items-center justify-between gap-3 px-4 py-3 bg-white border-b border-gray-200">
+        <div>
+          <div id="printPreviewTitle" class="font-black text-gray-950">Print Preview</div>
+          <div class="text-xs text-gray-500">A4 print-ready preview</div>
+        </div>
+        <div class="flex items-center gap-2">
+          <button type="button" onclick="window.print()" class="px-4 py-2 bg-cyan-700 text-white rounded-lg font-bold hover:bg-cyan-800">Print</button>
+          <button type="button" onclick="closePrintPreview()" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-bold hover:bg-gray-50">Close</button>
+        </div>
+      </div>
+      <div id="printPreviewContent" class="print-preview-content p-6 sm:p-8"></div>
+    </div>
+  </div>
+

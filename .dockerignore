@@ -1,0 +1,35 @@
+# Local dependencies and persistent runtime data
+node_modules/
+data/
+
+# Deployment artifacts and release archives
+deployments/
+deployment/
+releases/
+*.zip
+*.rar
+*.7z
+
+# Source-control and editor files
+.git/
+.gitignore
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local-only launch and deployment scripts are not needed inside the image
+*.bat
+*.cmd
+*.ps1
+
+# Logs and transient database files
+npm-debug.log*
+*.log
+*.db
+*.db-wal
+*.db-shm
+
+# Environment files and secrets
+.env
+.env.*

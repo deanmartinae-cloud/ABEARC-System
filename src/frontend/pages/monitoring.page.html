@@ -1,0 +1,94 @@
+    <div id="monitoringInventoryView" class="hidden fade-in space-y-3">
+      <section class="enterprise-card monitoring-workbench" aria-label="Monitoring Inventory">
+        <header class="monitoring-page-header">
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="monitoring-page-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3h6a1 1 0 0 1 1 1v2H8V4a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3" stroke-width="2"/><path stroke-linecap="round" stroke-width="2" d="m14.2 15.2 2.8 2.8"/></svg>
+            </div>
+            <div class="min-w-0">
+              <p class="monitoring-page-kicker">Established Project &amp; Asset Monitoring</p>
+              <h2 class="monitoring-page-title">Monitoring Inventory</h2>
+              <p class="monitoring-page-description">Track the condition, location, schedule, and follow-up work for established project outputs.</p>
+            </div>
+          </div>
+          <div class="monitoring-page-actions">
+            <details class="monitoring-overflow" onclick="event.stopPropagation()">
+              <summary class="monitoring-btn monitoring-btn-secondary" aria-label="More inventory actions" title="More inventory actions">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="19" cy="12" r="1.5" fill="currentColor" stroke="none"/></svg><span>More</span>
+              </summary>
+              <div class="monitoring-overflow-menu" role="menu">
+                <button id="monitoringImportBtn" type="button" onclick="this.closest('details').removeAttribute('open'); document.getElementById('monitoringImportFile').click()" class="hidden" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15V3m0 0L8 7m4-4 4 4M5 19h14"/></svg><span><strong>Import Excel</strong><small>Add or update inventory records</small></span>
+                </button>
+                <input id="monitoringImportFile" type="file" accept=".xlsx,.xls" class="hidden" onchange="importMonitoringWorkbook(event)">
+                <button id="monitoringExportBtn" type="button" onclick="this.closest('details').removeAttribute('open'); exportMonitoringInventory()" class="hidden" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14"/></svg><span><strong>Export Excel</strong><small>Download the current inventory</small></span>
+                </button>
+                <button id="monitoringChecklistExportBtn" type="button" onclick="this.closest('details').removeAttribute('open'); openMonitoringChecklistExport()" class="hidden" role="menuitem">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 3h10a2 2 0 0 1 2 2v14H5V5a2 2 0 0 1 2-2Zm2 5h6m-6 4h6m-6 4h3"/></svg><span><strong>Print inspection checklist</strong><small>Choose an asset-type template</small></span>
+                </button>
+              </div>
+            </details>
+            <button id="monitoringAddBtn" type="button" onclick="openMonitoringInventoryForm()" class="hidden monitoring-btn monitoring-btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-width="2" d="M12 5v14M5 12h14"/></svg><span>Add inventory</span>
+            </button>
+          </div>
+        </header>
+        <div id="monitoringKpiGrid" class="monitoring-kpi-grid" aria-label="Monitoring inventory summary"></div>
+      </section>
+
+      <div id="monitoringAnalyticsGrid" class="grid grid-cols-1 lg:grid-cols-3 gap-3" aria-label="Inventory breakdowns"></div>
+
+      <div class="grid grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_21rem] gap-3 items-start">
+        <section class="enterprise-card overflow-hidden monitoring-register" aria-label="Inventory register">
+          <div class="monitoring-section-header">
+            <div class="min-w-0">
+              <h3>All inventory</h3>
+              <p id="monitoringListSummary">Loading records...</p>
+            </div>
+          </div>
+
+          <div class="monitoring-toolbar">
+            <div class="monitoring-search-row">
+              <div class="monitoring-search-wrap">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m21 21-4.35-4.35m1.35-5.65a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"/></svg>
+                <input id="monitoringSearch" type="search" oninput="renderMonitoringInventory()" placeholder="Search code, asset, recipient, location..." aria-label="Search monitoring inventory">
+              </div>
+              <button type="button" onclick="toggleMonitoringFilters()" data-monitoring-filter-toggle class="monitoring-filter-icon-btn" aria-expanded="false" aria-label="Filters" title="Filters">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M7 12h10m-7 6h4"/></svg><span data-monitoring-filter-count class="hidden monitoring-filter-count">0</span>
+              </button>
+            </div>
+            <div data-monitoring-filter-panel class="monitoring-filter-panel">
+              <label><span>Asset type</span><select id="monitoringTypeFilter" onchange="renderMonitoringInventory()"><option value="">All types</option></select></label>
+              <label><span>Condition</span><select id="monitoringStatusFilter" onchange="renderMonitoringInventory()"><option value="">All conditions</option></select></label>
+              <label><span>District</span><select id="monitoringDistrictFilter" onchange="renderMonitoringInventory()"><option value="">All districts</option></select></label>
+              <label><span>Priority</span><select id="monitoringPriorityFilter" onchange="renderMonitoringInventory()"><option value="">All priorities</option><option>Critical</option><option>High</option><option>Medium</option><option>Low</option></select></label>
+              <label><span>Due status</span><select id="monitoringDueFilter" onchange="renderMonitoringInventory()"><option value="">All due states</option><option>Never Monitored</option><option>Overdue</option><option>Due Soon</option><option>Current</option></select></label>
+              <label><span>Lifecycle</span><select id="monitoringLifecycleFilter" onchange="renderMonitoringInventory()"><option value="">All lifecycle statuses</option><option>Active</option><option>Archived</option></select></label>
+              <label><span>Assignee</span><select id="monitoringAssigneeFilter" onchange="renderMonitoringInventory()"><option value="">All assignees</option><option value="__me__">My assignments</option><option value="__unassigned__">Unassigned</option></select></label>
+              <button type="button" onclick="clearMonitoringFilters()" data-monitoring-clear-filters class="monitoring-clear-filters">Clear filters</button>
+            </div>
+          </div>
+
+          <div class="monitoring-table-wrap hidden lg:block" role="region" aria-label="Monitoring inventory table" tabindex="0">
+            <table class="w-full text-left text-sm">
+              <thead><tr><th>Code / asset</th><th>Recipient / location</th><th>Condition</th><th>Last monitoring</th><th>Next / due</th><th>Priority</th><th class="text-center">Tasks</th><th class="text-right">Actions</th></tr></thead>
+              <tbody id="monitoringInventoryTable"></tbody>
+            </table>
+          </div>
+          <div id="monitoringInventoryMobile" class="lg:hidden monitoring-mobile-list"></div>
+          <div id="monitoringEmpty" class="hidden monitoring-empty-state" role="status"></div>
+        </section>
+
+        <aside class="enterprise-card overflow-hidden monitoring-queue" aria-label="Priority visit queue">
+          <div class="monitoring-section-header">
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="monitoring-section-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v4m0 4h.01M10.3 4.7 3.6 16.3A2 2 0 0 0 5.3 19h13.4a2 2 0 0 0 1.7-2.7L13.7 4.7a2 2 0 0 0-3.4 0Z"/></svg></span>
+              <div class="min-w-0"><div class="monitoring-section-title-row"><h3>Priority visit queue</h3><button type="button" onclick="showMonitoringPriorityQueueInfo()" class="monitoring-info-btn" aria-label="How priority visit queue works" title="How this queue works">i</button></div><p>Highest-risk and overdue records</p></div>
+            </div>
+          </div>
+          <div id="monitoringPriorityQueue" class="monitoring-priority-list"></div>
+        </aside>
+      </div>
+
+    </div>

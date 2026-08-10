@@ -1,0 +1,870 @@
+[
+  {
+    "method": "POST",
+    "path": "/api/auth/login"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/mobile-qr"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/mobile-qr/exchange"
+  },
+  {
+    "method": "GET",
+    "path": "/api/avatars/:path(*)"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/trash"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/upload"
+  },
+  {
+    "method": "POST",
+    "path": "/api/mobile/geocam/upload"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mobile/geocam/existing"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mobile/geocam/latest"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mobile/geocam/latest/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mobile/docscanner/latest"
+  },
+  {
+    "method": "GET",
+    "path": "/api/mobile/docscanner/latest/download"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/folders"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/user-drive/files/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/user-drive/folders/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/files/:id/view"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/files/:id/download"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/items/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/items/download/:filename"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/folders/:id/download"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/user-drive/files/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/user-drive/folders/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/files/:id/restore"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/folders/:id/restore"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/user-drive/files/:id/permanent"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/user-drive/folders/:id/permanent"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/items/move"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/items/copy"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/files/:id/share"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/folders/:id/share"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/user-drive/shares/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/user-drive/shares/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/files/:id/access"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/folders/:id/access"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/files/:id/transfer-owner"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/folders/:id/transfer-owner"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/shared-with-me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user-drive/storage-summary"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/files/:id/copy-to-project-document"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/files/:id/copy-to-project-documentation"
+  },
+  {
+    "method": "POST",
+    "path": "/api/user-drive/files/:id/copy-to-calendar-attachment"
+  },
+  {
+    "method": "GET",
+    "path": "/api/user/theme"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/user/theme"
+  },
+  {
+    "method": "POST",
+    "path": "/api/me/avatar"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/me/avatar"
+  },
+  {
+    "method": "GET",
+    "path": "/api/auth/me"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/unread-count"
+  },
+  {
+    "method": "GET",
+    "path": "/api/notifications/stream"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/notifications/:id/read"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/notifications/read-all"
+  },
+  {
+    "method": "GET",
+    "path": "/api/deletion-requests"
+  },
+  {
+    "method": "POST",
+    "path": "/api/deletion-requests"
+  },
+  {
+    "method": "POST",
+    "path": "/api/deletion-requests/:id/approve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/deletion-requests/:id/deny"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/user/change-password"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/activity"
+  },
+  {
+    "method": "POST",
+    "path": "/api/auth/logout"
+  },
+  {
+    "method": "GET",
+    "path": "/api/active-users"
+  },
+  {
+    "method": "POST",
+    "path": "/api/changelog/feedback"
+  },
+  {
+    "method": "GET",
+    "path": "/api/changelog/feedback"
+  },
+  {
+    "method": "GET",
+    "path": "/api/changelog/feedback/:id/attachment/view"
+  },
+  {
+    "method": "GET",
+    "path": "/api/changelog/feedback/:id/attachment/download"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/changelog/feedback/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/users"
+  },
+  {
+    "method": "GET",
+    "path": "/api/users/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/users"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/users/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/users/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/users/:id/password"
+  },
+  {
+    "method": "GET",
+    "path": "/api/privileges/defaults"
+  },
+  {
+    "method": "GET",
+    "path": "/api/privileges"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/users/:id/privileges"
+  },
+  {
+    "method": "GET",
+    "path": "/api/configuration-change-requests"
+  },
+  {
+    "method": "GET",
+    "path": "/api/configuration-change-requests/pending-count"
+  },
+  {
+    "method": "GET",
+    "path": "/api/configuration-change-requests/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/configuration-change-requests/:id/approve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/configuration-change-requests/:id/clear-stale"
+  },
+  {
+    "method": "POST",
+    "path": "/api/configuration-change-requests/:id/reject"
+  },
+  {
+    "method": "POST",
+    "path": "/api/configuration-change-requests/:id/cancel"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/settings/reorder/:type"
+  },
+  {
+    "method": "GET",
+    "path": "/api/settings/${type}"
+  },
+  {
+    "method": "POST",
+    "path": "/api/settings/${type}"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/settings/${type}/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/settings/${type}/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/downloads-forms"
+  },
+  {
+    "method": "POST",
+    "path": "/api/downloads-forms/upload"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/downloads-forms/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/downloads-forms/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/downloads-forms/:id/download"
+  },
+  {
+    "method": "POST",
+    "path": "/api/downloads-forms/:id/share"
+  },
+  {
+    "method": "GET",
+    "path": "/api/downloads-forms/:id/shared-download"
+  },
+  {
+    "method": "POST",
+    "path": "/api/settings/requirements/document-types"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/settings/document-due-schedules"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/settings/document-type/:id/due-schedule"
+  },
+  {
+    "method": "GET",
+    "path": "/api/document-types/for-selector"
+  },
+  {
+    "method": "GET",
+    "path": "/api/settings/requirements"
+  },
+  {
+    "method": "GET",
+    "path": "/api/settings/requirements/reload-override"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/settings/requirements/reload-override"
+  },
+  {
+    "method": "GET",
+    "path": "/api/settings/requirements/audit"
+  },
+  {
+    "method": "GET",
+    "path": "/api/settings/requirements/due-schedules"
+  },
+  {
+    "method": "POST",
+    "path": "/api/settings/requirements"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:id/reload-requirements"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:id/sync-requirements"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/events"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events/:id"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/calendar/events/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/calendar/events/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/calendar/events/:id/permanent"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/events/:id/respond"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/events/:id/participants"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/calendar/events/:id/participants/:userId"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events/:id/notes"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/events/:id/notes"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/calendar/events/:id/notes/:noteId"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/calendar/events/:id/notes/:noteId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/events/:id/notes/:noteId/finalize"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events/:id/notes/:noteId/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events/:id/attachments"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/events/:id/attachments"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events/:id/attachments/:attachmentId/view"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/events/:id/attachments/:attachmentId/download"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/calendar/events/:id/attachments/:attachmentId/content"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/calendar/events/:id/attachments/:attachmentId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/calendar/reminders/run"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/my-schedules"
+  },
+  {
+    "method": "GET",
+    "path": "/api/dashboard/my-schedules"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/dues"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/details"
+  },
+  {
+    "method": "GET",
+    "path": "/api/calendar/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/analytics/workload"
+  },
+  {
+    "method": "GET",
+    "path": "/api/backups"
+  },
+  {
+    "method": "POST",
+    "path": "/api/backups"
+  },
+  {
+    "method": "GET",
+    "path": "/api/backups/:filename/download"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/backups/:filename"
+  },
+  {
+    "method": "POST",
+    "path": "/api/backups/restore"
+  },
+  {
+    "method": "POST",
+    "path": "/api/backups/restore-login"
+  },
+  {
+    "method": "GET",
+    "path": "/api/config/export"
+  },
+  {
+    "method": "POST",
+    "path": "/api/config/preview"
+  },
+  {
+    "method": "POST",
+    "path": "/api/config/import"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/duplicate-check"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:id/disposition"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:id/reopen"
+  },
+  {
+    "method": "GET",
+    "path": "/api/project-disposition-requests"
+  },
+  {
+    "method": "POST",
+    "path": "/api/project-disposition-requests/:id/approve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/project-disposition-requests/:id/reject"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/print-data"
+  },
+  {
+    "method": "GET",
+    "path": "/api/document-search"
+  },
+  {
+    "method": "POST",
+    "path": "/api/document-search/rebuild"
+  },
+  {
+    "method": "GET",
+    "path": "/api/maintenance/summary"
+  },
+  {
+    "method": "GET",
+    "path": "/api/system/health"
+  },
+  {
+    "method": "POST",
+    "path": "/api/system/test"
+  },
+  {
+    "method": "POST",
+    "path": "/api/maintenance/clear-temp"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/maintenance/orphan-files"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:id/closure-request"
+  },
+  {
+    "method": "GET",
+    "path": "/api/project-closure-requests"
+  },
+  {
+    "method": "POST",
+    "path": "/api/project-closure-requests/:id/approve"
+  },
+  {
+    "method": "POST",
+    "path": "/api/project-closure-requests/:id/reject"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/pending-confirmations"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/closure-attachments"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/closure-attachments/:attachmentId/view"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/closure-attachments/:attachmentId/download"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/projects/:id/stage"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/projects/:id"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/projects/:id/assignment"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/work-assignments/bulk"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/stage-edit-access"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:id/stage-edit-access"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/stage-edit-access/:accessId"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/stage-edit-access/:accessId/revoke"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:projectId/monitoring-documents"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/projects/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:projectId/documentation/counts"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:projectId/documentation"
+  },
+  {
+    "method": "POST",
+    "path": "/api/projects/:projectId/documentation"
+  },
+  {
+    "method": "GET",
+    "path": "/api/project-documentation/:id/view"
+  },
+  {
+    "method": "GET",
+    "path": "/api/project-documentation/:id/download"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/project-documentation/:id"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/project-documentation/:id"
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents"
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents/for-review"
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents/reviewed"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/documents/:documentId/assignment"
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents/:projectId"
+  },
+  {
+    "method": "POST",
+    "path": "/api/documents/:documentId/upload"
+  },
+  {
+    "method": "GET",
+    "path": "/api/documents/:docId/download"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:id/export-pdf"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/documents/:docId"
+  },
+  {
+    "method": "DELETE",
+    "path": "/api/documents/:docId/file"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/documents/:documentId/status"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/documents/:documentId/requirement-state"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/projects/:projectId/due-date"
+  },
+  {
+    "method": "PUT",
+    "path": "/api/documents/:documentId/due-date"
+  },
+  {
+    "method": "GET",
+    "path": "/api/projects/:projectId/documents-with-due-dates"
+  },
+  {
+    "method": "GET",
+    "path": "/api/activity-logs"
+  },
+  {
+    "method": "GET",
+    "path": "/api/activity-logs/export/csv"
+  },
+  {
+    "method": "GET",
+    "path": "/api/activity-logs/export/excel"
+  },
+  {
+    "method": "GET",
+    "path": "/api/activity-logs/export/pdf"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/geotag-photos/:id/thumbnail"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/inventory/:id/geotag-photos"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/dashboard"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/inventory"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/inventory/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/monitoring/inventory"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/monitoring/inventory/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/monitoring/inventory/:id/archive"
+  },
+  {
+    "method": "POST",
+    "path": "/api/monitoring/inventory/:id/visits"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/attachments/:id/download"
+  },
+  {
+    "method": "POST",
+    "path": "/api/monitoring/inventory/:id/tasks"
+  },
+  {
+    "method": "PATCH",
+    "path": "/api/monitoring/tasks/:id"
+  },
+  {
+    "method": "POST",
+    "path": "/api/monitoring/inventory/:id/schedule"
+  },
+  {
+    "method": "GET",
+    "path": "/api/monitoring/export.xlsx"
+  },
+  {
+    "method": "POST",
+    "path": "/api/monitoring/import"
+  }
+]

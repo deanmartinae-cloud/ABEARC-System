@@ -1,0 +1,93 @@
+    <div id="detailView" class="hidden fade-in">
+      <div class="mb-4">
+        <button onclick="showDashboard()" class="text-gray-600 hover:text-cyan-700 dark:text-gray-300 dark:hover:text-cyan-300 flex items-center gap-2 font-bold transition bg-white dark:bg-gray-900 px-3 py-2 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 hover:border-cyan-300 dark:hover:border-cyan-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 18l-6-6 6-6"/></svg>
+          <span>Back</span>
+        </button>
+      </div>
+      <div class="enterprise-card bg-white dark:bg-gray-900 p-4 sm:p-5 mb-4">
+        <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-xs font-bold uppercase tracking-[0.16em] text-cyan-700 dark:text-cyan-300">Project record</p>
+            <h2 id="detailTitle" class="text-2xl sm:text-3xl font-black text-gray-950 dark:text-gray-50 mt-1 break-words"></h2>
+          </div>
+          <div id="detailProgress" class="inline-flex items-center rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 px-3 py-2 text-sm font-black text-cyan-700 dark:text-cyan-300"></div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-3 mt-5">
+          <div class="enterprise-muted p-3">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Requester</div>
+            <p id="detailRequester" class="mt-1 font-bold text-gray-900 dark:text-gray-100 break-words"></p>
+          </div>
+          <div class="enterprise-muted p-3">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Type / Requestee</div>
+            <p id="detailMeta" class="mt-1 font-bold text-gray-900 dark:text-gray-100 break-words"></p>
+          </div>
+          <div class="enterprise-muted p-3">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Location</div>
+            <p id="detailLocation" class="mt-1 font-bold text-gray-900 dark:text-gray-100 break-words"></p>
+          </div>
+          <div class="enterprise-muted p-3 sm:col-span-2">
+            <div class="text-[11px] font-bold uppercase tracking-wide text-gray-500 dark:text-gray-400">Dates / Assignment</div>
+            <div id="detailDates" class="mt-1 text-xs text-gray-600 dark:text-gray-300 space-y-1"></div>
+          </div>
+        </div>
+      </div>
+      <!-- Remarks Section - Shows stage and completion remarks -->
+      <div id="detailRemarksContainer" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 hidden">
+        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Project Remarks</h3>
+        <div id="detailRemarksContent" class="space-y-2"></div>
+      </div>
+      <div class="detail-stage-folder-bar px-4 pt-4 pb-0">
+        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+            <div class="detail-stage-tabs w-full lg:w-auto">
+                <button onclick="switchDetailStage('Proposal')" id="projTabProposal" class="detail-stage-tab detail-stage-tab-active detail-stage-tab-proposal flex-1 sm:flex-none px-4 py-2.5 text-sm transition"><span class="stage-tab-label inline-flex items-center justify-center gap-2"><svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><span>Proposal</span></span></button>
+                <button onclick="switchDetailStage('Implementation')" id="projTabImpl" class="detail-stage-tab detail-stage-tab-implementation flex-1 sm:flex-none px-4 py-2.5 text-sm transition"><span class="stage-tab-label inline-flex items-center justify-center gap-2"><svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><span>Implementation</span></span></button>
+                <button onclick="switchDetailStage('Monitoring')" id="projTabMonitoring" class="detail-stage-tab detail-stage-tab-monitoring flex-1 sm:flex-none px-4 py-2.5 text-sm transition"><span class="stage-tab-label inline-flex items-center justify-center gap-2"><svg class="w-4 h-4 opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg><span>Monitoring</span></span></button>
+            </div>
+            <div class="detail-stage-actions flex items-center justify-end gap-3 pb-3">
+              <button id="manageStageEditAccessBtn" onclick="openStageEditAccessModal()" class="hidden px-4 py-2 bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 rounded-lg hover:bg-cyan-900 dark:hover:bg-cyan-400 transition font-bold flex items-center gap-2">
+                Manage Stage Edit Access
+              </button>
+              <button id="exportPdfBtn" onclick="exportProjectPDF()" class="hidden px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Export Project Documents
+              </button>
+              <div id="transitionBtnArea" class="w-full sm:w-auto hidden"></div>
+            </div>
+        </div>
+        <p id="stageLockedNotice" class="hidden mt-3 text-sm text-red-700 dark:text-red-300 font-bold bg-red-50 dark:bg-red-950/30 px-3 py-2 rounded-lg border border-red-100 dark:border-red-900">Locked stage: this stage is read-only because the project has moved forward.</p>
+        <div id="temporaryStageAccessBanner" class="hidden mt-3 mb-3 rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/30 px-3 py-3 text-sm text-cyan-900 dark:text-cyan-100"></div>
+      </div>
+      <div class="detail-documents-panel bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 detail-content overflow-hidden">
+        <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div class="min-w-0">
+            <div class="text-sm font-black text-gray-950 dark:text-gray-50">Document requirements</div>
+            <div class="text-xs text-gray-500 dark:text-gray-400">Upload, review, assign ownership, and manage due dates for this stage.</div>
+          </div>
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2 w-full sm:w-auto">
+            <button id="reloadRequirementsBtn" onclick="reloadProjectRequirements()" class="hidden w-full sm:w-auto justify-center px-3 py-2 bg-white dark:bg-gray-700 border border-indigo-200 dark:border-indigo-700 text-indigo-700 dark:text-indigo-300 rounded-lg hover:bg-indigo-50 dark:hover:bg-indigo-900/30 transition font-bold text-sm flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+              Reload Requirements
+            </button>
+            <div id="projectDocumentationActions" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-2 w-full sm:w-auto">
+              <button id="uploadDocumentationBtn" onclick="openProjectDocumentationUploadModal()" class="w-full sm:w-auto justify-center px-3 py-2 rounded-lg bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 hover:bg-cyan-900 dark:hover:bg-cyan-400 transition font-bold text-sm flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1M12 12V4m0 0l-4 4m4-4l4 4"/></svg>
+                Upload Documentation
+              </button>
+              <button id="viewDocumentationBtn" onclick="openProjectDocumentationViewer()" class="w-full sm:w-auto justify-center px-3 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition font-bold text-sm flex items-center gap-2">
+                <svg class="w-4 h-4 text-cyan-700 dark:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+                <span id="viewDocumentationBtnLabel">View Documentation (0)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <table class="min-w-[700px] w-full text-left border-collapse hidden md:table">
+          <thead class="bg-gray-50 dark:bg-gray-900 text-gray-600 dark:text-gray-400 text-xs uppercase tracking-wider border-b dark:border-gray-700">
+            <tr><th class="px-6 py-4 w-1/4">Document</th><th class="px-6 py-4 w-1/5">Assigned To</th><th class="px-6 py-4 w-1/5">File</th><th class="px-6 py-4 w-1/6">Date Uploaded</th><th class="px-6 py-4 w-1/6">Date Due</th><th class="px-6 py-4 w-1/6 whitespace-nowrap">Status</th><th class="px-6 py-4 w-1/6 text-center">Actions</th></tr>
+          </thead>
+          <tbody id="documentsTable" class="divide-y divide-gray-100 dark:divide-gray-700 text-sm"></tbody>
+        </table>
+        <div id="documentsTableMobile" class="md:hidden divide-y divide-gray-200 dark:divide-gray-700"></div>
+      </div>
+    </div>
+

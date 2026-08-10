@@ -1,0 +1,19 @@
+{
+  "source_archive": "ABEARC SYSTEM.zip",
+  "backend_source_lines": 13413,
+  "frontend_source_lines": 20962,
+  "backend_modules": 40,
+  "named_route_controllers": 196,
+  "static_route_definitions": 200,
+  "runtime_route_registrations": 208,
+  "frontend_static_dom_ids": 463,
+  "frontend_script_exact_reconstruction": true,
+  "frontend_style_exact_reconstruction": true,
+  "route_catalog_exact_match": true,
+  "database_schema_compatibility": "Original schema, indexes, seeds, and migrations retained in source order.",
+  "sha256": {
+    "original_server": "f6d49d90a68e75c4d105998fc9f819e03dad6a6c69543dc492d9669c39a9a455",
+    "original_index": "4504c0af47a220a250637e67745983a86428b5021c3fa20d80699a37df46b87f",
+    "generated_index": "b062e55426c818dbe6152f133f202c79aa00bf57323ddce57d28830a44ccc02c"
+  }
+}

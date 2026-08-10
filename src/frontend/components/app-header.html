@@ -1,0 +1,76 @@
+  <header id="appHeader" class="bg-white/90 dark:bg-gray-950/90 border-b border-gray-200 dark:border-gray-800 sticky top-0 z-30 transition-colors duration-200">
+    <div id="appHeaderInner" class="max-w-[1600px] mx-auto px-3 sm:px-4 py-3 flex items-center justify-between gap-3">
+      <button id="brandHomeButton" class="min-w-0 flex items-center gap-3 text-left group" onclick="setSidebarActive('overview'); showDashboard(true, { projectsPanel: true })" aria-label="Return to projects dashboard">
+        <span id="brandBadge" class="h-10 rounded-lg bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 font-black grid place-items-center shadow-sm">
+          <span id="brandBadgeDefault">ABEARC</span>
+          <span id="brandBadgeUser" class="hidden"></span>
+        </span>
+        <span id="brandTitleWrap" class="min-w-0">
+          <span id="brandTitle" class="block text-base sm:text-lg font-black text-gray-950 dark:text-gray-50 leading-tight truncate group-hover:text-cyan-800 dark:group-hover:text-cyan-300">
+            <span id="brandDesktopTitle">Agricultural &amp; Biosystems Engineering Analytics, Records &amp; Connectivity</span>
+            <span id="brandMobileDefaultTitle">ABEARC PRSMIS</span>
+            <span id="brandMobileAuthTitle">ABEARC PRSMIS</span>
+          </span>
+          <span class="hidden sm:block -mt-0.5 text-xs leading-none font-medium text-gray-500 dark:text-gray-400 truncate">Projects &amp; Services Monitoring Information System</span>
+        </span>
+      </button>
+      <div id="headerActions" class="flex gap-2 items-center shrink-0">
+        <div id="notificationEntry" class="hidden relative">
+          <button id="notificationBellBtn" onclick="toggleNotificationsPanel()" class="relative w-10 h-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-300 hover:text-cyan-700 dark:hover:text-cyan-300 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 transition flex items-center justify-center" title="Notifications" aria-label="Notifications">
+            <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0m6 0H9"/></svg>
+            <span id="notificationBadge" class="hidden absolute -top-1.5 -right-1.5 min-w-[1.25rem] h-5 px-1 rounded-full bg-red-600 text-white text-[11px] font-bold leading-5 text-center shadow-sm border border-white"></span>
+          </button>
+          <div id="notificationPanel" class="hidden absolute right-0 mt-2 w-[24rem] max-w-[calc(100vw-2rem)] bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl overflow-hidden z-50">
+            <div class="sticky top-0 bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-4 py-3 flex items-center justify-between">
+              <div class="flex items-center gap-2 font-semibold text-gray-900 dark:text-gray-100">
+                <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0a3 3 0 11-6 0m6 0H9"/></svg>
+                Notifications
+              </div>
+              <button onclick="markAllNotificationsRead()" class="text-xs font-semibold text-cyan-700 dark:text-cyan-300 hover:underline">Mark all as read</button>
+            </div>
+            <div class="grid grid-cols-2 gap-1 p-2 bg-gray-50 dark:bg-gray-950 border-b border-gray-100 dark:border-gray-800">
+              <button id="notificationUnreadTab" onclick="setNotificationFilter('unread')" class="px-3 py-2 rounded-md text-xs font-black transition">Unread</button>
+              <button id="notificationAllTab" onclick="setNotificationFilter('all')" class="px-3 py-2 rounded-md text-xs font-black transition">All</button>
+            </div>
+            <div id="notificationList" class="max-h-[26rem] overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700"></div>
+            <button id="notificationViewAllBtn" onclick="openAllNotifications()" class="sticky bottom-0 w-full px-4 py-3 bg-gray-50 dark:bg-gray-950 text-sm font-semibold text-cyan-700 dark:text-cyan-300 hover:bg-gray-100 dark:hover:bg-gray-800 border-t border-gray-100 dark:border-gray-700">View All Notifications</button>
+          </div>
+        </div>
+        <button id="newProjectBtn" onclick="openCreateModal()" class="hidden mobile-header-secondary inline-flex items-center justify-center gap-2 h-10 px-3 sm:px-4 rounded-lg bg-cyan-800 hover:bg-cyan-900 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-gray-950 text-sm font-bold transition shadow-sm">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> <span class="hidden sm:inline">New Project</span>
+        </button>
+        <button id="myDriveHeaderBtn" onclick="showMyDrive()" class="hidden mobile-header-secondary inline-flex items-center justify-center gap-2 h-10 px-3 sm:px-4 rounded-lg bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-bold transition shadow-sm border border-gray-200 dark:border-gray-700">
+          <svg class="w-5 h-5 text-cyan-700 dark:text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
+          <span class="hidden sm:inline">My Drive</span>
+        </button>
+        <button id="settingsBtn" onclick="showSettings()" class="hidden mobile-header-secondary inline-flex items-center justify-center gap-2 h-10 px-3 sm:px-4 rounded-lg bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-200 text-sm font-bold transition shadow-sm border border-gray-200 dark:border-gray-700">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+          <span class="hidden sm:inline">Settings</span>
+        </button>
+        <div id="userInfoBar" class="hidden items-center gap-3">
+          <div id="headerUserBox" class="hidden"></div>
+          <button id="logoutBtn" onclick="logout()" class="mobile-header-secondary h-10 px-3 sm:px-4 bg-white dark:bg-gray-900 hover:bg-red-50 dark:hover:bg-red-950/30 text-red-700 dark:text-red-300 rounded-lg text-sm font-bold transition shadow-sm border border-red-200 dark:border-red-900"><span class="hidden sm:inline">Logout</span><span class="sm:hidden">Exit</span></button>
+        </div>
+        <div id="mobileHeaderMenuEntry" class="hidden md:hidden relative">
+          <button id="mobileHeaderMenuBtn" type="button" onclick="toggleMobileHeaderMenu()" class="h-10 w-10 rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center justify-center" aria-label="Open menu" aria-expanded="false">
+            <svg class="w-5 h-5 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16"/></svg>
+          </button>
+          <div id="mobileHeaderMenu" class="hidden absolute right-0 top-full mt-2 w-[min(18rem,calc(100vw-1rem))] rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-xl overflow-hidden z-50">
+            <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
+              <div id="mobileHeaderMenuName" class="text-sm font-black text-gray-900 dark:text-gray-100 truncate">User</div>
+              <div id="mobileHeaderMenuRole" class="text-xs font-semibold text-gray-500 dark:text-gray-400 capitalize truncate"></div>
+            </div>
+            <div class="p-2 space-y-1">
+              <button id="mobileMenuNewProjectBtn" onclick="closeMobileHeaderMenu(); openCreateModal()" class="hidden w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">New Project</button>
+              <button id="mobileMenuMyDriveBtn" onclick="closeMobileHeaderMenu(); showMyDrive()" class="hidden w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">My Drive</button>
+              <button id="mobileMenuMonitoringBtn" onclick="closeMobileHeaderMenu(); showMonitoringInventory()" class="hidden w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">Established Projects Monitoring</button>
+              <button id="mobileMenuCalendarBtn" onclick="closeMobileHeaderMenu(); showCalendarView()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">Calendar</button>
+              <button id="mobileMenuDashboardBtn" onclick="closeMobileHeaderMenu(); showDashboard()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">Dashboard</button>
+              <button id="mobileMenuSettingsBtn" onclick="closeMobileHeaderMenu(); showSettings()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800">Settings</button>
+              <button id="mobileMenuLogoutBtn" onclick="closeMobileHeaderMenu(); logout()" class="w-full text-left px-3 py-2.5 rounded-lg text-sm font-bold text-red-700 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30">Logout</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>

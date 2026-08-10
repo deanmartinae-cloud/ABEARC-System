@@ -1,0 +1,30 @@
+node_modules/
+data/
+deployments/
+public/
+
+# Environment and machine-specific configuration
+.env
+.env.*
+!.env.example
+deployment/
+
+# Local Synology credentials and deployment state
+deployment/nas-deploy.config.bat
+Restart_Update ABEACR Server.bat
+
+# Transient logs and database sidecar files
+*.log
+*.db-wal
+*.db-shm
+
+# Generated packages and application installers
+*.zip
+*.apk
+/ABEARC Synology NAS Installation, Update, Backup, and Rollback Guide.docx
+
+# Editor and test artifacts
+.idea/
+.vscode/
+coverage/
+*.tmp

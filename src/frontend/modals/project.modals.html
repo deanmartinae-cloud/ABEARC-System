@@ -1,0 +1,177 @@
+  <div id="projectModal" class="fixed inset-0 bg-black/40 hidden z-40 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm transition-all duration-200">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto overflow-hidden fade-in" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 sticky top-0 z-10"><h3 id="modalTitle" class="text-lg font-bold text-gray-900 dark:text-gray-100">New Project</h3><button onclick="closeModal('projectModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-2">&times;</button></div>
+      <form id="projectForm" class="p-6 space-y-4">
+        <input type="hidden" name="id" id="projId">
+        <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Project Name <span class="text-red-500">*</span></label><input name="name" required id="projName" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Name"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Project Type <span class="text-red-500">*</span></label><select name="project_type_id" required id="projType" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"></select></div>
+          <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Requestee <span class="text-red-500">*</span></label><select name="requestee_id" required id="projReq" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"></select></div>
+        </div>
+        <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Requester <span class="text-red-500">*</span></label><input name="requester" required id="projRequester" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="Requester"></div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Barangay <span class="text-red-500">*</span></label><input name="barangay" required id="projBar" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
+          <div><label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">District <span class="text-red-500">*</span></label><input name="district" required id="projDist" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 outline-none"></div>
+        </div>
+        <div class="pt-2 flex justify-between border-t border-gray-100 dark:border-gray-700 mt-4 pt-4">
+            <button type="button" id="btnDeleteModal" onclick="confirmDeleteProject()" class="hidden p-2 bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/50 transition flex items-center justify-center"></button>
+            <div class="flex gap-3 ml-auto">
+                <button type="button" onclick="closeModal('projectModal')" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+                <button type="submit" id="btnSubmitProj" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow-md">Create</button>
+            </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="uploadModal" class="fixed inset-0 bg-black/40 hidden z-40 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm transition-all duration-200">
+    <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto overflow-hidden fade-in" onclick="event.stopPropagation()">
+      <div class="p-6 border-b border-gray-100 dark:border-gray-700 flex justify-between items-center bg-gray-50 dark:bg-gray-900 sticky top-0 z-10"><h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Upload</h3><button onclick="closeModal('uploadModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-2">&times;</button></div>
+      <form id="uploadForm" class="p-6 space-y-5">
+        <input type="hidden" name="docId">
+        <input id="uploadDocType" disabled class="w-full bg-gray-100 dark:bg-gray-600 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 text-gray-500 dark:text-gray-300">
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">File</label>
+          <div id="uploadDropZone" role="button" tabindex="0" aria-label="Drag and drop file here, or click to browse" class="group rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 px-4 py-5 text-center cursor-pointer transition hover:border-cyan-500 hover:bg-cyan-50/60 dark:hover:border-cyan-400 dark:hover:bg-cyan-950/20 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800">
+            <div class="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-cyan-700 dark:text-cyan-300 shadow-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01.88-7.903A5 5 0 1117.9 9H18a3 3 0 010 6h-1m-4-4v8m0-8l-3 3m3-3l3 3"/></svg>
+            </div>
+            <div id="uploadDropText" class="text-sm font-bold text-gray-800 dark:text-gray-100">Drag and drop file here, or click to browse</div>
+            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Allowed files: PDF, JPG/JPEG, and PNG only</div>
+            <div class="mt-1 text-xs text-gray-400 dark:text-gray-500">Maximum size: 50MB</div>
+            <div id="uploadSelectedFile" class="hidden mt-3 rounded-lg border border-cyan-200 dark:border-cyan-800 bg-white dark:bg-gray-800 px-3 py-2 text-xs font-semibold text-cyan-800 dark:text-cyan-200 break-words"></div>
+          </div>
+          <input type="file" id="uploadFile" name="file" accept=".pdf,.png,.jpg,.jpeg,application/pdf,image/png,image/jpeg" class="sr-only">
+        </div>
+        <div class="pt-2 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700 mt-4 pt-4">
+          <button type="button" onclick="closeModal('uploadModal')" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">Cancel</button>
+          <button type="submit" id="btnUpload" class="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 font-semibold shadow-md">Upload</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="projectDocumentationUploadModal" class="fixed inset-0 bg-black/40 hidden z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm transition-all duration-200">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full sm:max-w-2xl max-h-[92vh] overflow-y-auto overflow-hidden fade-in" onclick="event.stopPropagation()">
+      <div class="p-5 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 sticky top-0 z-10 flex items-center justify-between gap-3">
+        <div>
+          <h3 id="projectDocumentationUploadTitle" class="text-lg font-black text-gray-900 dark:text-gray-100">Upload Project Documentation</h3>
+          <p id="projectDocumentationUploadSubtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1">Photos and videos for the active stage.</p>
+        </div>
+        <button onclick="closeModal('projectDocumentationUploadModal')" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-2">&times;</button>
+      </div>
+      <form id="projectDocumentationUploadForm" class="p-5 space-y-4">
+        <input type="hidden" id="projectDocumentationStage">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Stage</label>
+            <input id="projectDocumentationStageDisplay" disabled class="w-full border border-gray-200 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 rounded-lg px-3 py-2.5 font-bold">
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Category</label>
+            <select id="projectDocumentationCategory" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-cyan-500 outline-none">
+              <option>Site Validation</option>
+              <option>Implementation</option>
+              <option>Monitoring</option>
+              <option>Completion</option>
+              <option>Others</option>
+            </select>
+          </div>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Caption / Remarks</label>
+          <textarea id="projectDocumentationCaption" rows="3" maxlength="2000" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-cyan-500 outline-none" placeholder="Optional notes for this upload batch"></textarea>
+        </div>
+        <div>
+          <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1.5">Files</label>
+          <div id="projectDocumentationDropZone" role="button" tabindex="0" class="rounded-xl border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-950/40 px-4 py-6 text-center cursor-pointer transition hover:border-cyan-500 hover:bg-cyan-50/60 dark:hover:bg-cyan-950/20 focus:outline-none focus:ring-2 focus:ring-cyan-500">
+            <div class="mx-auto mb-2 flex h-11 w-11 items-center justify-center rounded-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-cyan-700 dark:text-cyan-300 shadow-sm">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01.88-7.903A5 5 0 1117.9 9H18a3 3 0 010 6h-1m-4-4v8m0-8l-3 3m3-3l3 3"/></svg>
+            </div>
+            <div class="text-sm font-black text-gray-900 dark:text-gray-100">Drop photos/videos here or click to browse</div>
+            <div class="mt-1 text-xs text-gray-500 dark:text-gray-400">Photos: JPG, JPEG, PNG, WEBP up to 25MB. Videos: MP4, MOV, WEBM up to 500MB. Max 20 files.</div>
+          </div>
+          <input id="projectDocumentationFiles" type="file" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm" class="sr-only">
+          <div id="projectDocumentationSelectedFiles" class="mt-3 space-y-2"></div>
+        </div>
+        <div id="projectDocumentationUploadProgress" class="hidden rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/30 p-3">
+          <div class="flex items-center justify-between text-xs font-bold text-cyan-900 dark:text-cyan-100 mb-2">
+            <span>Uploading documentation...</span>
+            <span id="projectDocumentationUploadProgressText">Working</span>
+          </div>
+          <div class="h-2 rounded-full bg-white dark:bg-gray-800 overflow-hidden">
+            <div class="h-full w-1/2 bg-cyan-700 dark:bg-cyan-400 animate-pulse rounded-full"></div>
+          </div>
+        </div>
+        <div class="pt-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+          <button type="button" onclick="closeModal('projectDocumentationUploadModal')" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 font-bold">Cancel</button>
+          <button type="submit" id="projectDocumentationUploadSubmit" class="px-5 py-2.5 bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 rounded-lg hover:bg-cyan-900 dark:hover:bg-cyan-400 font-bold">Upload Documentation</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="projectDocumentationViewerModal" class="fixed inset-0 bg-black/50 hidden z-50 flex items-stretch sm:items-center justify-center sm:p-4 backdrop-blur-sm transition-all duration-200">
+    <div class="bg-white dark:bg-gray-900 shadow-2xl w-full h-full sm:w-[94vw] sm:h-[90vh] sm:rounded-2xl overflow-hidden fade-in flex flex-col border border-gray-200 dark:border-gray-700" onclick="event.stopPropagation()">
+      <div class="px-4 sm:px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 flex flex-col lg:flex-row lg:items-center gap-3">
+        <div class="min-w-0 flex-1">
+          <h3 id="projectDocumentationViewerTitle" class="text-lg font-black text-gray-900 dark:text-gray-100 truncate">Project Documentation</h3>
+          <p id="projectDocumentationViewerSubtitle" class="text-xs text-gray-500 dark:text-gray-400">Stage documentation photos and videos.</p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <select id="projectDocumentationMediaFilter" onchange="loadProjectDocumentationViewer()" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-bold">
+            <option value="">All</option>
+            <option value="photo">Photos</option>
+            <option value="video">Videos</option>
+          </select>
+          <select id="projectDocumentationCategoryFilter" onchange="loadProjectDocumentationViewer()" class="border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg px-3 py-2 text-sm font-bold">
+            <option value="">All Categories</option>
+            <option>Site Validation</option>
+            <option>Implementation</option>
+            <option>Monitoring</option>
+            <option>Completion</option>
+            <option>Others</option>
+          </select>
+          <button type="button" onclick="closeModal('projectDocumentationViewerModal')" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 font-bold">Close</button>
+        </div>
+      </div>
+      <div id="projectDocumentationGallery" class="flex-1 overflow-y-auto p-4 bg-gray-50 dark:bg-gray-950"></div>
+    </div>
+  </div>
+
+  <div id="projectDocumentationPreviewModal" class="fixed inset-0 bg-black/75 hidden z-[60] flex items-center justify-center p-4 backdrop-blur-sm">
+    <div class="w-full max-w-5xl max-h-[92vh] bg-white dark:bg-gray-950 rounded-2xl overflow-hidden shadow-2xl flex flex-col" onclick="event.stopPropagation()">
+      <div class="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h3 id="projectDocumentationPreviewTitle" class="font-black text-gray-900 dark:text-gray-100 truncate">Preview</h3>
+          <p id="projectDocumentationPreviewMeta" class="text-xs text-gray-500 dark:text-gray-400"></p>
+        </div>
+        <button type="button" onclick="closeModal('projectDocumentationPreviewModal')" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none p-2">&times;</button>
+      </div>
+      <div id="projectDocumentationPreviewBody" class="flex-1 min-h-[320px] bg-black flex items-center justify-center overflow-auto"></div>
+    </div>
+  </div>
+
+  <div id="fileViewerModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-stretch sm:items-center justify-center sm:p-4 backdrop-blur-sm transition-all duration-200">
+    <div class="bg-white dark:bg-gray-900 shadow-2xl w-full h-full sm:w-[90vw] sm:h-[90vh] sm:rounded-2xl overflow-hidden fade-in flex flex-col border border-gray-200 dark:border-gray-700" onclick="event.stopPropagation()">
+      <div class="px-4 sm:px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 flex items-center gap-3 sticky top-0 z-10">
+        <button type="button" onclick="closeFileViewer()" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 font-bold text-sm">Back to Project</button>
+        <div class="min-w-0 flex-1">
+          <h3 id="fileViewerTitle" class="text-sm sm:text-base font-black text-gray-900 dark:text-gray-100 truncate">File Preview</h3>
+          <p id="fileViewerMeta" class="text-xs text-gray-500 dark:text-gray-400">Loading preview...</p>
+        </div>
+        <button type="button" id="fileViewerDownloadBtn" onclick="downloadCurrentFileViewerFile()" class="px-3 sm:px-4 py-2 rounded-lg bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 hover:bg-cyan-900 dark:hover:bg-cyan-400 font-bold text-sm disabled:opacity-60 disabled:cursor-not-allowed">Download File</button>
+        <button type="button" onclick="closeFileViewer()" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none p-2" aria-label="Close file preview">&times;</button>
+      </div>
+      <div id="fileViewerBody" class="flex-1 min-h-0 bg-gray-100 dark:bg-gray-950 overflow-auto p-3 sm:p-4">
+        <div class="h-full min-h-[320px] flex items-center justify-center text-sm text-gray-600 dark:text-gray-300">
+          <span class="spinner mr-2"></span> Loading preview...
+        </div>
+      </div>
+      <div class="px-4 sm:px-5 py-3 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 flex justify-end gap-3 sm:hidden">
+        <button type="button" onclick="closeFileViewer()" class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg bg-white dark:bg-gray-800 font-bold">Close</button>
+        <button type="button" onclick="downloadCurrentFileViewerFile()" class="flex-1 px-4 py-2.5 bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 rounded-lg font-bold">Download</button>
+      </div>
+    </div>
+  </div>
+
