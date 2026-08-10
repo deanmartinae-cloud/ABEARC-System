@@ -96,18 +96,9 @@ The changed existing-file categories are:
 
 No existing project, document, My Drive, Geotag Map, authentication, deployment BAT, or unrelated Calendar workflow was intentionally redesigned.
 
-## Packaged inventory validation
+## Inventory-data validation
 
-Validated from `src/backend/assets/CAgrO-ABED_AFME_Inventory_January_2026.xlsx`:
-
-- 218 unique monitoring inventory records
-- 92 historical monitoring visits
-- 132 records with complete latitude and longitude
-- 76 blank source conditions normalized to `Unverified`
-- 4 source records classified as `Non-operational`
-- original remarks, actions/recommendations, and preceding reports retained
-
-The startup seed runs only when `MonitoringInventory` is empty. It is transactional and does not replace or duplicate an existing monitoring registry.
+No operational inventory workbook is packaged with the repository and a fresh database does not preload monitoring records. Excel inventory is accepted only through the privilege-protected runtime import workflow.
 
 ## Automated checks completed
 
@@ -121,7 +112,7 @@ The startup seed runs only when `MonitoringInventory` is empty. It is transactio
 - Schedule route tests: multi-user participants, creator ownership, past-date confirmation, time validation, invalid-user rejection, and master-assignee preservation passed
 - Calendar synchronization tests: Manila date conversion, move, cancel/delete, next-event selection, and visit-frequency fallback passed
 - Visit/import tests: required findings, coordinate and next-date validation, embedded-task validation and privilege enforcement, transaction commit/rollback, and all-or-nothing import passed
-- SQLite seed simulation: 218 inventory records and 92 historical visits passed with no foreign-key violations
+- Fresh-database validation: no packaged monitoring inventory is inserted; eligible Monitoring/Completed projects still synchronize through Project Control
 
 ## Mandatory GeoCam visit-confirmation update
 
@@ -138,7 +129,7 @@ Focused validation covered:
 - transaction linking and single-use race guard;
 - monitoring-history display of confirmation thumbnails;
 - preservation of optional supporting attachments;
-- unchanged packaged AFME workbook hash, 218 inventory records, and 92 imported visits.
+- unchanged monitoring schema and privilege-protected runtime import workflow.
 
 ## Runtime limitation
 

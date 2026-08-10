@@ -9,6 +9,9 @@ public/
 !.env.example
 deployment/
 
+# Operational source workbooks must be imported at runtime, never committed
+/src/backend/assets/CAgrO-ABED_AFME_Inventory_January_2026.xlsx
+
 # Local Synology credentials and deployment state
 deployment/nas-deploy.config.bat
 Restart_Update ABEACR Server.bat

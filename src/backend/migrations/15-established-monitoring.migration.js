@@ -75,11 +75,6 @@ const ensureEstablishedMonitoringMigration = async () => {
     }
   }
 
-  const result = await seedInitialMonitoringInventory();
-  if (result?.skipped_existing) {
-    console.log('Established monitoring inventory already contains data; packaged AFME seed was not reapplied.');
-  }
-
   const projectRows = await dbAll(`SELECT id FROM Projects WHERE stage IN ('Monitoring', 'Completed')`);
   for (const project of projectRows) {
     await syncProjectToMonitoringInventory(project.id, null);

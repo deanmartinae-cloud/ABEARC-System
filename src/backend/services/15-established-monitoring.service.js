@@ -1,6 +1,3 @@
-const INITIAL_MONITORING_INVENTORY_SOURCE = 'CAgrO-ABED AFME Inventory and Monitoring January 2026(1).xlsx';
-const INITIAL_MONITORING_WORKBOOK_PATH = path.join(__dirname, 'src', 'backend', 'assets', 'CAgrO-ABED_AFME_Inventory_January_2026.xlsx');
-
 const monitoringManilaDateKey = (date = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila' }).format(date);
 
 const parseMonitoringDateKey = (value) => {
@@ -622,98 +619,6 @@ const syncProjectToMonitoringInventory = async (projectId, createdByUserId = nul
     WHERE id = ?
   `, [...values, record.date_completed, new Date().toISOString(), existing.id]);
   return existing.id;
-};
-
-const parseInitialMonitoringWorkbook = () => {
-  if (!fs.existsSync(INITIAL_MONITORING_WORKBOOK_PATH)) throw new Error(`Initial monitoring workbook is missing: ${INITIAL_MONITORING_WORKBOOK_PATH}`);
-  const workbook = XLSX.readFile(INITIAL_MONITORING_WORKBOOK_PATH, { cellDates: false });
-  const sheet = workbook.Sheets[workbook.SheetNames[0]];
-  const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, raw: true, defval: null });
-  const headerIndex = rows.findIndex(row => String(row?.[0] || '').trim() === '#' && /machinery|asset|project/i.test(String(row?.[1] || '')));
-  if (headerIndex < 0) throw new Error('The packaged AFME workbook format is not recognized.');
-  const records = [];
-  for (let index = headerIndex + 2; index < rows.length; index += 1) {
-    const row = rows[index] || [];
-    const assetName = String(row[1] || '').trim();
-    if (!assetName) continue;
-    const sourceRowNumber = Number(row[0]) || records.length + 1;
-    const lastMonitoring = parseMonitoringDateKey(row[28]);
-    const nextMonitoring = lastMonitoring ? addMonthsToDateKey(lastMonitoring, 12) : null;
-    records.push({
-      inventory_code: `AFME-${String(sourceRowNumber).padStart(4, '0')}`,
-      source_row_number: sourceRowNumber,
-      source_name: INITIAL_MONITORING_INVENTORY_SOURCE,
-      asset_type: 'Machinery & Equipment',
-      asset_name: assetName,
-      commodity: row[2] == null ? null : String(row[2]),
-      registration_no: row[3] == null ? null : String(row[3]),
-      source_of_fund: row[4] == null ? null : String(row[4]),
-      year_funded: row[5] == null ? null : String(row[5]),
-      supplier: row[6] == null ? null : String(row[6]),
-      capacity: row[7] == null ? null : String(row[7]),
-      machine_brand: row[8] == null ? null : String(row[8]),
-      machine_model: row[9] == null ? null : String(row[9]),
-      machine_serial_no: row[10] == null ? null : String(row[10]),
-      engine_brand: row[11] == null ? null : String(row[11]),
-      engine_model: row[12] == null ? null : String(row[12]),
-      engine_serial_no: row[13] == null ? null : String(row[13]),
-      engine_make: row[14] == null ? null : String(row[14]),
-      rated_power: row[15] == null ? null : String(row[15]),
-      recipient_organization: row[16] == null ? null : String(row[16]),
-      contact_person: row[17] == null ? null : String(row[17]),
-      designation: row[18] == null ? null : String(row[18]),
-      contact_no: row[19] == null ? null : String(row[19]),
-      purok: row[20] == null ? null : String(row[20]),
-      barangay: row[21] == null ? null : String(row[21]),
-      district: row[22] == null ? null : String(row[22]),
-      latitude: parseMonitoringCoordinate(row[23]),
-      longitude: parseMonitoringCoordinate(row[24]),
-      latitude_raw: row[23] == null ? null : String(row[23]),
-      longitude_raw: row[24] == null ? null : String(row[24]),
-      condition_status: normalizeMonitoringCondition(row[25]),
-      date_received: parseMonitoringDateKey(row[26]),
-      monitoring_frequency_months: 12,
-      last_monitoring_date: lastMonitoring,
-      next_monitoring_date: nextMonitoring,
-      lifecycle_status: 'Active',
-      baseline_remarks: row[29] == null ? null : String(row[29]),
-      baseline_actions_recommendations: row[30] == null ? null : String(row[30]),
-      baseline_preceding_reports: row[31] == null ? null : String(row[31])
-    });
-  }
-  return records;
-};
-
-const seedInitialMonitoringInventory = async () => {
-  const count = await dbGet(`SELECT COUNT(*) AS count FROM MonitoringInventory`);
-  if (Number(count?.count || 0) > 0) return { seeded: 0, skipped_existing: true };
-  const records = parseInitialMonitoringWorkbook();
-  await dbRun('BEGIN IMMEDIATE');
-  try {
-    let seeded = 0;
-    let visits = 0;
-    for (const item of records) {
-      const inventoryId = await insertMonitoringInventoryRecord(item, null);
-      if (item.last_monitoring_date) {
-        await dbRun(`INSERT INTO MonitoringVisits (
-          inventory_id, monitoring_date, monitoring_type, condition_status, findings, actions_recommendations,
-          preceding_reports, next_monitoring_date, inspector_username, finalized, created_at, updated_at
-        ) VALUES (?, ?, 'Imported Monitoring Record', ?, ?, ?, ?, ?, 'Imported from Excel', 1, ?, ?)`, [
-          inventoryId, item.last_monitoring_date, item.condition_status, item.baseline_remarks,
-          item.baseline_actions_recommendations, item.baseline_preceding_reports, item.next_monitoring_date,
-          new Date().toISOString(), new Date().toISOString()
-        ]);
-        visits += 1;
-      }
-      seeded += 1;
-    }
-    await dbRun('COMMIT');
-    console.log(`Seeded ${seeded} monitoring inventory records and ${visits} historical visits from the AFME workbook.`);
-    return { seeded, visits };
-  } catch (error) {
-    await dbRun('ROLLBACK').catch(() => {});
-    throw error;
-  }
 };
 
 const monitoringCalendarDateKey = (value) => {

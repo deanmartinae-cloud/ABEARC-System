@@ -2,17 +2,11 @@
 
 ABEARC v1.45 adds a permanent registry and recurring monitoring workflow for completed or established machinery, infrastructure, irrigation systems, facilities, vehicles, and other project outputs.
 
-## Packaged inventory data
+## Inventory data
 
-The release includes `src/backend/assets/CAgrO-ABED_AFME_Inventory_January_2026.xlsx`. On startup, ABEARC imports the workbook only when `MonitoringInventory` is empty.
+The repository does not include operational monitoring inventory or source workbooks. A fresh database starts with an empty monitoring registry, except for eligible projects synchronized from Project Control. Authorized users can add records manually or import an approved Excel workbook at runtime.
 
-- 218 machinery and equipment records
-- 92 imported historical monitoring visits
-- Original recipient, location, coordinate, condition, technical specification, remarks, recommendations, and preceding-report fields retained
-- Stable codes `AFME-0001` through `AFME-0218`
-- Blank condition fields normalized to `Unverified`
-
-The seed is transactional and idempotent: an existing monitoring registry is never overwritten or duplicated.
+Operational workbooks can contain contact, equipment, and precise-location data. Keep them outside Git and distribute them only through approved protected storage.
 
 ## Main capabilities
 
