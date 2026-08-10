@@ -528,8 +528,6 @@ db.serialize(() => {
     FOREIGN KEY(owner_user_id) REFERENCES Users(id),
     FOREIGN KEY(parent_folder_id) REFERENCES UserDriveFolders(id)
   )`);
-  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_drive_upload_idempotency ON UserDriveFiles(owner_user_id, upload_idempotency_key) WHERE upload_idempotency_key IS NOT NULL`);
-
   db.run(`CREATE TABLE IF NOT EXISTS UserDriveShares (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     file_id INTEGER NOT NULL,
