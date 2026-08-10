@@ -1642,12 +1642,6 @@
     }
 
     function navigateTo(view, options = {}, pushHistory = true) {
-      if (Number(currentUser?.must_change_password) === 1
-          && !(view === 'settings' && options.section === 'change-password')) {
-        view = 'settings';
-        options = { section: 'change-password' };
-        pushHistory = false;
-      }
       if (appCurrentView === 'map' && view !== 'map') window.resetAbearcMapThumbnailMoves?.();
       hideViews();
       if (view !== 'dashboard') {

@@ -7,7 +7,7 @@ const __routeController001 = (req, res) => {
   if (!username || !password) return res.status(400).json({ error: 'Username and password are required.' });
 
   db.get(`SELECT id, username, password_hash, role, theme_preference, avatar_path,
-                 is_system_account, hidden_from_workflows, must_change_password
+                 is_system_account, hidden_from_workflows
           FROM Users WHERE username = ?`, [username], (err, user) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (!user || !verifyPassword(password, user.password_hash)) {
@@ -92,16 +92,10 @@ const __routeController003 = (req, res) => {
   if (!data) return unauthorized(res, 'QR login code is invalid or expired.');
 
   db.get(`SELECT id, username, role, theme_preference, avatar_path,
-                 is_system_account, hidden_from_workflows, must_change_password
+                 is_system_account, hidden_from_workflows
           FROM Users WHERE id = ?`, [Number(data.sub)], (err, user) => {
     if (err) return res.status(500).json({ error: 'DB error' });
     if (!user) return unauthorized(res, 'QR login user was not found.');
-    if (Number(user.must_change_password) === 1) {
-      return res.status(403).json({
-        error: 'Change the temporary password in the ABEARC web application before using QR login.',
-        code: 'PASSWORD_CHANGE_REQUIRED'
-      });
-    }
 
     const token = generateSessionToken();
     const now = new Date().toISOString();

@@ -42,7 +42,6 @@ const ensureUsersSystemRoleMigration = async () => {
   if (supportsSystemRole) {
     await addColumnIfMissing('Users', 'is_system_account', 'INTEGER DEFAULT 0');
     await addColumnIfMissing('Users', 'hidden_from_workflows', 'INTEGER DEFAULT 0');
-    await addColumnIfMissing('Users', 'must_change_password', 'INTEGER DEFAULT 0');
     await dbRun(`UPDATE Users
                  SET is_system_account = CASE WHEN role = 'system' THEN 1 ELSE COALESCE(is_system_account, 0) END,
                      hidden_from_workflows = CASE WHEN role = 'system' THEN 1 ELSE COALESCE(hidden_from_workflows, 0) END`);
@@ -59,7 +58,6 @@ const ensureUsersSystemRoleMigration = async () => {
   const createdAtExpr = expr('created_at', 'CURRENT_TIMESTAMP');
   const isSystemExpr = columnNames.has('is_system_account') ? 'COALESCE(is_system_account, 0)' : '0';
   const hiddenExpr = columnNames.has('hidden_from_workflows') ? 'COALESCE(hidden_from_workflows, 0)' : '0';
-  const mustChangePasswordExpr = columnNames.has('must_change_password') ? 'COALESCE(must_change_password, 0)' : '0';
 
   console.log('Migrating Users table to support the System / Maintenance role...');
 
@@ -86,12 +84,11 @@ const ensureUsersSystemRoleMigration = async () => {
               direct_superior_user_id INTEGER,
               is_system_account INTEGER DEFAULT 0,
               hidden_from_workflows INTEGER DEFAULT 0,
-              must_change_password INTEGER DEFAULT 0,
               created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             );
             INSERT INTO Users_system_role_migration (
               id, username, password_hash, role, theme_preference, avatar_path,
-              direct_superior_user_id, is_system_account, hidden_from_workflows, must_change_password, created_at
+              direct_superior_user_id, is_system_account, hidden_from_workflows, created_at
             )
             SELECT
               id,
@@ -103,7 +100,6 @@ const ensureUsersSystemRoleMigration = async () => {
               ${directSuperiorExpr},
               CASE WHEN role = 'system' THEN 1 ELSE ${isSystemExpr} END,
               CASE WHEN role = 'system' THEN 1 ELSE ${hiddenExpr} END,
-              ${mustChangePasswordExpr},
               ${createdAtExpr}
             FROM Users;
             DROP TABLE Users;
@@ -126,57 +122,3 @@ const ensureUsersSystemRoleMigration = async () => {
                    hidden_from_workflows = CASE WHEN role = 'system' THEN 1 ELSE COALESCE(hidden_from_workflows, 0) END`);
 };
 
-const ensureFirstRunAdministrator = async () => {
-  await addColumnIfMissing('Users', 'must_change_password', 'INTEGER DEFAULT 0');
-  const countRow = await dbGet(`SELECT COUNT(*) AS count FROM Users`);
-  if (Number(countRow?.count || 0) > 0) return;
-
-  const username = String(process.env.ABEARC_BOOTSTRAP_USERNAME || 'superadmin').trim();
-  if (!/^[A-Za-z0-9._-]{3,64}$/.test(username)) {
-    throw new Error('ABEARC_BOOTSTRAP_USERNAME must be 3-64 characters using letters, numbers, dot, underscore, or hyphen.');
-  }
-
-  const suppliedPassword = process.env.ABEARC_BOOTSTRAP_PASSWORD;
-  if (suppliedPassword !== undefined && String(suppliedPassword).length < 12) {
-    throw new Error('ABEARC_BOOTSTRAP_PASSWORD must contain at least 12 characters.');
-  }
-
-  const generatedPassword = suppliedPassword === undefined;
-  const temporaryPassword = generatedPassword
-    ? crypto.randomBytes(32).toString('base64url')
-    : String(suppliedPassword);
-
-  let generatedCredentialsWritten = false;
-  if (generatedPassword) {
-    const credentials = [
-      'ABEARC first-run administrator credentials',
-      `Username: ${username}`,
-      `Temporary password: ${temporaryPassword}`,
-      'Password change required: yes',
-      '',
-      'Sign in once, change the password immediately, and then delete this file.'
-    ].join('\n');
-    fs.writeFileSync(BOOTSTRAP_CREDENTIALS_PATH, credentials, { encoding: 'utf8', mode: 0o600 });
-    try { fs.chmodSync(BOOTSTRAP_CREDENTIALS_PATH, 0o600); } catch (_) {}
-    generatedCredentialsWritten = true;
-  }
-
-  try {
-    await dbRun(
-      `INSERT INTO Users (username, password_hash, role, must_change_password)
-       VALUES (?, ?, 'superadmin', 1)`,
-      [username, hashPassword(temporaryPassword)]
-    );
-  } catch (bootstrapErr) {
-    if (generatedCredentialsWritten) {
-      try { fs.rmSync(BOOTSTRAP_CREDENTIALS_PATH, { force: true }); } catch (_) {}
-    }
-    throw bootstrapErr;
-  }
-
-  if (generatedPassword) {
-    console.warn(`First-run administrator created. Temporary credentials were written to ${BOOTSTRAP_CREDENTIALS_PATH}`);
-  } else {
-    console.warn(`First-run administrator "${username}" created from ABEARC_BOOTSTRAP_PASSWORD. A password change is required at first login.`);
-  }
-};

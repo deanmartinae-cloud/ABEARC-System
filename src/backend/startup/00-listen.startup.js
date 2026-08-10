@@ -1,7 +1,6 @@
 db.wait(async () => {
   try {
     await ensureUsersSystemRoleMigration();
-    await ensureFirstRunAdministrator();
     await ensureCalendarEventTypeDetailMigration();
     await removeNonSystemFeedbackNotifications();
     await ensureEstablishedMonitoringMigration();

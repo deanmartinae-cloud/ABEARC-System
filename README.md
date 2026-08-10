@@ -60,21 +60,6 @@ npm start
 
 `npm run check` validates the modular structure, preserved frontend identifiers, route wiring, and authentication order before deployment.
 
-## First-run administrator
-
-ABEARC does not create accounts with built-in passwords. When the `Users` table is empty, startup creates one `superadmin` account using the following bootstrap settings:
-
-- `ABEARC_BOOTSTRAP_USERNAME` - optional username; defaults to `superadmin`.
-- `ABEARC_BOOTSTRAP_PASSWORD` - optional temporary password of at least 12 characters.
-
-If no bootstrap password is supplied, ABEARC generates a cryptographically random password and writes the one-time credentials to `data/.bootstrap-admin-credentials` (or `/data/.bootstrap-admin-credentials` in Docker). The password is not printed to the application log.
-
-Sign in with the temporary credentials and change the password immediately. Until that change is complete, the account cannot use protected ABEARC features or mobile QR login. Changing the password revokes the bootstrap session and removes the generated credentials file.
-
-If `ABEARC_BOOTSTRAP_PASSWORD` was supplied by the deployment environment, remove it after the first successful startup so the temporary secret is not retained in the service configuration.
-
-Administrators creating an account or resetting another user's password also set a temporary password; that user must replace it at the next login.
-
 ## Runtime data
 
 Operational data is intentionally kept outside version control. The following are not committed:

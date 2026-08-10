@@ -107,25 +107,6 @@ try {
   if (!(loginIndex >= 0 && protectionIndex > loginIndex && protectedIndex > protectionIndex)) {
     throw new Error(`API middleware order changed: login=${loginIndex}, protection=${protectionIndex}, protected=${protectedIndex}.`);
   }
-  const schemaSource = realFs.readFileSync(path.join(ROOT, 'src', 'backend', 'models', '00-schema.models.js'), 'utf8');
-  const migrationSource = realFs.readFileSync(path.join(ROOT, 'src', 'backend', 'migrations', '00-runtime.migrations.js'), 'utf8');
-  const authMiddlewareSource = realFs.readFileSync(path.join(ROOT, 'src', 'backend', 'middleware', '00-auth-authorization.middleware.js'), 'utf8');
-  const forbiddenSeedPatterns = [
-    /hashPassword\(\s*['"]superadmin/i,
-    /hashPassword\(\s*['"]admin/i,
-    /hashPassword\(\s*['"]user/i
-  ];
-  if (forbiddenSeedPatterns.some(pattern => pattern.test(schemaSource))) {
-    throw new Error('Built-in default user passwords must not be present in the schema seed.');
-  }
-  if (!migrationSource.includes('ABEARC_BOOTSTRAP_PASSWORD')
-      || !migrationSource.includes("crypto.randomBytes(32)")
-      || !/INSERT INTO Users[\s\S]*must_change_password\)[\s\S]*VALUES \(\?, \?, 'superadmin', 1\)/.test(migrationSource)) {
-    throw new Error('Secure first-run administrator bootstrap wiring is missing.');
-  }
-  if (!authMiddlewareSource.includes("code: 'PASSWORD_CHANGE_REQUIRED'")) {
-    throw new Error('Forced password-change API enforcement is missing.');
-  }
   console.log(`Runtime wiring check passed: ${routeCount} routes; public authentication remains before API protection.`);
 } finally {
   Module._load = originalLoad;

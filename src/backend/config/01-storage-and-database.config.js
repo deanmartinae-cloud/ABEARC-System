@@ -27,7 +27,6 @@ const MAP_ZONING_DB_PATH = path.join(MAP_ZONING_DIR, 'zones.db');
 const MAP_ZONING_PACKAGED_DB_PATH = path.join(__dirname, 'src', 'backend', 'assets', 'zones.dbz');
 const BACKUPS_DIR = path.join(DATA_DIR, 'backups');
 const DB_PATH = path.join(DATA_DIR, 'data.db');
-const BOOTSTRAP_CREDENTIALS_PATH = path.join(DATA_DIR, '.bootstrap-admin-credentials');
 const SYSTEM_RESTORE_PASSWORD = 'CAgrO+2026';
 const ALLOWED_UPLOAD_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
 const AVATAR_ALLOWED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];

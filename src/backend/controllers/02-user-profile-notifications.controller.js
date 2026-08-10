@@ -44,7 +44,7 @@ const __routeController045 = (req, res) => {
     }
     try { fs.rmSync(req.file.path, { force: true }); } catch (_) {}
     const updated = await dbGet(`SELECT id, username, role, theme_preference, avatar_path,
-                                        is_system_account, hidden_from_workflows, must_change_password
+                                        is_system_account, hidden_from_workflows
                                  FROM Users WHERE id = ?`, [req.user.id]);
     res.json({ success: true, user: userPublicFields(updated) });
   } catch (err) {
@@ -61,7 +61,7 @@ const __routeController046 = async (req, res) => {
     const oldPath = safeAvatarAbsolutePath(existing?.avatar_path);
     if (oldPath && fs.existsSync(oldPath)) fs.rmSync(oldPath, { force: true });
     const updated = await dbGet(`SELECT id, username, role, theme_preference, avatar_path,
-                                        is_system_account, hidden_from_workflows, must_change_password
+                                        is_system_account, hidden_from_workflows
                                  FROM Users WHERE id = ?`, [req.user.id]);
     res.json({ success: true, user: userPublicFields(updated) });
   } catch (err) {
@@ -71,7 +71,7 @@ const __routeController046 = async (req, res) => {
 
 const __routeController047 = (req, res) => {
   db.get(`SELECT id, username, role, theme_preference, avatar_path,
-                 is_system_account, hidden_from_workflows, must_change_password
+                 is_system_account, hidden_from_workflows
           FROM Users WHERE id = ?`, [req.user.id], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
     
@@ -312,7 +312,7 @@ const __routeController057 = (req, res) => {
   }
   
   // Verify current password
-  db.get("SELECT id, username, password_hash, role, must_change_password FROM Users WHERE id = ?", [req.user.id], (err, user) => {
+  db.get("SELECT id, username, password_hash, role FROM Users WHERE id = ?", [req.user.id], (err, user) => {
     if (err) {
       console.error('Database error fetching user:', err);
       return res.status(500).json({ error: 'Database error' });
@@ -330,7 +330,7 @@ const __routeController057 = (req, res) => {
     const newPasswordHash = hashPassword(newPassword);
     console.log('Updating password for user:', user.username, 'userId:', req.user.id);
     
-    db.run("UPDATE Users SET password_hash = ?, must_change_password = 0 WHERE id = ?", [newPasswordHash, req.user.id], function(err) {
+    db.run("UPDATE Users SET password_hash = ? WHERE id = ?", [newPasswordHash, req.user.id], function(err) {
       if (err) {
         console.error('Database error updating password:', err);
         return res.status(500).json({ error: 'Failed to update password' });
@@ -367,13 +367,7 @@ const __routeController057 = (req, res) => {
         includeActor: true
       });
       
-      if (Number(user.must_change_password) === 1 && user.role === 'superadmin' && fs.existsSync(BOOTSTRAP_CREDENTIALS_PATH)) {
-        try { fs.rmSync(BOOTSTRAP_CREDENTIALS_PATH, { force: true }); } catch (_) {}
-      }
-      db.run("DELETE FROM UserSessions WHERE user_id = ?", [req.user.id], (sessionErr) => {
-        if (sessionErr) console.error('Failed to revoke sessions after password change:', sessionErr);
-        res.json({ success: true, message: 'Password changed successfully. Please sign in again.' });
-      });
+      res.json({ success: true, message: 'Password changed successfully.' });
     });
   });
 };

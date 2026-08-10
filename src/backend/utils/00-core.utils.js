@@ -535,7 +535,6 @@ const userPublicFields = (user = {}) => ({
   role: user.role,
   is_system_account: Number(user.is_system_account || 0),
   hidden_from_workflows: Number(user.hidden_from_workflows || 0),
-  must_change_password: Number(user.must_change_password || 0),
   theme_preference: user.theme_preference || 'light',
   avatar_path: user.avatar_path || null,
   avatar_url: avatarUrlForPath(user.avatar_path)
