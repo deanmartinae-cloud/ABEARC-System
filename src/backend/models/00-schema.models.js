@@ -38,6 +38,14 @@ db.serialize(() => {
     last_activity_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES Users(id)
   )`);
+  db.run(`CREATE TABLE IF NOT EXISTS MobileQrLoginTokens (
+    nonce TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    expires_at INTEGER NOT NULL,
+    consumed_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(user_id) REFERENCES Users(id)
+  )`);
   
   // ActivityLogs table for audit trail
   db.run(`CREATE TABLE IF NOT EXISTS ActivityLogs (
@@ -498,7 +506,6 @@ db.serialize(() => {
     FOREIGN KEY(owner_user_id) REFERENCES Users(id),
     FOREIGN KEY(parent_folder_id) REFERENCES UserDriveFolders(id)
   )`);
-
   db.run(`CREATE TABLE IF NOT EXISTS UserDriveFiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_user_id INTEGER NOT NULL,
@@ -517,9 +524,11 @@ db.serialize(() => {
     uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     deleted_at TEXT,
+    upload_idempotency_key TEXT,
     FOREIGN KEY(owner_user_id) REFERENCES Users(id),
     FOREIGN KEY(parent_folder_id) REFERENCES UserDriveFolders(id)
   )`);
+  db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_drive_upload_idempotency ON UserDriveFiles(owner_user_id, upload_idempotency_key) WHERE upload_idempotency_key IS NOT NULL`);
 
   db.run(`CREATE TABLE IF NOT EXISTS UserDriveShares (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -828,6 +837,7 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_project_documentation_uploaded_by ON ProjectDocumentationFiles(uploaded_by_user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_project_documentation_uploaded_at ON ProjectDocumentationFiles(uploaded_at)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON Notifications(recipient_user_id, read_at, created_at)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_mobile_qr_login_expiry ON MobileQrLoginTokens(expires_at, consumed_at)`);
   db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_daily_alert ON Notifications(recipient_user_id, alert_key, alert_date) WHERE alert_key IS NOT NULL AND alert_date IS NOT NULL`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_alert_key_recent ON Notifications(recipient_user_id, alert_key, created_at)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_config_requests_superior_status ON ConfigurationChangeRequests(direct_superior_user_id, status, created_at)`);

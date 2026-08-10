@@ -733,22 +733,41 @@ const generateSessionToken = () => crypto.randomBytes(48).toString('hex');
 
 const base64UrlEncode = (value) => Buffer.from(value).toString('base64url');
 const base64UrlJson = (value) => base64UrlEncode(JSON.stringify(value));
+const requireMobileQrLoginSecret = () => {
+  if (Buffer.byteLength(MOBILE_QR_LOGIN_SECRET, 'utf8') < 32) {
+    const err = new Error('Mobile QR login requires MOBILE_QR_LOGIN_SECRET or SESSION_SECRET with at least 32 characters.');
+    err.code = 'MOBILE_QR_LOGIN_NOT_CONFIGURED';
+    throw err;
+  }
+  return MOBILE_QR_LOGIN_SECRET;
+};
 const mobileQrSignature = (payload) => crypto
-  .createHmac('sha256', process.env.MOBILE_QR_LOGIN_SECRET || process.env.SESSION_SECRET || 'abearc-mobile-qr-login')
+  .createHmac('sha256', requireMobileQrLoginSecret())
   .update(payload)
   .digest('base64url');
-const createMobileQrLoginToken = (userId) => {
+const createMobileQrLoginToken = async (userId) => {
+  requireMobileQrLoginSecret();
+  const nonce = crypto.randomBytes(24).toString('hex');
+  const expiresAt = Date.now() + MOBILE_QR_LOGIN_TTL_MS;
   const payload = base64UrlJson({
     typ: 'abearc-mobile-login',
     aud: MOBILE_QR_LOGIN_AUDIENCE,
     sub: Number(userId),
-    exp: Date.now() + MOBILE_QR_LOGIN_TTL_MS,
-    nonce: crypto.randomBytes(16).toString('hex')
+    exp: expiresAt,
+    nonce
   });
+  await dbRun(`DELETE FROM MobileQrLoginTokens WHERE expires_at < ? OR consumed_at IS NOT NULL`, [Date.now()]);
+  await dbRun(
+    `INSERT INTO MobileQrLoginTokens (nonce, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)`,
+    [nonce, Number(userId), expiresAt, new Date().toISOString()]
+  );
   return `${payload}.${mobileQrSignature(payload)}`;
 };
-const verifyMobileQrLoginToken = (token = '') => {
-  const [payload, signature] = String(token || '').split('.');
+const verifyAndConsumeMobileQrLoginToken = async (token = '') => {
+  requireMobileQrLoginSecret();
+  const parts = String(token || '').split('.');
+  if (parts.length !== 2) return null;
+  const [payload, signature] = parts;
   if (!payload || !signature) return null;
   const expected = mobileQrSignature(payload);
   if (Buffer.byteLength(signature) !== Buffer.byteLength(expected)) return null;
@@ -761,7 +780,15 @@ const verifyMobileQrLoginToken = (token = '') => {
   }
   if (data?.typ !== 'abearc-mobile-login' || data?.aud !== MOBILE_QR_LOGIN_AUDIENCE) return null;
   if (!Number.isInteger(Number(data.sub)) || Number(data.sub) <= 0) return null;
+  if (!/^[a-f0-9]{48}$/.test(String(data.nonce || ''))) return null;
   if (!Number(data.exp) || Date.now() > Number(data.exp)) return null;
+  const consumed = await dbRun(
+    `UPDATE MobileQrLoginTokens
+     SET consumed_at = ?
+     WHERE nonce = ? AND user_id = ? AND expires_at = ? AND consumed_at IS NULL AND expires_at >= ?`,
+    [new Date().toISOString(), data.nonce, Number(data.sub), Number(data.exp), Date.now()]
+  );
+  if (Number(consumed.changes || 0) !== 1) return null;
   return data;
 };
 const requestBaseUrl = (req) => {

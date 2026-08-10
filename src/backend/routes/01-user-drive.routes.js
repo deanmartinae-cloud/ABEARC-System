@@ -162,6 +162,24 @@ const userDriveFolderDescendantIds = async (userId, folderId) => {
   `, [folderId, userId, userId]);
   return rows.map(row => Number(row.id)).filter(Boolean);
 };
+const validateUserDriveFolderParent = async (userId, folderId, targetFolderId) => {
+  const normalizedFolderId = Number(folderId);
+  const normalizedTargetId = normalizeUserDriveFolderId(targetFolderId);
+  await ensureOwnDriveFolder(userId, normalizedTargetId);
+  if (!normalizedTargetId) return null;
+  if (normalizedTargetId === normalizedFolderId) {
+    const err = new Error('A folder cannot be moved into itself.');
+    err.statusCode = 400;
+    throw err;
+  }
+  const descendants = await userDriveFolderDescendantIds(userId, normalizedFolderId);
+  if (descendants.includes(normalizedTargetId)) {
+    const err = new Error('A folder cannot be moved inside one of its subfolders.');
+    err.statusCode = 400;
+    throw err;
+  }
+  return normalizedTargetId;
+};
 const canManageAllUserDrive = async (user) => user ? userHasPrivilegeAsync(user, 'manage_all_user_drive') : false;
 const calculateUserDriveUsage = async (userId) => dbGet(`
   SELECT COALESCE(SUM(file_size), 0) as bytes,
@@ -362,11 +380,27 @@ const validateUserDriveUploadFile = (file) => {
   return ext;
 };
 
-const storeUserDriveUploads = async (req, files, { folderId = null, title = '', description = '', tags = '', pathPartsForFile = null, imageOnly = false, skipExisting = false } = {}) => {
+const storeUserDriveUploads = async (req, files, { folderId = null, title = '', description = '', tags = '', pathPartsForFile = null, imageOnly = false, skipExisting = false, idempotencyKey = null } = {}) => {
   if (!files?.length) {
     const err = new Error('Choose at least one file.');
     err.statusCode = 400;
     throw err;
+  }
+  const normalizedIdempotencyKey = String(idempotencyKey || '').trim();
+  if (normalizedIdempotencyKey && (!/^[A-Za-z0-9._:-]{8,128}$/.test(normalizedIdempotencyKey) || files.length !== 1)) {
+    const err = new Error('A valid idempotency key can only be used with a single file upload.');
+    err.statusCode = 400;
+    throw err;
+  }
+  if (normalizedIdempotencyKey) {
+    const existing = await dbGet(`SELECT * FROM UserDriveFiles WHERE owner_user_id=? AND upload_idempotency_key=?`, [req.user.id, normalizedIdempotencyKey]);
+    if (existing) {
+      files.forEach(file => { try { if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path); } catch (_) {} });
+      const uploaded = [userDriveFilePublic(existing)];
+      uploaded.idempotentReplay = true;
+      uploaded.skipped = [];
+      return uploaded;
+    }
   }
   await ensureOwnDriveFolder(req.user.id, folderId);
   const usage = await calculateUserDriveUsage(req.user.id);
@@ -409,9 +443,20 @@ const storeUserDriveUploads = async (req, files, { folderId = null, title = '', 
     const dest = path.join(userRoot, storedName);
     fs.renameSync(file.path, dest);
     const rel = path.relative(USER_DRIVE_DIR, dest).replace(/\\/g, '/');
-    const result = await dbRun(`INSERT INTO UserDriveFiles (owner_user_id, owner_username, parent_folder_id, original_name, stored_name, file_path, file_ext, file_type, file_size, title, description, tags, uploaded_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
-      req.user.id, req.user.username, targetFolderId, displayName, storedName, rel, ext, file.mimetype || '', file.size || 0, String(title || displayName).trim(), String(description || '').trim(), safeDriveTags(tags), new Date().toISOString(), new Date().toISOString()
-    ]);
+    let result;
+    try {
+      result = await dbRun(`INSERT INTO UserDriveFiles (owner_user_id, owner_username, parent_folder_id, original_name, stored_name, file_path, file_ext, file_type, file_size, title, description, tags, uploaded_at, updated_at, upload_idempotency_key) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+        req.user.id, req.user.username, targetFolderId, displayName, storedName, rel, ext, file.mimetype || '', file.size || 0, String(title || displayName).trim(), String(description || '').trim(), safeDriveTags(tags), new Date().toISOString(), new Date().toISOString(), normalizedIdempotencyKey || null
+      ]);
+    } catch (err) {
+      if (!normalizedIdempotencyKey || !String(err.message || '').includes('UNIQUE constraint failed')) throw err;
+      try { if (fs.existsSync(dest)) fs.unlinkSync(dest); } catch (_) {}
+      const existing = await dbGet(`SELECT * FROM UserDriveFiles WHERE owner_user_id=? AND upload_idempotency_key=?`, [req.user.id, normalizedIdempotencyKey]);
+      if (!existing) throw err;
+      uploaded.push(userDriveFilePublic(existing));
+      uploaded.idempotentReplay = true;
+      continue;
+    }
     uploaded.push(userDriveFilePublic(await dbGet(`SELECT * FROM UserDriveFiles WHERE id=?`, [result.lastID])));
   }
   uploaded.skipped = skipped;

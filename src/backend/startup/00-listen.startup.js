@@ -2,6 +2,7 @@ db.wait(async () => {
   try {
     await ensureUsersSystemRoleMigration();
     await ensureCalendarEventTypeDetailMigration();
+    await ensureUserDriveUploadIdempotencyMigration();
     await removeNonSystemFeedbackNotifications();
     await ensureEstablishedMonitoringMigration();
     app.listen(PORT, '0.0.0.0', () => {

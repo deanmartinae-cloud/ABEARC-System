@@ -72,6 +72,16 @@ Operational data is intentionally kept outside version control. The following ar
 
 Back up the runtime data directory and database according to the deployment guide before updating an existing installation.
 
+## Mobile QR login security
+
+Configure either `MOBILE_QR_LOGIN_SECRET` or `SESSION_SECRET` with at least 32 characters before enabling mobile QR login. There is no built-in fallback secret.
+
+QR authorization codes expire after two minutes and can be exchanged only once. The mobile session created by a successful exchange remains long-lived according to the existing mobile session policy.
+
+## Backup restore safety
+
+Backup restores inspect the archive's total uncompressed size before extraction. The defaults allow at most 20 GB and 100,000 ZIP entries; deployments can lower these with `BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES` and `BACKUP_RESTORE_MAX_ENTRIES`.
+
 ## Documentation
 
 - [Architecture and maintenance rules](docs/ARCHITECTURE.md)

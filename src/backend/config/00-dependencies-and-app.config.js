@@ -18,8 +18,17 @@ const { pipeline } = require('stream/promises');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const MOBILE_QR_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
+const MOBILE_QR_LOGIN_TTL_MS = 2 * 60 * 1000;
 const MOBILE_QR_LOGIN_AUDIENCE = 'abearc-geocamera';
+const MOBILE_QR_LOGIN_SECRET = String(process.env.MOBILE_QR_LOGIN_SECRET || process.env.SESSION_SECRET || '');
+const backupRestoreMaxBytesEnv = Number(process.env.BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES);
+const backupRestoreMaxEntriesEnv = Number(process.env.BACKUP_RESTORE_MAX_ENTRIES);
+const BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES = Number.isFinite(backupRestoreMaxBytesEnv) && backupRestoreMaxBytesEnv > 0
+  ? Math.max(1024 * 1024, Math.floor(backupRestoreMaxBytesEnv))
+  : 20 * 1024 * 1024 * 1024;
+const BACKUP_RESTORE_MAX_ENTRIES = Number.isFinite(backupRestoreMaxEntriesEnv) && backupRestoreMaxEntriesEnv > 0
+  ? Math.max(1, Math.floor(backupRestoreMaxEntriesEnv))
+  : 100000;
 
 const normalizeIpAddress = (value = '') => String(value || '')
   .trim()

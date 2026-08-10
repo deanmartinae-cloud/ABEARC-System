@@ -17,6 +17,13 @@ const ensureCalendarEventTypeDetailMigration = async () => {
   await addColumnIfMissing('CalendarEvents', 'event_type_detail', 'TEXT');
 };
 
+const ensureUserDriveUploadIdempotencyMigration = async () => {
+  await addColumnIfMissing('UserDriveFiles', 'upload_idempotency_key', 'TEXT');
+  await dbRun(`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_drive_upload_idempotency
+               ON UserDriveFiles(owner_user_id, upload_idempotency_key)
+               WHERE upload_idempotency_key IS NOT NULL`);
+};
+
 const removeNonSystemFeedbackNotifications = async () => {
   await dbRun(`
     DELETE FROM Notifications
