@@ -19,6 +19,7 @@
       if (sortOrder) dashboardSavedFilters.sort = sortOrder.value;
       if (appCurrentView === 'dashboard' && !restoringHistoryState) replaceAppHistory('dashboard');
       
+      if (Number(currentProjId) !== Number(pid)) projectDocumentationCounts = {};
       currentProjId=pid;
       activeDetailStage = stage || 'Proposal';
       const p = projCache.find(x => x.id == pid);
@@ -74,8 +75,12 @@
           <div class="w-full sm:w-40 shrink-0 grid grid-cols-1 gap-2 sm:-mt-1">
             <button onclick="printProjectSummary()" class="${detailPrintButtonClass}">Print Summary</button>
             <button onclick="printRequirementsChecklist()" class="${detailPrintButtonClass}">Print Checklist</button>
+            <button id="viewDocumentationBtn" type="button" onclick="openProjectDocumentationViewer()" disabled class="hidden">
+              <span id="viewDocumentationBtnLabel">View Documentation (0)</span>
+            </button>
           </div>
         </div>`;
+      updateProjectDocumentationButtons();
       
       // Display remarks box with stage and completion remarks
       const detailRemarksContainer = document.getElementById('detailRemarksContainer');
@@ -114,9 +119,9 @@
         detailRemarksContainer.classList.remove('hidden');
       }
       
-      // Show/hide Export Project Documents button based on stage/outcome and privilege
+      // Show/hide Export Project Documents button based on privilege
       const exportPdfBtn = document.getElementById('exportPdfBtn');
-      const canExportProjectPdf = hasPrivilege('export_project_documents') && (p.stage === 'Monitoring' || p.stage === 'Completed' || isInactiveProject(p));
+      const canExportProjectPdf = hasPrivilege('export_project_documents');
       if (canExportProjectPdf) {
         exportPdfBtn.classList.remove('hidden');
       } else {
@@ -352,10 +357,126 @@
       document.addEventListener('keydown', handleConfirmModalEnterKey);
     }
 
+    function canEditDocumentDate(doc) {
+      if (!doc?.file_path || !currentUser) return false;
+      const project = projCache.find(p => Number(p.id) === Number(doc.project_id || currentProjId));
+      const docStage = doc.stage || activeDetailStage;
+      const stageEditable = !project || project.stage === docStage || currentUser.role === 'superadmin' || hasTemporaryStageAccess(docStage, 'upload');
+      const isUploader = Number(doc.uploader_user_id || 0) === Number(currentUser.id || 0);
+      return stageEditable && (isUploader || currentUser.role === 'superadmin');
+    }
+
+    function ensureDocumentDateModal() {
+      let modal = document.querySelector('[data-document-date-modal="modal"]');
+      if (modal) return modal;
+      modal = document.createElement('div');
+      modal.dataset.documentDateModal = 'modal';
+      modal.className = 'fixed inset-0 bg-black/40 hidden z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm';
+      modal.innerHTML = `
+        <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full sm:max-w-md max-h-[90vh] overflow-y-auto" data-document-date-modal="panel" onclick="event.stopPropagation()">
+          <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between items-start gap-3 bg-gray-50 dark:bg-gray-900">
+            <div class="min-w-0"><h3 class="text-lg font-bold text-gray-900 dark:text-white">Document Date</h3><p class="text-sm text-gray-600 dark:text-gray-400 mt-1" data-document-date-modal="name"></p></div>
+            <button type="button" data-document-date-modal="close" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl leading-none p-1" aria-label="Close">&times;</button>
+          </div>
+          <div class="p-5 space-y-3">
+            <label class="block text-sm font-semibold text-gray-700 dark:text-gray-300">Document Date &amp; Time</label>
+            <input type="datetime-local" data-document-date-modal="input" class="w-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-cyan-600 outline-none">
+            <p class="text-xs text-gray-500 dark:text-gray-400">Enter the date and time stated for this document. This is separate from the file upload date.</p>
+          </div>
+          <div class="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-end gap-2">
+            <button type="button" data-document-date-modal="cancel" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg font-bold text-gray-700 dark:text-gray-200">Cancel</button>
+            <button type="button" data-document-date-modal="save" class="px-4 py-2.5 bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 rounded-lg font-bold">Save Document Date</button>
+          </div>
+        </div>`;
+      document.body.appendChild(modal);
+      const close = () => modal.classList.add('hidden');
+      modal.addEventListener('click', event => { if (event.target === modal) close(); });
+      modal.querySelector('[data-document-date-modal="close"]').addEventListener('click', close);
+      modal.querySelector('[data-document-date-modal="cancel"]').addEventListener('click', close);
+      modal.querySelector('[data-document-date-modal="save"]').addEventListener('click', saveDocumentDate);
+      return modal;
+    }
+
+    function closeDocumentDateModal() {
+      document.querySelector('[data-document-date-modal="modal"]')?.classList.add('hidden');
+    }
+
+    let activeDocumentDateId = null;
+    window.openDocumentDateModal = function(docId) {
+      const doc = currentProjectDocumentById(docId);
+      if (!doc) return toast('Document is no longer available.', 'error');
+      if (!doc.file_path) return toast('Upload the document before entering its document date.', 'error');
+      if (!canEditDocumentDate(doc)) return toast('Only the document uploader can enter or edit the document date.', 'error');
+      activeDocumentDateId = Number(docId);
+      const modal = ensureDocumentDateModal();
+      modal.querySelector('[data-document-date-modal="name"]').textContent = doc.document_type_name || 'Document';
+      const input = modal.querySelector('[data-document-date-modal="input"]');
+      const source = doc.document_date || doc.upload_date || new Date().toISOString();
+      const d = new Date(source);
+      input.value = Number.isNaN(d.getTime()) ? '' : new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+      modal.classList.remove('hidden');
+      setTimeout(() => input.focus(), 0);
+    };
+
+    async function saveDocumentDate() {
+      const modal = ensureDocumentDateModal();
+      const input = modal.querySelector('[data-document-date-modal="input"]');
+      if (!activeDocumentDateId || !input?.value) return toast('Document date and time are required.', 'error');
+      const parsed = new Date(input.value);
+      if (Number.isNaN(parsed.getTime())) return toast('Enter a valid document date and time.', 'error');
+      const saveBtn = modal.querySelector('[data-document-date-modal="save"]');
+      const oldText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      try {
+        await fetchJson(`${API}/documents/${activeDocumentDateId}/document-date`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ document_date: parsed.toISOString() })
+        });
+        closeDocumentDateModal();
+        toast('Document date saved.');
+        await refreshAfterMutation({ projectId: currentProjId, documentId: activeDocumentDateId, silent: false });
+      } catch (e) {
+        toast(e.message || 'Unable to save document date.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = oldText;
+      }
+    }
+
+    function showDocumentDateRequiredNotice(doc) {
+      let modal = document.querySelector('[data-document-date-required="modal"]');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.dataset.documentDateRequired = 'modal';
+        modal.className = 'fixed inset-0 bg-black/40 hidden z-50 flex items-end sm:items-center justify-center p-4 backdrop-blur-sm';
+        modal.innerHTML = `
+          <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full sm:max-w-md" onclick="event.stopPropagation()">
+            <div class="p-5 border-b border-gray-100 dark:border-gray-700 flex justify-between gap-3"><div><h3 class="text-lg font-bold text-gray-900 dark:text-white">Document Date Required</h3><p class="text-sm text-gray-500 dark:text-gray-400 mt-1">This document cannot be marked Checked yet.</p></div><button type="button" data-document-date-required="close" class="text-gray-400 text-2xl leading-none">&times;</button></div>
+            <div class="p-5"><p class="text-sm text-gray-700 dark:text-gray-200" data-document-date-required="message"></p></div>
+            <div class="p-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex justify-end"><button type="button" data-document-date-required="ok" class="px-4 py-2.5 bg-gray-800 dark:bg-gray-200 text-white dark:text-gray-900 rounded-lg font-bold">Close</button></div>
+          </div>`;
+        document.body.appendChild(modal);
+        const close = () => modal.classList.add('hidden');
+        modal.addEventListener('click', event => { if (event.target === modal) close(); });
+        modal.querySelector('[data-document-date-required="close"]').addEventListener('click', close);
+        modal.querySelector('[data-document-date-required="ok"]').addEventListener('click', close);
+      }
+      const uploader = doc?.uploader_username ? ` ${doc.uploader_username}` : ' the uploader';
+      modal.querySelector('[data-document-date-required="message"]').textContent = `Please inform${uploader} to enter the Document Date and time before this document can be marked Checked.`;
+      modal.classList.remove('hidden');
+    }
+
     async function toggleStatus(docId, statusBtn) {
       if (!requirePrivilege('mark_checked')) return;
       const currentStatus = statusBtn.dataset.status;
       const nextStatus = currentStatus === 'For Review' ? 'Checked' : 'For Review';
+      const currentDoc = currentProjectDocumentById(docId);
+      if (nextStatus === 'Checked' && currentDoc && !currentDoc.document_date) {
+        showDocumentDateRequiredNotice(currentDoc);
+        return;
+      }
       const msg = currentStatus === 'For Review' 
         ? "Confirm document has been reviewed and checked?" 
         : "Revert this document back to review status?";
@@ -460,7 +581,7 @@
         dashboardOutcomeFilter = currentOutcomeFilter;
         
         // Fetch all documents to calculate overdue count accurately
-        const allDocs = await fetchJson(`${API}/documents`, fetchOpts).catch(() => []);
+        const allDocs = await fetchJson(`${API}/documents`, fetchOpts);
         window.allDocumentsCache = allDocs;
         myScheduleAssignmentsCache = await fetchJson(`${API}/calendar/my-schedules`, { ...fetchOpts, silentLoading: true })
           .then(data => data.schedules || [])
@@ -491,7 +612,7 @@
         await loadReviewDocuments({ silent: true });
         updateSidebarBadges();
         if (appCurrentView === 'review') renderReviewDocumentsPage();
-      } catch(e){ if (!options.silent) toast(e.message,'error');}
+      } catch(e){ toast(`Unable to refresh dashboard: ${e.message}`, 'error'); }
     }
 
     function getProjectWorkMetrics(projectId) {
@@ -540,10 +661,10 @@
       // Save filter state on every render
       dashboardSavedFilters = { search: q, requestee: requesteeFilter, type: f, outcome: outcomeFilter, sort: sort };
       const renderKey = `${q}|${requesteeFilter}|${f}|${outcomeFilter}|${sort}|${dashboardStageFilter}`;
-      if (renderKey !== lastDashboardRenderKey) {
+      if (lastDashboardRenderKey && renderKey !== lastDashboardRenderKey) {
         dashboardPage = 1;
-        lastDashboardRenderKey = renderKey;
       }
+      lastDashboardRenderKey = renderKey;
       
       let data = projCache.filter(p => {
         const searchText = `${p.name || ''} ${p.requester || ''} ${p.type_name || ''} ${p.requestee_name || ''} ${p.barangay || ''} ${p.district || ''} ${p.assigned_username || ''}`.toLowerCase();
@@ -994,6 +1115,238 @@
       return expected.length !== current.length || expected.some((item, index) => item !== current[index]);
     }
 
+    let activeDocumentRemarkId = null;
+    let documentRequirementLongPressTimer = null;
+    let documentRequirementLongPressPoint = null;
+
+    function currentProjectDocumentById(docId) {
+      return (window.currentProjectDocumentsCache || []).find(doc => Number(doc.id) === Number(docId)) || null;
+    }
+
+    function canEditDocumentRemark(doc) {
+      if (!doc || !currentUser) return false;
+      const project = projCache.find(p => Number(p.id) === Number(doc.project_id || currentProjId));
+      const docStage = doc.stage || activeDetailStage;
+      if (project && isInactiveProject(project) && currentUser.role !== 'superadmin') return false;
+      if (project && project.stage !== docStage && currentUser.role !== 'superadmin') return false;
+      const canWorkDocument = hasPrivilege('upload_document') || hasPrivilege('mark_checked') || currentUser.role === 'superadmin';
+      return canWorkDocument && (canActOnAssignedItem(doc) || hasPrivilege('mark_checked') || currentUser.role === 'superadmin');
+    }
+
+    function documentRemarkIndicatorHtml(doc) {
+      const remarks = String(doc?.remarks || '').trim();
+      if (!remarks) return '';
+      const compact = remarks.replace(/\s+/g, ' ').slice(0, 240);
+      return `<button type="button" onclick="event.stopPropagation(); openDocumentRemarkModal(${Number(doc.id)})" class="document-requirement-remark-indicator" title="Remark: ${esc(compact)}" aria-label="View remark for ${esc(doc.document_type_name || 'document')}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="w-3.5 h-3.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m7-2a8 8 0 11-3.1-6.3L20 4v8z"/></svg>
+      </button>`;
+    }
+
+    function documentRemarkElement(role) {
+      return document.querySelector(`[data-document-remark="${role}"]`);
+    }
+
+    function updateDocumentRemarkCounter() {
+      const textarea = documentRemarkElement('text');
+      const counter = documentRemarkElement('counter');
+      if (!textarea || !counter) return;
+      counter.textContent = `${textarea.value.length} / 2000`;
+    }
+
+    function openDocumentRemarkModal(docId) {
+      closeDocumentRequirementContextMenu();
+      const doc = currentProjectDocumentById(docId);
+      if (!doc) return toast('Document is no longer available.', 'error');
+      activeDocumentRemarkId = Number(doc.id);
+      const editable = canEditDocumentRemark(doc);
+      const textarea = documentRemarkElement('text');
+      const saveBtn = documentRemarkElement('save');
+      const hint = documentRemarkElement('hint');
+      documentRemarkElement('title').textContent = doc.document_type_name || 'Document Remark';
+      documentRemarkElement('subtitle').textContent = `${doc.stage || activeDetailStage} stage • ${doc.assigned_username ? `Assigned to ${doc.assigned_username}` : 'Unassigned'}`;
+      textarea.value = String(doc.remarks || '');
+      textarea.readOnly = !editable;
+      textarea.classList.toggle('opacity-80', !editable);
+      saveBtn.classList.toggle('hidden', !editable);
+      hint.textContent = editable
+        ? 'Keep this concise; the remark is shared with users who can view this project.'
+        : 'Read-only for this user or stage.';
+      updateDocumentRemarkCounter();
+      documentRemarkElement('modal').classList.remove('hidden');
+      if (editable) setTimeout(() => textarea.focus(), 50);
+    }
+
+    function closeDocumentRemarkModal() {
+      documentRemarkElement('modal')?.classList.add('hidden');
+      activeDocumentRemarkId = null;
+    }
+
+    async function saveDocumentRemark() {
+      const docId = Number(activeDocumentRemarkId || 0);
+      const textarea = documentRemarkElement('text');
+      const saveBtn = documentRemarkElement('save');
+      if (!docId || !textarea || textarea.readOnly) return;
+      const remarks = textarea.value.trim();
+      const originalText = saveBtn.textContent;
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+      try {
+        const result = await fetchJson(`${API}/documents/${docId}/remarks`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ remarks })
+        });
+        const doc = currentProjectDocumentById(docId);
+        if (doc) doc.remarks = result?.remarks || '';
+        closeDocumentRemarkModal();
+        toast(remarks ? 'Document remark saved.' : 'Document remark cleared.');
+        await refreshAfterMutation({ projectId: currentProjId, documentId: docId, silent: true });
+      } catch (err) {
+        toast(err.message || 'Unable to save document remark.', 'error');
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.textContent = originalText;
+      }
+    }
+
+    function documentRequirementMenuIcon(kind) {
+      const paths = {
+        file: '<path stroke-linecap="round" stroke-linejoin="round" d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 2v6h6"/>',
+        upload: '<path stroke-linecap="round" stroke-linejoin="round" d="M12 16V4m0 0L7 9m5-5l5 5M5 20h14"/>',
+        remark: '<path stroke-linecap="round" stroke-linejoin="round" d="M8 10h8M8 14h5m7-2a8 8 0 11-3.1-6.3L20 4v8z"/>',
+        due: '<rect x="3" y="5" width="18" height="16" rx="2"/><path stroke-linecap="round" d="M16 3v4M8 3v4M3 10h18"/>',
+        check: '<path stroke-linecap="round" stroke-linejoin="round" d="M20 6L9 17l-5-5"/>',
+        state: '<path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h10"/>',
+        delete: '<path stroke-linecap="round" stroke-linejoin="round" d="M3 6h18M8 6V4h8v2m-9 0l1 14h8l1-14M10 11v5m4-5v5"/>'
+      };
+      return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="document-requirement-context-menu__icon" aria-hidden="true">${paths[kind] || paths.state}</svg>`;
+    }
+
+    function closeDocumentRequirementContextMenu() {
+      document.getElementById('documentRequirementContextMenu')?.remove();
+    }
+
+    function positionDocumentRequirementContextMenu(menu, x, y) {
+      const gap = 8;
+      const rect = menu.getBoundingClientRect();
+      const left = Math.max(gap, Math.min(x, window.innerWidth - rect.width - gap));
+      const top = Math.max(gap, Math.min(y, window.innerHeight - rect.height - gap));
+      menu.style.left = `${left}px`;
+      menu.style.top = `${top}px`;
+    }
+
+    function openDocumentRequirementContextMenu(event, docId) {
+      event?.preventDefault?.();
+      event?.stopPropagation?.();
+      const x = Number(event?.clientX || 12);
+      const y = Number(event?.clientY || 12);
+      openDocumentRequirementContextMenuAt(docId, x, y);
+      return false;
+    }
+
+    function openDocumentRequirementContextMenuAt(docId, x, y) {
+      closeDocumentRequirementContextMenu();
+      const doc = currentProjectDocumentById(docId);
+      if (!doc) return;
+      const project = projCache.find(p => Number(p.id) === Number(doc.project_id || currentProjId));
+      const docStage = doc.stage || activeDetailStage;
+      const isLocked = !!(project && project.stage !== docStage);
+      const inactiveProject = !!(project && isInactiveProject(project));
+      const hasFile = !!doc.file_path;
+      const isNotRequired = (doc.requirement_state || 'Required') === 'Not Required';
+      const canActOnThisDocument = canActOnAssignedItem(doc);
+      const uploadedByMe = Number(doc.uploader_user_id || 0) === Number(currentUser?.id || 0);
+      const canUploadStageDoc = !hasFile && !isNotRequired && canUpload() && (!inactiveProject || currentUser?.role === 'superadmin') && (!isLocked || hasTemporaryStageAccess(docStage, 'upload')) && canActOnThisDocument;
+      const canStatusStageDoc = hasFile && !isNotRequired && hasPrivilege('mark_checked') && (!isLocked || hasTemporaryStageAccess(docStage, 'status_change'));
+      const canRequirementStageDoc = hasPrivilege('edit_requirement_state') && (!isLocked || hasTemporaryStageAccess(docStage, 'requirement_state_change'));
+      const dueClickable = !inactiveProject && (hasPrivilege('set_manual_due_date') || currentUser?.role === 'superadmin') && (!isLocked || hasTemporaryStageAccess(docStage, 'due_date_change'));
+      const canDeleteDocument = hasFile && (hasPrivilege('delete_document') || currentUser?.role === 'superadmin') && (!isLocked || hasTemporaryStageAccess(docStage, 'delete_file')) && (canActOnThisDocument || uploadedByMe);
+      const canDeleteMonitoringRequirement = !hasFile && docStage === 'Monitoring' && hasPrivilege('manage_requirements') && !isLocked;
+      const canEditRemark = canEditDocumentRemark(doc);
+      const hasRemark = !!String(doc.remarks || '').trim();
+
+      const items = [];
+      if (hasFile) items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'open-file')">${documentRequirementMenuIcon('file')}<span>Open file</span></button>`);
+      if (canUploadStageDoc) items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'upload')">${documentRequirementMenuIcon('upload')}<span>Upload file</span></button>`);
+      if (hasFile || canUploadStageDoc) items.push('<div class="document-requirement-context-menu__separator"></div>');
+      if (canEditRemark) {
+        items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'remark')">${documentRequirementMenuIcon('remark')}<span>${hasRemark ? 'Edit remark' : 'Add remark'}</span></button>`);
+      } else if (hasRemark) {
+        items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'remark')">${documentRequirementMenuIcon('remark')}<span>View remark</span></button>`);
+      } else {
+        items.push(`<button type="button" class="document-requirement-context-menu__item is-disabled" disabled>${documentRequirementMenuIcon('remark')}<span>No remark</span></button>`);
+      }
+      if (dueClickable) items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'due')">${documentRequirementMenuIcon('due')}<span>${doc.due_at ? 'Edit due date' : 'Set due date'}</span></button>`);
+      if (canStatusStageDoc) items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'status')">${documentRequirementMenuIcon('check')}<span>${doc.status === 'Checked' ? 'Return to For Review' : 'Mark as Checked'}</span></button>`);
+      if (canRequirementStageDoc && (!hasFile || isNotRequired)) items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, 'requirement-state')">${documentRequirementMenuIcon('state')}<span>Change requirement state</span></button>`);
+      if (canDeleteDocument || canDeleteMonitoringRequirement) {
+        items.push('<div class="document-requirement-context-menu__separator"></div>');
+        items.push(`<button type="button" role="menuitem" class="document-requirement-context-menu__item is-danger" onclick="runDocumentRequirementContextAction(${Number(doc.id)}, '${canDeleteDocument ? 'delete-file' : 'delete-monitoring'}')">${documentRequirementMenuIcon('delete')}<span>${canDeleteDocument ? 'Delete file' : 'Delete monitoring document'}</span></button>`);
+      }
+
+      const menu = document.createElement('div');
+      menu.id = 'documentRequirementContextMenu';
+      menu.className = 'document-requirement-context-menu';
+      menu.setAttribute('role', 'menu');
+      menu.innerHTML = `<div class="document-requirement-context-menu__header"><div class="document-requirement-context-menu__name">${esc(doc.document_type_name || 'Document')}</div><div class="document-requirement-context-menu__meta">${esc(docStage)} • ${esc(doc.status || (hasFile ? 'For Review' : 'No File'))}</div></div>${items.join('')}`;
+      document.body.appendChild(menu);
+      positionDocumentRequirementContextMenu(menu, x, y);
+      menu.querySelector('button:not([disabled])')?.focus({ preventScroll: true });
+    }
+
+    function runDocumentRequirementContextAction(docId, action) {
+      const doc = currentProjectDocumentById(docId);
+      closeDocumentRequirementContextMenu();
+      if (!doc) return toast('Document is no longer available.', 'error');
+      if (action === 'open-file' && doc.file_path) return openFileViewer(String(doc.id), doc.file_name || 'Document');
+      if (action === 'upload') return openUp(doc.id, doc.document_type_name || 'Document');
+      if (action === 'remark') return openDocumentRemarkModal(doc.id);
+      if (action === 'due') {
+        const proxy = document.createElement('button');
+        proxy.dataset.docId = String(doc.id);
+        proxy.dataset.dueAt = String(doc.due_at || '');
+        proxy.dataset.docName = String(doc.document_type_name || 'Document');
+        return openDocumentDueDateFromButton(proxy);
+      }
+      if (action === 'status') return toggleStatus(doc.id, { dataset: { status: doc.status || 'For Review' } });
+      if (action === 'requirement-state') return toggleRequirementState(doc.id, { dataset: { requirementState: doc.requirement_state || 'Required', hasFile: doc.file_path ? '1' : '0' } });
+      if (action === 'delete-file') return openConfirmModal('Delete file?', () => delFile(doc.id));
+      if (action === 'delete-monitoring') return openConfirmModal('Delete monitoring document?', () => delMonitoringDoc(doc.id));
+    }
+
+    function startDocumentRequirementLongPress(event, docId) {
+      if (!event || event.pointerType === 'mouse') return;
+      if (event.target?.closest?.('button, input, select, textarea, a, label')) return;
+      cancelDocumentRequirementLongPress();
+      documentRequirementLongPressPoint = { x: event.clientX, y: event.clientY };
+      documentRequirementLongPressTimer = setTimeout(() => {
+        const point = documentRequirementLongPressPoint || { x: 12, y: 12 };
+        openDocumentRequirementContextMenuAt(docId, point.x, point.y);
+        documentRequirementLongPressTimer = null;
+      }, 550);
+    }
+
+    function cancelDocumentRequirementLongPress() {
+      if (documentRequirementLongPressTimer) clearTimeout(documentRequirementLongPressTimer);
+      documentRequirementLongPressTimer = null;
+      documentRequirementLongPressPoint = null;
+    }
+
+    if (!window.documentRequirementContextMenuHandlersReady) {
+      window.documentRequirementContextMenuHandlersReady = true;
+      document.addEventListener('click', event => {
+        if (!event.target.closest?.('#documentRequirementContextMenu')) closeDocumentRequirementContextMenu();
+      });
+      document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+          closeDocumentRequirementContextMenu();
+          if (!documentRemarkElement('modal')?.classList.contains('hidden')) closeDocumentRemarkModal();
+        }
+      });
+      window.addEventListener('resize', closeDocumentRequirementContextMenu);
+      window.addEventListener('scroll', closeDocumentRequirementContextMenu, true);
+    }
+
     async function loadDocs(projectId, stage, options = {}) {
       try {
         if (!usersCache.length) usersCache = filterVisibleWorkUsers(await fetchJson(`${API}/active-users`, options.silent ? { silentLoading: true } : {}).catch(() => []));
@@ -1019,7 +1372,7 @@
         const canAddMonitoringDoc = hasPrivilege('manage_requirements') && stage === 'Monitoring' && p && p.stage === 'Monitoring' && !inactiveProject;
         if (canAddMonitoringDoc) {
           const addBtn = `<button onclick="openMonitoringDocModal()" class="bg-cyan-800 dark:bg-cyan-500 hover:bg-cyan-900 dark:hover:bg-cyan-400 text-white dark:text-gray-950 px-4 py-2 rounded-lg font-bold shadow-sm">Add Monitoring Document</button>`;
-          h += `<tr><td colspan="7" class="px-6 py-4 bg-cyan-50/60 dark:bg-cyan-950/20">${addBtn}</td></tr>`;
+          h += `<tr><td colspan="8" class="px-4 py-4 bg-cyan-50/60 dark:bg-cyan-950/20">${addBtn}</td></tr>`;
           hm += `<div class="p-4 bg-cyan-50/60 dark:bg-cyan-950/20">${addBtn}</div>`;
         }
         docs.forEach(d=>{
@@ -1049,6 +1402,16 @@
           const dueHtml = inactiveProject ? `<span class="inline-flex items-center rounded-full px-2.5 py-1 border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-xs text-gray-500 dark:text-gray-400 font-bold">Inactive project</span>` : (dueClickable
             ? `<button type="button" data-doc-id="${d.id}" data-due-at="${esc(d.due_at || '')}" data-doc-name="${esc(d.document_type_name)}" onclick="openDocumentDueDateFromButton(this)" class="inline-flex items-center rounded-full px-2.5 py-1 border text-xs ${dueAt ? (isOverdue ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-200 border-red-200 dark:border-red-800 font-black' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 font-bold') : 'border-dashed border-gray-300 dark:border-gray-700 text-gray-400 font-bold'} cursor-pointer hover:border-blue-300 dark:hover:border-blue-700" title="${dueAt ? 'Click to edit due date' : 'Click to set due date'}">${dueAt ? fmtDueDate(dueAt) : 'Set due date'}</button>`
             : (dueAt ? `<span class="inline-flex items-center rounded-full px-2.5 py-1 border text-xs ${isOverdue ? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-200 border-red-200 dark:border-red-800 font-black' : 'bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-200 dark:border-gray-700 font-bold'}" title="Due date">${fmtDueDate(dueAt)}</span>` : `<span class="inline-flex items-center rounded-full px-2.5 py-1 border border-dashed border-gray-300 dark:border-gray-700 text-xs text-gray-400">Set due date</span>`));
+          const canEditDate = canEditDocumentDate(d);
+          const documentDateHtml = !has
+            ? `<span class="text-gray-400">-</span>`
+            : (d.document_date
+              ? (canEditDate
+                ? `<button type="button" onclick="openDocumentDateModal(${d.id})" class="text-left text-xs text-gray-500 dark:text-gray-400 hover:text-cyan-700 dark:hover:text-cyan-300" title="Click to edit document date">${fmtDateTime(d.document_date)}</button>`
+                : `<span class="text-xs text-gray-500 dark:text-gray-400">${fmtDateTime(d.document_date)}</span>`)
+              : (canEditDate
+                ? `<button type="button" onclick="openDocumentDateModal(${d.id})" class="inline-flex items-center rounded-full px-2.5 py-1 border border-dashed border-amber-300 dark:border-amber-700 text-xs text-amber-700 dark:text-amber-300 font-bold hover:border-cyan-400" title="Enter document date and time">Enter date</button>`
+                : `<span class="inline-flex items-center rounded-full px-2.5 py-1 border border-dashed border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/60 text-xs text-gray-400 dark:text-gray-500 font-bold cursor-not-allowed select-none" title="Only the uploader can enter the document date">Enter date</span>`));
           let desktopStatusBadge = `<span class="text-xs px-2.5 py-1 rounded-full border font-bold bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-300 border-gray-200 dark:border-gray-700 whitespace-nowrap">No File</span>`;
           if (!has && canManageStageDoc) {
             desktopStatusBadge = `<span data-requirement-state="${esc(requirementState)}" data-has-file="0" onclick="toggleRequirementState(${d.id}, this)" class="text-xs px-2.5 py-1 rounded-full border font-bold ${statusClass} cursor-pointer select-none whitespace-nowrap" title="${requirementState === 'Required' ? 'Click to choose Optional or Not Required' : 'Click to make required again'}">${statusLabel}</span>`;
@@ -1069,7 +1432,7 @@
           const reqBtnDesktop = '';
           const delBtnDesktop = canDeleteDocument && has ? `<button onclick="openConfirmModal('Delete file?',()=>delFile(${d.id}))" class="p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center justify-center" title="Delete file">${svgDelete}</button>` : (canManageStageDoc && stage === 'Monitoring' ? `<button onclick="openConfirmModal('Delete monitoring document?',()=>delMonitoringDoc(${d.id}))" class="p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center justify-center">${svgDelete}</button>` : '');
           const rowTone = isNotRequired ? 'bg-slate-50/60 dark:bg-slate-900/20 opacity-80' : (isOverdue ? 'bg-red-50/60 dark:bg-red-900/10' : (assignedToMe ? 'bg-indigo-50/50 dark:bg-indigo-900/10' : (!d.assigned_user_id ? 'bg-gray-50/50 dark:bg-gray-900/40' : '')));
-          h+=`<tr id="document-row-${d.id}" data-doc-id="${d.id}" class="${rowTone} hover:bg-gray-50 dark:hover:bg-gray-800/70 transition group align-middle"><td class="px-6 py-4 font-bold text-gray-950 dark:text-gray-50 group-hover:text-cyan-800 dark:group-hover:text-cyan-300">${esc(d.document_type_name)}</td><td class="px-6 py-4">${ownerControl}</td><td class="px-6 py-4">${f}</td><td class="px-6 py-4 text-xs text-gray-500 dark:text-gray-400">${has?fmtDateTime(d.upload_date):'-'}</td><td class="px-6 py-4 text-xs">${dueHtml}</td><td class="px-6 py-4">${desktopStatusBadge}</td><td class="px-6 py-4 text-center align-middle"><div class="flex justify-center items-center gap-2">${actBtnDesktop}${reqBtnDesktop}${delBtnDesktop}</div></td></tr>`;
+          h+=`<tr id="document-row-${d.id}" data-doc-id="${d.id}" oncontextmenu="return openDocumentRequirementContextMenu(event, ${d.id})" class="${rowTone} hover:bg-gray-50 dark:hover:bg-gray-800/70 transition group align-middle"><td class="px-4 py-4 font-bold text-gray-950 dark:text-gray-50 group-hover:text-cyan-800 dark:group-hover:text-cyan-300 overflow-hidden"><div class="flex items-center gap-2 min-w-0"><span class="min-w-0 break-words">${esc(d.document_type_name)}</span>${documentRemarkIndicatorHtml(d)}</div></td><td class="px-4 py-4 overflow-hidden">${ownerControl}</td><td class="px-4 py-4 overflow-hidden">${f}</td><td class="px-4 py-4 text-xs">${documentDateHtml}</td><td class="px-4 py-4 text-xs text-gray-500 dark:text-gray-400">${has?fmtDateTime(d.upload_date):'-'}</td><td class="px-4 py-4 text-xs">${dueHtml}</td><td class="px-4 py-4">${desktopStatusBadge}</td><td class="px-4 py-4 text-center align-middle"><div class="flex justify-center items-center gap-2">${actBtnDesktop}${reqBtnDesktop}${delBtnDesktop}</div></td></tr>`;
           let mobileBadge = `<span class="text-xs px-2.5 py-1 rounded-full border font-bold ${statusClass}">${statusLabel}</span>`;
           if (!has && canManageStageDoc) {
             mobileBadge = `<span data-requirement-state="${esc(requirementState)}" data-has-file="0" onclick="toggleRequirementState(${d.id}, this)" class="text-xs px-2.5 py-1 rounded-full border font-bold ${statusClass} cursor-pointer select-none" title="${requirementState === 'Required' ? 'Tap to choose Optional or Not Required' : 'Tap to make required again'}">${statusLabel}</span>`;
@@ -1088,9 +1451,9 @@
           const mobileManageBtn = canDeleteDocument && has ? `<div class="flex gap-2"><button disabled class="flex-1 ${btnClass} border font-bold text-sm px-4 py-2.5 rounded-lg cursor-not-allowed">${btnLabel}</button>${mobileReqBtn}<button onclick="openConfirmModal('Delete file?',()=>delFile(${d.id}))" class="p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center justify-center" title="Delete file">${svgDelete}</button></div>` : (has ? `<div class="flex gap-2"><button disabled class="flex-1 ${btnClass} border font-bold text-sm px-4 py-2.5 rounded-lg cursor-not-allowed">${btnLabel}</button>${mobileReqBtn}</div>` : (canManageStageDoc && stage === 'Monitoring' ? `<div class="flex gap-2">${mobileUploadBtn}<button onclick="openConfirmModal('Delete monitoring document?',()=>delMonitoringDoc(${d.id}))" class="p-2 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/40 transition flex items-center justify-center">${svgDelete}</button></div>` : ''));
           const mobileMissingAction = isNotRequired ? '' : mobileUploadBtn;
           const mobileEmptyAction = stage === 'Monitoring' && canManageStageDoc ? mobileManageBtn : mobileMissingAction;
-          hm+=`<div id="document-row-${d.id}" data-doc-id="${d.id}" class="p-4 border-b border-gray-100 dark:border-gray-700 ${rowTone || 'bg-white dark:bg-gray-900'} hover:bg-gray-50 dark:hover:bg-gray-800 transition group">
+          hm+=`<div id="document-row-${d.id}" data-doc-id="${d.id}" oncontextmenu="return openDocumentRequirementContextMenu(event, ${d.id})" onpointerdown="startDocumentRequirementLongPress(event, ${d.id})" onpointerup="cancelDocumentRequirementLongPress()" onpointercancel="cancelDocumentRequirementLongPress()" onpointerleave="cancelDocumentRequirementLongPress()" class="p-4 border-b border-gray-100 dark:border-gray-700 ${rowTone || 'bg-white dark:bg-gray-900'} hover:bg-gray-50 dark:hover:bg-gray-800 transition group">
             <div class="flex justify-between items-start mb-2">
-              <span class="font-black text-gray-950 dark:text-gray-50 text-base flex-1 pr-2 group-hover:text-cyan-800 dark:group-hover:text-cyan-300">${esc(d.document_type_name)}</span>
+              <div class="font-black text-gray-950 dark:text-gray-50 text-base flex-1 pr-2 group-hover:text-cyan-800 dark:group-hover:text-cyan-300 flex items-center gap-2 min-w-0"><span class="min-w-0">${esc(d.document_type_name)}</span>${documentRemarkIndicatorHtml(d)}</div>
               ${mobileBadge}
             </div>
             <div class="grid grid-cols-2 gap-2 text-xs mb-3">
@@ -1101,6 +1464,10 @@
               <div>
                 <span class="text-gray-500 dark:text-gray-400">Due:</span>
                 ${dueClickable ? `<button type="button" data-doc-id="${d.id}" data-due-at="${esc(d.due_at || '')}" data-doc-name="${esc(d.document_type_name)}" onclick="openDocumentDueDateFromButton(this)" class="ml-1 text-left ${isOverdue ? 'text-red-700 dark:text-red-300 font-black' : 'text-gray-700 dark:text-gray-200'} hover:text-blue-600">${dueAt ? fmtDueDate(dueAt) : 'Set due date'}</button>` : `<span class="ml-1 ${isOverdue ? 'text-red-700 dark:text-red-300 font-black' : 'text-gray-700 dark:text-gray-200'}">${dueAt ? fmtDueDate(dueAt) : '-'}</span>`}
+              </div>
+              <div>
+                <span class="text-gray-500 dark:text-gray-400">Document Date:</span>
+                <span class="ml-1">${documentDateHtml}</span>
               </div>
               <div>
                 <span class="text-gray-500 dark:text-gray-400">Uploaded:</span>
@@ -1508,24 +1875,36 @@
       if (!actions) return;
       const canUpload = canUploadProjectDocumentation();
       const canView = canViewProjectDocumentation();
-      actions.classList.toggle('hidden', !(canUpload || canView));
+      actions.classList.toggle('hidden', !canUpload);
       document.getElementById('uploadDocumentationBtn')?.classList.toggle('hidden', !canUpload);
-      document.getElementById('viewDocumentationBtn')?.classList.toggle('hidden', !canView);
       const stage = currentProjectDocumentationStage();
+      const count = Number(projectDocumentationCounts[stage] || 0);
+      const button = document.getElementById('viewDocumentationBtn');
+      if (button) {
+        button.disabled = !canView || count === 0;
+        button.className = 'w-full justify-center px-4 py-2.5 rounded-lg transition font-bold flex items-center gap-2 ' + (button.disabled
+          ? 'bg-gray-200 dark:bg-gray-800 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+          : 'bg-cyan-700 dark:bg-cyan-500 text-white dark:text-gray-950 hover:bg-cyan-800 dark:hover:bg-cyan-400 shadow-md hover:shadow-lg cursor-pointer focus-visible:ring-2 focus-visible:ring-cyan-500 focus-visible:ring-offset-2');
+        button.classList.toggle('hidden', !canView);
+        button.title = count ? `View ${stage} photos and videos` : `No documentation uploaded for ${stage}`;
+      }
       const label = document.getElementById('viewDocumentationBtnLabel');
-      if (label) label.textContent = `View Documentation (${Number(projectDocumentationCounts[stage] || 0)})`;
+      if (label) label.textContent = `View Documentation (${count})`;
     }
 
     async function refreshProjectDocumentationCounts(options = {}) {
+      const projectId = currentProjId;
       if (!currentProjId || !canViewProjectDocumentation()) {
         projectDocumentationCounts = { Proposal: 0, Implementation: 0, Monitoring: 0, Completed: 0 };
         updateProjectDocumentationButtons();
         return;
       }
       try {
-        const counts = await fetchJson(`${API}/projects/${currentProjId}/documentation/counts`, options.silent ? { silentLoading: true } : {});
+        const counts = await fetchJson(`${API}/projects/${projectId}/documentation/counts`, options.silent ? { silentLoading: true } : {});
+        if (Number(projectId) !== Number(currentProjId)) return;
         projectDocumentationCounts = { Proposal: 0, Implementation: 0, Monitoring: 0, Completed: 0, ...(counts || {}) };
       } catch (e) {
+        if (Number(projectId) !== Number(currentProjId)) return;
         projectDocumentationCounts = { Proposal: 0, Implementation: 0, Monitoring: 0, Completed: 0 };
       }
       updateProjectDocumentationButtons();
@@ -1633,6 +2012,48 @@
       document.getElementById('projectDocumentationUploadModal').classList.remove('hidden');
     }
 
+    function uploadProjectDocumentation(url, form) {
+      const bar = document.getElementById('projectDocumentationUploadProgressBar');
+      const label = document.getElementById('projectDocumentationUploadProgressText');
+      bar.style.width = '0%';
+      bar.setAttribute('aria-valuenow', '0');
+      label.textContent = '0%';
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        const requestAuthToken = authToken;
+        xhr.open('POST', url);
+        if (requestAuthToken) xhr.setRequestHeader('Authorization', `Bearer ${requestAuthToken}`);
+        xhr.upload.onprogress = event => {
+          if (!event.lengthComputable || !event.total) {
+            bar.removeAttribute('aria-valuenow');
+            label.textContent = `${formatBytes(event.loaded)} uploaded`;
+            return;
+          }
+          const percent = Math.min(100, Math.floor(event.loaded / event.total * 100));
+          bar.style.width = `${percent}%`;
+          bar.setAttribute('aria-valuenow', String(percent));
+          label.textContent = `${percent}%`;
+        };
+        xhr.upload.onload = () => {
+          bar.style.width = '100%';
+          bar.setAttribute('aria-valuenow', '100');
+          label.textContent = '100% — Saving documentation...';
+        };
+        xhr.onload = () => {
+          let data;
+          try { data = JSON.parse(xhr.responseText); }
+          catch { return reject(new Error('Invalid upload response. Please refresh to check whether the files were saved.')); }
+          if (xhr.status === 401 && requestAuthToken && requestAuthToken === authToken) handleServerSessionUnauthorized(data.code);
+          if (xhr.status < 200 || xhr.status >= 300) return reject(new Error(data.error || 'Upload failed'));
+          schedulePostMutationRefresh(url);
+          resolve(data);
+        };
+        xhr.onerror = () => reject(new Error('Upload failed. Check your connection and try again.'));
+        xhr.onabort = () => reject(new Error('Upload cancelled.'));
+        xhr.send(form);
+      });
+    }
+
     document.getElementById('projectDocumentationUploadForm')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       if (!currentProjId) return;
@@ -1649,7 +2070,7 @@
       progress.classList.remove('hidden');
       submit.disabled = true;
       try {
-        const result = await fetchJson(`${API}/projects/${currentProjId}/documentation`, { method: 'POST', body: form });
+        const result = await uploadProjectDocumentation(`${API}/projects/${currentProjId}/documentation`, form);
         toast(`Uploaded ${result.uploaded?.length || projectDocumentationSelectedFiles.length} documentation file(s)`);
         closeModal('projectDocumentationUploadModal');
         projectDocumentationSelectedFiles = [];
@@ -1944,6 +2365,7 @@
     }
 
     const settingsSectionMeta = {
+      'telegram-integration': {group:'Configuration',title:'Telegram Integration',subtitle:'Connect approved chats and send weather alerts through your Telegram bot.',access:'Privilege controlled'},
       'appearance': {
         group: 'My Account',
         title: 'Appearance',
@@ -2052,7 +2474,7 @@
       appearance: 'theme display dark light system branding logo header',
       'change-password': 'password account credential security',
       'mobile-qr-login': 'mobile qr login geocamera abearc account scan link',
-      changelog: 'changelog release notes version updates feedback bug change improvement v1.47 august 2026 established asset monitoring inventory metrics inspection checklist machinery infrastructure irrigation facility vehicle print export geocam share qr saved badge sql upload reliability v1.46 shared map visibility project geotag automation keyboard live mydrive synchronization v1.45 monitoring registry visits tasks priority scheduling v1.44 geotag map auto sync persistent camera zoom bulk rename category download delete all confirmations davao zoning tiles boundary perimeter outside upload rejection opentopomap scale extent measure ruler fixed workspace sidebar uniform icons v1.43 geocam map layers offline terrain v1.42 geotag map naming v1.41 terminology v1.40 geocam send upload ui v1.39 destination selection v1.38 stamped photo enforcement v1.37 abearc map search fit bounds all results global dataset viewport adjust matching photos search filters no snap redundant reload v1.36 commercial grade abearc map ui ux evidence workspace command bar filter rail live results sync states photo list details drawer responsive mobile filter panel measurement controls operational redesign v1.35 geocam photo details effective zoning facing zone road capture details label metadata integration v1.34 abearc map measuring layer full height bottom clipping svg overlay canvas dimensions resize sync ruler v1.33 abearc map layers click only no hover focus open tray explicit toggle v1.32 abearc map edit modal category remarks system design responsive bottom sheet desktop dialog inline validation escape close v1.31 google maps style layers image tile overlaid caption horizontal thumbnail tray alt cluster explosion modifier release fixed viewport map page no scroll v1.30 abearc map persistent ctrl explosion pan rotate zoom refresh selected image google maps style layers thumbnail bottom left full page original photo preview escape close details v1.29 abearc map max zoom cluster explosion selected photo highlight yellow thumbnail empty map click zoom out ctrl release exploded selection v1.28 abearc map ctrl release unexplode animation exploded photo direction arrows compass bearing thumbnails reverse collapse v1.27 abearc map compass correct bearing arrows thumbnail direction map rotation rotate exploded photo arrows v1.26 abearc map pinned cluster explosion source marker hidden animated thumbnails white leader lines coordinate dots avoid line crossing stay exploded escape ctrl click collapse v1.25 abearc map bearing arrow thumbnail outline explosion each photo coordinate avoid occupied thumbnails hide removed original preview full tab detail thumbnail zoning recovery stamp remarks image metadata known zone names v1.24 abearc map clustered photo click continue zoom max zoom no cluster cap screen cluster source cluster close photo group v1.23 abearc map open original edit icon direct event listener zoning stamp remarks fallback ruler area label center closed polygon photo coordinate measure ctrl held explosion release collapse v1.22 abearc map cluster click zoom in ctrl click explode prevent zoom out clustered photo pins v1.21 abearc map live ruler draggable measure points double click delete point original viewer edit icons global handlers remarks geocam zoning stamp fallback bearing arrow no zoom cluster explode v1.20 abearc map details editable category remarks zoning location hide unhide original viewer bearing arrow age status ctrl cluster explosion ruler distance area v1.19 abearc map broken thumbnail image authenticated media token samsung gallery cluster stable mercator no shaking stacked photo badge v1.18 abearc map photo pins not visible deterministic screen clustering render markers loaded features v1.17 abearc map geocam style photo thumbnail pins latest image cluster count marker not circle map photo preview v1.16 abearc map failed to load map photos mapMediaGeoJsonFeature mapMediaPublicFields backend manifest map media model v1.15 geocam abearc map upload storeMapMediaUpload not defined backend manifest map media service v1.14 abearc map blank map area maplibre canvas basemap loading viewport height google terrain google satellite v1.13 geocam map upload error details multipart photo files field invalid map image v1.12 abearc map layer basemap google terrain google satellite v1.11 abearc map geocam direct upload map media clustering exploded photo groups leader lines location review thumbnails maplibre v1.10 requirements reload override admin v1.09 mobile upload geocam doc scanner abedocscan sync skip existing qr login v1.08 work assignment bulk assign for review direct superior calendar participant my drive shared folder folder download owner transfer configuration stale request ABEARC v1.07 v1.06 v1.05 v1.04 v1.03 v1.02 v1.01',
+      changelog: 'changelog release notes version updates feedback bug change improvement v1.49 september 2026 kml import export multiple polygons contour lines namria dtm elevation profile annotations coordinate search barangay district cpdo calendar quick filters dashboard pagination permissions reliability v1.48 august 2026 drone orthomap orthomosaic timeline time series compare playback geotiff terrain topography elevation overlays project document export download nas deployment v1.47 established asset monitoring inventory metrics inspection checklist machinery infrastructure irrigation facility vehicle print export geocam share qr saved badge sql upload reliability v1.46 shared map visibility project geotag automation keyboard live mydrive synchronization v1.45 monitoring registry visits tasks priority scheduling v1.44 geotag map auto sync persistent camera zoom bulk rename category download delete all confirmations davao zoning tiles boundary perimeter outside upload rejection opentopomap scale extent measure ruler fixed workspace sidebar uniform icons v1.43 geocam map layers offline terrain v1.42 geotag map naming v1.41 terminology v1.40 geocam send upload ui v1.39 destination selection v1.38 stamped photo enforcement v1.37 abearc map search fit bounds all results global dataset viewport adjust matching photos search filters no snap redundant reload v1.36 commercial grade abearc map ui ux evidence workspace command bar filter rail live results sync states photo list details drawer responsive mobile filter panel measurement controls operational redesign v1.35 geocam photo details effective zoning facing zone road capture details label metadata integration v1.34 abearc map measuring layer full height bottom clipping svg overlay canvas dimensions resize sync ruler v1.33 abearc map layers click only no hover focus open tray explicit toggle v1.32 abearc map edit modal category remarks system design responsive bottom sheet desktop dialog inline validation escape close v1.31 google maps style layers image tile overlaid caption horizontal thumbnail tray alt cluster explosion modifier release fixed viewport map page no scroll v1.30 abearc map persistent ctrl explosion pan rotate zoom refresh selected image google maps style layers thumbnail bottom left full page original photo preview escape close details v1.29 abearc map max zoom cluster explosion selected photo highlight yellow thumbnail empty map click zoom out ctrl release exploded selection v1.28 abearc map ctrl release unexplode animation exploded photo direction arrows compass bearing thumbnails reverse collapse v1.27 abearc map compass correct bearing arrows thumbnail direction map rotation rotate exploded photo arrows v1.26 abearc map pinned cluster explosion source marker hidden animated thumbnails white leader lines coordinate dots avoid line crossing stay exploded escape ctrl click collapse v1.25 abearc map bearing arrow thumbnail outline explosion each photo coordinate avoid occupied thumbnails hide removed original preview full tab detail thumbnail zoning recovery stamp remarks image metadata known zone names v1.24 abearc map clustered photo click continue zoom max zoom no cluster cap screen cluster source cluster close photo group v1.23 abearc map open original edit icon direct event listener zoning stamp remarks fallback ruler area label center closed polygon photo coordinate measure ctrl held explosion release collapse v1.22 abearc map cluster click zoom in ctrl click explode prevent zoom out clustered photo pins v1.21 abearc map live ruler draggable measure points double click delete point original viewer edit icons global handlers remarks geocam zoning stamp fallback bearing arrow no zoom cluster explode v1.20 abearc map details editable category remarks zoning location hide unhide original viewer bearing arrow age status ctrl cluster explosion ruler distance area v1.19 abearc map broken thumbnail image authenticated media token samsung gallery cluster stable mercator no shaking stacked photo badge v1.18 abearc map photo pins not visible deterministic screen clustering render markers loaded features v1.17 abearc map geocam style photo thumbnail pins latest image cluster count marker not circle map photo preview v1.16 abearc map failed to load map photos mapMediaGeoJsonFeature mapMediaPublicFields backend manifest map media model v1.15 geocam abearc map upload storeMapMediaUpload not defined backend manifest map media service v1.14 abearc map blank map area maplibre canvas basemap loading viewport height google terrain google satellite v1.13 geocam map upload error details multipart photo files field invalid map image v1.12 abearc map layer basemap google terrain google satellite v1.11 abearc map geocam direct upload map media clustering exploded photo groups leader lines location review thumbnails maplibre v1.10 requirements reload override admin v1.09 mobile upload geocam doc scanner abedocscan sync skip existing qr login v1.08 work assignment bulk assign for review direct superior calendar participant my drive shared folder folder download owner transfer configuration stale request ABEARC v1.07 v1.06 v1.05 v1.04 v1.03 v1.02 v1.01',
       'project-types': 'project types project type categories classification',
       requestees: 'requestees offices recipients requester requestee',
       'document-types': 'document types documents proposal implementation categories display order requirement names',

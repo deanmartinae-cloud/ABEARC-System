@@ -1,0 +1,32 @@
+{
+  "title": "Hydraulic Ram Pump System Design Manual",
+  "organization": "US Peace Corps Philippines",
+  "author": "Page Weil",
+  "reference_url": "https://www.slideshare.net/slideshow/hydraulic-ram-pump-system-design-manual-us-peace-corps-philippines/22448949",
+  "purpose": "Local engineering-reference snapshot for ABEARC Ram-Pump planning. This file stores summarized design rules, not copied manual pages.",
+  "reference_design": {
+    "name": "University of Warwick DTU S-2 ram pump",
+    "source_flow_l_min": { "min": 40, "max": 120 },
+    "drive_head_m": { "min": 2, "max": 15 },
+    "delivery_head_m": { "max": 100 },
+    "drive_pipe_diameter_by_source_flow": [
+      { "source_flow_l_s": { "min": 0.66, "max": 1.0 }, "drive_pipe_nominal_in": 1.0, "diameter_mm": 25.4 },
+      { "source_flow_l_s": { "min_exclusive": 1.0, "max": 1.33 }, "drive_pipe_nominal_in": 1.5, "diameter_mm": 38.1 },
+      { "source_flow_l_s": { "min_exclusive": 1.33, "max": 2.0 }, "drive_pipe_nominal_in": 2.0, "diameter_mm": 50.8 }
+    ],
+    "drive_pipe_length_rule": {
+      "minimum": "150D",
+      "maximum": "1000D",
+      "unit_rule": "L and D must use consistent units"
+    },
+    "long_drive_treatment": {
+      "condition": "Use a standpipe or drive tank when the intake/source-to-pump run exceeds the maximum allowable rigid drive-pipe length.",
+      "standpipe_top_freeboard_above_source_water_m": 0.3,
+      "standpipe_minimum_oversize_over_drive_pipe_in": 1.0,
+      "upstream_supply_pipe_oversize_over_drive_pipe_in": 0.5,
+      "placement": "Place the standpipe/drive tank as far from the ram pump as practical while keeping the effective rigid drive-pipe segment within Lmax."
+    }
+  },
+  "important_scope_note": "The S-2 operating envelope and Table 2 diameter bands are model-specific reference limits. ABEARC keeps manufacturer-specific limits separate for other pumps. The 150D-1000D drive-pipe check is exposed as a selectable reference rule and must be verified against the selected pump/manufacturer for final design.",
+  "engineering_status": "Preliminary planning reference only; final design requires surveyed elevations, dependable minimum source discharge, pipe pressure/transient checks, structural support/anchorage design, and manufacturer verification."
+}

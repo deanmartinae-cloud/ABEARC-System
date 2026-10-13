@@ -1,0 +1,13 @@
+{
+  "format": "ABEARC_MAP_LAYOUT",
+  "format_version": 1,
+  "exported_at": "2026-10-06T05:49:35.351Z",
+  "layout": {
+    "name": "Export test",
+    "description": "",
+    "state_version": 1,
+    "state": {
+      "camera": {}
+    }
+  }
+}

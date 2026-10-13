@@ -93,7 +93,7 @@ async function deleteDocumentFileInternal(req, docId, { stageAccess = null, skip
     try { fs.unlinkSync(fp); } catch(e) { logError('DELETE_FILE_UNLINK', e.message, e.stack); }
     cleanEmptyFolders(path.dirname(fp));
   }
-  await dbRun("UPDATE Documents SET file_path=NULL, file_name=NULL, upload_date=NULL, checked_at=NULL, status=? WHERE id=?", ['None', docId]);
+  await dbRun("UPDATE Documents SET file_path=NULL, file_name=NULL, upload_date=NULL, document_date=NULL, checked_at=NULL, status=? WHERE id=?", ['None', docId]);
   await dbRun("DELETE FROM DocumentSearchIndex WHERE document_id = ?", [docId]).catch(() => {});
   await removeProjectDocumentMapMediaLinks([docId]);
   try { logActivity({ req, action: 'DELETE_FILE', projectId: doc.project_id, project: doc.project_name, requester: doc.requester, docType: doc.document_type_name, details: 'Deleted file' }); } catch(logErr) { logError('DELETE_FILE_LOG', logErr.message, logErr.stack); }
@@ -117,6 +117,10 @@ app.delete('/api/documents/:docId/file', checkPrivilege('delete_document'), __ro
 app.patch('/api/documents/:documentId/status', checkPrivilege('mark_checked'), __routeController188);
 
 app.patch('/api/documents/:documentId/requirement-state', __routeController189);
+
+app.patch('/api/documents/:documentId/document-date', requireAuth, updateDocumentDateController);
+
+app.patch('/api/documents/:documentId/remarks', requireAuth, updateDocumentRemarksController);
 
 // Update manual due date override for a project
 app.put('/api/projects/:projectId/due-date', checkPrivilege('set_manual_due_date'), __routeController190);

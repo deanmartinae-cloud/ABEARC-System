@@ -1091,10 +1091,12 @@
         } else if(choice!=='continue') return;
       }
       try{
+        const conflicts=await calendarCheckConflicts({start_datetime:`${date}T${startTime}:00+08:00`,end_datetime:`${date}T${endTime}:00+08:00`,participant_user_ids:monitoringScheduleParticipantIds()});
+        if(conflicts.length && !(await confirmModalChoice(calendarConflictMarkup(conflicts),{title:'Schedule conflicts',confirmText:'Proceed Anyway'})))return;
         await fetchJson(`${API}/monitoring/inventory/${id}/schedule`,{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({date,start_time:startTime,end_time:endTime,participant_user_ids:monitoringScheduleParticipantIds(),notes:monitoringValue('msNotes'),confirm_past_date:confirmedPastDate})
+          body:JSON.stringify({date,start_time:startTime,end_time:endTime,participant_user_ids:monitoringScheduleParticipantIds(),notes:monitoringValue('msNotes'),confirm_past_date:confirmedPastDate,acknowledge_conflicts:true})
         });
         usersCache = [];
         monitoringUsersCache = [];

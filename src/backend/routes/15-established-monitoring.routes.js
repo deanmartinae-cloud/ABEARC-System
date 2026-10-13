@@ -773,6 +773,7 @@ app.post('/api/monitoring/inventory/:id/schedule', checkPrivilege('schedule_moni
     if (participants.length !== participantUserIds.length) return res.status(400).json({ error: 'One or more selected participants do not exist or cannot be assigned.' });
 
     const title = `Monitoring: ${item.inventory_code} - ${item.asset_name}`;
+    if (!(await calendarCheckBeforeSave(req,res,{start_datetime:`${dateKey}T${startTime}:00+08:00`,end_datetime:`${dateKey}T${endTime}:00+08:00`,participant_user_ids:participantUserIds,acknowledge_conflicts:req.body?.acknowledge_conflicts}))) return;
     const location = [item.purok, item.barangay, item.district].filter(Boolean).join(', ');
     const description = [`Recipient: ${item.recipient_organization || '-'}`, `Location: ${location || '-'}`, String(req.body?.notes || '').trim()].filter(Boolean).join('\n');
     const now = new Date().toISOString();

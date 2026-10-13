@@ -17,11 +17,22 @@ const ensureCalendarEventTypeDetailMigration = async () => {
   await addColumnIfMissing('CalendarEvents', 'event_type_detail', 'TEXT');
 };
 
-const ensureUserDriveUploadIdempotencyMigration = async () => {
-  await addColumnIfMissing('UserDriveFiles', 'upload_idempotency_key', 'TEXT');
-  await dbRun(`CREATE UNIQUE INDEX IF NOT EXISTS idx_user_drive_upload_idempotency
-               ON UserDriveFiles(owner_user_id, upload_idempotency_key)
-               WHERE upload_idempotency_key IS NOT NULL`);
+const ensureDocumentRemarksMigration = async () => {
+  await addColumnIfMissing('Documents', 'remarks', 'TEXT');
+};
+
+const ensureDocumentDateMigration = async () => {
+  await addColumnIfMissing('Documents', 'document_date', 'DATETIME');
+  await dbRun('CREATE INDEX IF NOT EXISTS idx_documents_document_date ON Documents(document_date)');
+};
+
+const ensureRoleDefaultPrivileges = async () => {
+  const users = await dbAll('SELECT id, role FROM Users');
+  for (const user of users) {
+    for (const privilege of ROLE_DEFAULT_PRIVILEGES[user.role] || []) {
+      await dbRun('INSERT OR IGNORE INTO UserPrivileges (user_id, privilege, enabled) VALUES (?, ?, 1)', [user.id, privilege]);
+    }
+  }
 };
 
 const removeNonSystemFeedbackNotifications = async () => {
@@ -128,4 +139,3 @@ const ensureUsersSystemRoleMigration = async () => {
                SET is_system_account = CASE WHEN role = 'system' THEN 1 ELSE COALESCE(is_system_account, 0) END,
                    hidden_from_workflows = CASE WHEN role = 'system' THEN 1 ELSE COALESCE(hidden_from_workflows, 0) END`);
 };
-

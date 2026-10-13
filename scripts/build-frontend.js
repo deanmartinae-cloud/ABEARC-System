@@ -1,9 +1,71 @@
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const ROOT = path.resolve(__dirname, '..');
 const FRONTEND = path.join(ROOT, 'src', 'frontend');
 const PUBLIC = path.join(ROOT, 'public');
+
+
+function listFilesRecursive(dir) {
+  const out = [];
+  if (!fs.existsSync(dir)) return out;
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) out.push(...listFilesRecursive(full));
+    else out.push(full);
+  }
+  return out.sort();
+}
+
+function computeFrontendBuildId() {
+  const hash = crypto.createHash('sha256');
+  const roots = [
+    path.join(FRONTEND, 'layout'),
+    path.join(FRONTEND, 'pages'),
+    path.join(FRONTEND, 'components'),
+    path.join(FRONTEND, 'modals'),
+    path.join(FRONTEND, 'styles'),
+    path.join(FRONTEND, 'services'),
+    path.join(FRONTEND, 'scripts'),
+    path.join(FRONTEND, 'data'),
+    path.join(FRONTEND, 'media')
+  ];
+  const manifestFiles = [
+    path.join(FRONTEND, 'manifest.json'),
+    path.join(FRONTEND, 'script-manifest.json')
+  ];
+  const files = [...roots.flatMap(listFilesRecursive), ...manifestFiles.filter(fs.existsSync)].sort();
+  for (const file of files) {
+    hash.update(path.relative(ROOT, file));
+    hash.update('\0');
+    hash.update(fs.readFileSync(file));
+    hash.update('\0');
+  }
+  return hash.digest('hex').slice(0, 12);
+}
+
+function versionAssetRefs(html, buildId) {
+  return String(html || '').replace(/(src|href)="(\/assets\/[^"?]+)(?:\?[^"#]*)?"/g, (_m, attr, url) => `${attr}="${url}?v=${buildId}"`);
+}
+
+function buildRecoveryBootstrap(buildId) {
+  return [
+    '  <script>',
+    `    window.__ABEARC_BUILD_ID = ${JSON.stringify(buildId)};`,
+    '    try {',
+    "      const buildKey = 'abearcFrontendBuildId';",
+    '      const previousBuild = localStorage.getItem(buildKey);',
+    '      if (previousBuild && previousBuild !== window.__ABEARC_BUILD_ID) {',
+    "        sessionStorage.removeItem('abedSessionAppState');",
+    "        localStorage.removeItem('abedSessionAppState');",
+    '      }',
+    '      localStorage.setItem(buildKey, window.__ABEARC_BUILD_ID);',
+    '    } catch (_) {}',
+    '  </script>',
+    ''
+  ].join('\n');
+}
 
 function read(relativePath) {
   return fs.readFileSync(path.join(ROOT, relativePath), 'utf8');
@@ -25,7 +87,7 @@ function copyVendorAsset(source, destination) {
   fs.copyFileSync(source, destination);
 }
 
-function copyMapLibreAssets(destinationDir) {
+function copyMapLibreAssets(destinationDir, buildId) {
   const dist = path.join(ROOT, 'node_modules', 'maplibre-gl', 'dist');
   if (!fs.existsSync(dist)) return;
   fs.mkdirSync(destinationDir, { recursive: true });
@@ -34,7 +96,7 @@ function copyMapLibreAssets(destinationDir) {
     if (/^maplibre-gl.*\.mjs$/.test(file)) copyVendorAsset(path.join(dist, file), path.join(destinationDir, file));
   }
   fs.writeFileSync(path.join(destinationDir, 'maplibre-gl.js'), [
-    "window.abearcMapLibreReady = import('/assets/vendor/maplibre-gl.mjs')",
+    `window.abearcMapLibreReady = import('/assets/vendor/maplibre-gl.mjs?v=${buildId}')`,
     "  .then((module) => {",
     "    window.maplibregl = module.default || module;",
     "    return window.maplibregl;",
@@ -64,6 +126,7 @@ function clearPublicAssets() {
 }
 
 function buildFrontend() {
+  const buildId = computeFrontendBuildId();
   fs.mkdirSync(PUBLIC, { recursive: true });
   const cssOut = path.join(PUBLIC, 'assets', 'css');
   const jsOut = path.join(PUBLIC, 'assets', 'js');
@@ -72,8 +135,10 @@ function buildFrontend() {
   copyDir(path.join(FRONTEND, 'services'), jsOut);
   copyDir(path.join(FRONTEND, 'scripts'), jsOut);
   copyDir(path.join(FRONTEND, 'data'), path.join(PUBLIC, 'assets', 'data'));
-  copyMapLibreAssets(path.join(PUBLIC, 'assets', 'vendor'));
+  if (fs.existsSync(path.join(FRONTEND, 'media'))) copyDir(path.join(FRONTEND, 'media'), path.join(PUBLIC, 'assets', 'media'));
+  copyMapLibreAssets(path.join(PUBLIC, 'assets', 'vendor'), buildId);
   copyPMTilesAssets(path.join(PUBLIC, 'assets', 'vendor'));
+  copyVendorAsset(path.join(ROOT, 'node_modules', 'pdf-lib', 'dist', 'pdf-lib.min.js'), path.join(PUBLIC, 'assets', 'vendor', 'pdf-lib.min.js'));
 
   const fragments = JSON.parse(fs.readFileSync(path.join(FRONTEND, 'manifest.json'), 'utf8'));
   const scripts = JSON.parse(fs.readFileSync(path.join(FRONTEND, 'script-manifest.json'), 'utf8'));
@@ -86,14 +151,15 @@ function buildFrontend() {
     return file.includes('/vendor/') ? `  <script src="/assets/vendor/${name}"></script>` : `  <script src="/assets/js/${name}"></script>`;
   }).join('\n');
 
-  const html = [
+  const html = versionAssetRefs([
     read('src/frontend/layout/head.html'),
+    buildRecoveryBootstrap(buildId),
     '  <link rel="stylesheet" href="/assets/vendor/maplibre-gl.css">\n',
     read('src/frontend/layout/body-open.html'),
     ...fragments.map(read),
     scriptTags + '\n',
     read('src/frontend/layout/body-close.html')
-  ].join('');
+  ].join(''), buildId);
 
   fs.writeFileSync(path.join(PUBLIC, 'index.html'), html, 'utf8');
   const logo = path.join(ROOT, 'psabe.png');
@@ -103,7 +169,7 @@ function buildFrontend() {
 
 if (require.main === module) {
   const output = buildFrontend();
-  console.log(`Frontend built: ${output}`);
+  console.log(`Frontend built: ${output} (build ${computeFrontendBuildId()})`);
 }
 
 module.exports = { buildFrontend };

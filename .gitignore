@@ -31,3 +31,12 @@ Restart_Update ABEACR Server.bat
 .vscode/
 coverage/
 *.tmp
+
+# Generated previews, test output, and scratch files
+output/
+tmp/
+
+# Windows launch/deployment helpers may contain machine-specific credentials.
+# Keep the already tracked legacy launcher, but ignore new batch files.
+*.bat
+!run-server-FIXED.bat

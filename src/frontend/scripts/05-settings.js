@@ -16,6 +16,7 @@
       document.getElementById('settingsView')?.classList.toggle('settings-standalone-section', section === 'downloads-forms');
       // Check privilege for settings sections
       const sectionPrivileges = {
+        'telegram-integration': () => telegramCanView(),
         'project-types': 'manage_project_types',
         'requestees': 'manage_requestees',
         'document-types': 'manage_document_types',
@@ -68,7 +69,9 @@
       }
       
       // Load content based on section
-      if (section === 'activity-logs') {
+      if (section === 'telegram-integration') {
+        await renderTelegramIntegration();
+      } else if (section === 'activity-logs') {
         loadActivityLogs();
       } else if (section === 'workload-analytics') {
         renderWorkloadAnalytics();
@@ -1352,21 +1355,10 @@
         closeModal('fileViewerModal');
     };
 
-    window.downloadDocumentFile = async function(documentId, fileName = '') {
+    window.downloadDocumentFile = function(documentId, fileName = '') {
         const docId = Number(documentId);
         if (!docId) return toast('No project/document selected.', 'error');
-        try {
-            const result = await downloadsFormsDownloadRequest(`${API}/documents/${docId}/download`, fileName || 'download', {
-              title: 'Downloading document',
-              initialStatus: 'Preparing document download...',
-              progressStatus: 'Downloading document...',
-              finishingStatus: 'Download complete. Saving file...',
-              returnMeta: true
-            });
-            downloadBlob(result.blob, result.filename || fileName || 'download');
-        } catch (e) {
-            toast(e.message || 'Failed to download file', 'error');
-        }
+        nativeAuthenticatedDownload(`${API}/documents/${docId}/download`, fileName || 'download');
     };
 
     window.downloadCurrentFileViewerFile = function() {

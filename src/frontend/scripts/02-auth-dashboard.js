@@ -1448,7 +1448,7 @@
       } else {
         showProjectsPanel(false);
       }
-      loadDash();
+      loadDash({ preservePage: true });
     }
 
     async function showReviewDocumentsPage(pushHistory = true) {
@@ -1657,6 +1657,7 @@
           !hasPrivilege('view_workload_analytics') &&
           !hasPrivilege('manage_backups') &&
           !canUsePendingConfirmations() &&
+          !telegramCanView() &&
           !hasPrivilege('manage_maintenance')) {
         return 'appearance';
       }
@@ -1674,13 +1675,14 @@
       if (hasPrivilege('manage_backups')) return 'backup-restore';
       if (canUsePendingConfirmations()) return 'pending-confirmations';
       if (hasPrivilege('manage_maintenance')) return 'admin-maintenance';
+      if (telegramCanView()) return 'telegram-integration';
       return 'appearance'; // fallback
     }
     
     // Apply sidebar navigation visibility based on privileges
     function applySettingsSidebarVisibility() {
       // First hide ALL settings nav items
-      const allNavItems = ['project-types', 'requestees', 'document-types', 'document-due-schedules', 'requirements', 'user-management', 'activity-logs', 'workload-analytics', 'backup-restore', 'downloads-forms', 'pending-confirmations', 'config-import-export', 'admin-maintenance'];
+      const allNavItems = ['telegram-integration', 'project-types', 'requestees', 'document-types', 'document-due-schedules', 'requirements', 'user-management', 'activity-logs', 'workload-analytics', 'backup-restore', 'downloads-forms', 'pending-confirmations', 'config-import-export', 'admin-maintenance'];
       for (const navId of allNavItems) {
         const navBtn = document.getElementById(`nav-${navId}`);
         if (navBtn) navBtn.classList.add('hidden');
@@ -1696,6 +1698,10 @@
       
       // Now show only authorized nav items
       let hasConfigPrivileges = false;
+      if (telegramCanView()) {
+        document.getElementById('nav-telegram-integration')?.classList.remove('hidden');
+        hasConfigPrivileges = true;
+      }
       if (hasPrivilege('manage_project_types')) {
         document.getElementById('nav-project-types')?.classList.remove('hidden');
         hasConfigPrivileges = true;

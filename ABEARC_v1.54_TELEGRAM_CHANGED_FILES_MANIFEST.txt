@@ -1,0 +1,50 @@
+ABEARC v1.54 Telegram Integration - Changed Files Manifest
+Baseline: ABEARC_SYSTEM_v1.53_AWS_ZENTRA_RAMPUMP_FINAL_NAS.zip
+Baseline SHA-256: a513a36640fdde6c6d6f2ebe7101c38dd5bd016596eeaabec1fa7ee4f9745dcf
+Release date: 2026-10-08
+
+Added files: 13
++ docs/ABEARC_v1.54_RELEASE_NOTES.md  SHA256=5442023941eadea5a14f0d881a79c2974bde8d16ea98a2b6fd3afdda556a22cd
++ docs/ABEARC_v1.54_TELEGRAM_FINAL_IMPLEMENTATION_REPORT.md  SHA256=417dd86ff8ece0edd4caa6549930f27c26200ae341f66b00043a9b7a4b7d2c4f
++ docs/TELEGRAM_INTEGRATION.md  SHA256=f0ed4a508738ef3009b067cc54c5456c2b27fe801d5ece915eeba27f93cf0fe9
++ public/assets/js/24-telegram-integration.js  SHA256=c9800e54a0917bc8941f7f21b198d5aa730110e51bb4ad853f1072788b018dd1
++ scripts/check-telegram-integration.js  SHA256=f029b86a00a3c75a6ad304f02aed115e60091af139cc902c622ffb6e57e84464
++ scripts/test-telegram-service.js  SHA256=48042fc24054ea8e197dfc21e5631ad96d257e2811496d9d41e832eefdb4b4b9
++ scripts/test-telegram-workflow.js  SHA256=d3f2605185fcb99b8f179b7198147989c4be5ed796765135e95735b330787e23
++ src/backend/config/22-telegram.config.js  SHA256=e78f34455717a6d7138d331bfbf11d35a328412986a6cd3090bc88b5559b2e2f
++ src/backend/controllers/22-telegram.controller.js  SHA256=a089969df04a7b4220069f9fc892b3d52901f2ca3155e615073b50434539e5d8
++ src/backend/migrations/22-telegram.migration.js  SHA256=4273b970ab9ecf64cab672ec82f49342f993598bd74f674fb173fdb4fddce2e3
++ src/backend/routes/22-telegram.routes.js  SHA256=6e7c73666eb69e34bf59b82fced23fd4893ba80e2f9246924c3ea07da1a52a0d
++ src/backend/services/22-telegram.service.js  SHA256=d22ada0d3f005f3d22b0570a2ab60f1da4877672ddc82a88404970466d783537
++ src/frontend/scripts/24-telegram-integration.js  SHA256=c9800e54a0917bc8941f7f21b198d5aa730110e51bb4ad853f1072788b018dd1
+
+Changed files: 25
+~ 2. Restart_Update ABEACR Server.bat  SHA256=c25767b01a5ce676ea70e4093463772dc74986c70ac29fa7137cb5f69f8be815
+~ Dockerfile  SHA256=ef81afb94e01d14f90a1093e9298d1898c39ccea7000eaf7b487c53ddb112253
+~ README.md  SHA256=128a57b4efefc4451a261b4dc5ee0c0bc1b7b3511577c175b997775a189915bd
+~ docs/frontend-dom-id-baseline.json  SHA256=864b078ef906b35f658094ef3e4f045f5adcdf608fe29a829d96d4d0119153de
+~ package-lock.json  SHA256=2bc4a4f5bad60bda51d174058e05214d388aaa0ad4b025c544cc68b6facbea46
+~ package.json  SHA256=e518c27b6dd42172edff0ce9e724a31d916ae08db5666cc478f5151e74b6b092
+~ public/assets/js/02-auth-dashboard.js  SHA256=0b877e05e31ac5eb5a6b2a3f2827ce89befcd465e635215a78d3c42fc0b60adf
+~ public/assets/js/04-project-detail-documents.js  SHA256=f04db1434953318e0b478136d6665742456aec2b36f23495d6fc6e10046b3e0f
+~ public/assets/js/05-settings.js  SHA256=06e9c0e8eae44c10c0db1f4eec5d7528aaf673cd9ca59bd89cb36eed8e913ac1
+~ public/assets/js/06-feedback-users.js  SHA256=6437b7442af56166c2629970c607c3d1ac8508030ba31781b27cc6d54848496b
+~ public/index.html  SHA256=25712f70bd0430b0184cfd034b68974458d317eeab659b252be0e9c3bff4f02f
+~ run-local-server.bat  SHA256=d2ffa58b14e3567f7ab004dfffd11e0be42619b95193738a6c0ea13924268b1b
+~ scripts/build-frontend.js  SHA256=2152a9889e7f54e729c7253a8566629438054cac7babfcd1b01964923066b3b8
+~ scripts/check-nas-readiness.js  SHA256=1f3e840d182a6da00fb3711a7969ea66b3f1afc1128e81a4863058147be372dd
+~ scripts/check-runtime-wiring.js  SHA256=b6a4f61078b9ea4861efdb9aa6b873dda7d0bcb19659640304c7d3fd8cc27d2c
+~ src/backend/manifest.json  SHA256=eecf365b88840e5726cc8fda6733a8fe0e21c5269e235b781b96ca3d8c31e0fc
+~ src/backend/startup/00-listen.startup.js  SHA256=cfd73dfad8bf47b755485477c1cc3ac9cac8dbce3fb075cfc5e50ed0503693ed
+~ src/backend/utils/00-core.utils.js  SHA256=7295215da47cc38669323f68c87fdb9a2c5e61973bae12e655d0b3860f0e21c3
+~ src/frontend/components/stable-sidebar.html  SHA256=bd136c139bec23ddb37d3a1e8f8ab7efdaa412d6c06f7c6d5e6c198477163635
+~ src/frontend/pages/settings.page.html  SHA256=ec70a37df7114ff3953ac743f2e2b6ca4b1bc3348d79577e87b852b74d244b7b
+~ src/frontend/script-manifest.json  SHA256=1f62c2524ba0fe6e2d9072545b7809f69cb53db9ed2d50fe0be14c6cb237865a
+~ src/frontend/scripts/02-auth-dashboard.js  SHA256=0b877e05e31ac5eb5a6b2a3f2827ce89befcd465e635215a78d3c42fc0b60adf
+~ src/frontend/scripts/04-project-detail-documents.js  SHA256=f04db1434953318e0b478136d6665742456aec2b36f23495d6fc6e10046b3e0f
+~ src/frontend/scripts/05-settings.js  SHA256=06e9c0e8eae44c10c0db1f4eec5d7528aaf673cd9ca59bd89cb36eed8e913ac1
+~ src/frontend/scripts/06-feedback-users.js  SHA256=6437b7442af56166c2629970c607c3d1ac8508030ba31781b27cc6d54848496b
+
+Deleted files: 0
+
+Note: this manifest file itself is intentionally excluded from the counts/hash list above to avoid a recursive self-hash.

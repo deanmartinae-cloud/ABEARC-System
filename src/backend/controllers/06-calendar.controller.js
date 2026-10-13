@@ -71,9 +71,10 @@ const __routeController101 = async (req, res) => {
       });
     }
     if (search) {
-      result = result.filter(ev => [ev.title, ev.description, ev.location, ev.project_name, ev.document_name, ev.event_type, ev.event_type_detail, ev.documentation_search_text, ...(ev.participants || []).map(p => p.username)].join(' ').toLowerCase().includes(search));
+      result = result.filter(ev => [ev.title, ev.description, ev.location, ev.project_name, ev.inventory_name, ev.inventory_code, ev.monitoring_status, ev.document_name, ev.event_type, ev.event_type_detail, ev.documentation_search_text, ...(ev.participants || []).map(p => p.username)].join(' ').toLowerCase().includes(search));
     }
     result.sort((a, b) => new Date(a.start) - new Date(b.start));
+    res.set('Cache-Control', 'private, no-store');
     res.json({ events: result });
   } catch (err) {
     console.error('Unified calendar events error:', err);
@@ -105,6 +106,7 @@ const __routeController102 = async (req, res) => {
       `, participants);
       if (found.length !== participants.length) return res.status(400).json({ error: 'One or more participants do not exist' });
     }
+    if (!(await calendarCheckBeforeSave(req, res, body))) return;
     let relatedProjectId = body.related_project_id ? Number(body.related_project_id) : null;
     if (relatedProjectId && !(await dbGet(`SELECT id FROM Projects WHERE id = ?`, [relatedProjectId]))) return res.status(400).json({ error: 'Related project not found' });
     if (body.related_document_id) {
@@ -113,20 +115,12 @@ const __routeController102 = async (req, res) => {
       if (!relatedProjectId) relatedProjectId = Number(doc.project_id);
     }
     const reminderMinutes = Array.isArray(body.reminder_minutes) ? JSON.stringify(body.reminder_minutes.map(Number).filter(n => Number.isFinite(n) && n >= 0)) : String(body.reminder_minutes || '');
-    const insert = await dbRun(`INSERT INTO CalendarEvents (title, description, location, start_datetime, end_datetime, all_day, event_type, event_type_detail, visibility, owner_user_id, related_project_id, related_document_id, color, reminder_minutes, recurrence_rule, status, created_by_user_id, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', ?, ?)`, [
-      title, String(body.description || '').trim(), String(body.location || '').trim(), start.toISOString(), end ? end.toISOString() : null, 0, eventType, eventTypeDetail, visibility, ownerUserId, relatedProjectId, body.related_document_id ? Number(body.related_document_id) : null, body.color || CALENDAR_TYPE_COLORS[eventType], reminderMinutes, String(body.recurrence_rule || '').trim(), req.user.id, new Date().toISOString()
-    ]);
+    const insert = await calendarInsertActivities(req, body, `INSERT INTO CalendarEvents (title, description, location, start_datetime, end_datetime, all_day, event_type, event_type_detail, visibility, owner_user_id, related_project_id, related_document_id, color, reminder_minutes, recurrence_rule, status, created_by_user_id, updated_at, priority, meeting_link, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`, [
+      title, String(body.description || '').trim(), String(body.location || '').trim(), start.toISOString(), end ? end.toISOString() : null, body.all_day ? 1 : 0, eventType, eventTypeDetail, visibility, ownerUserId, relatedProjectId, body.related_document_id ? Number(body.related_document_id) : null, body.color || CALENDAR_TYPE_COLORS[eventType], reminderMinutes, String(body.recurrence_rule || '').trim(), String(body.status || 'active'), req.user.id, new Date().toISOString(), body.priority || 'normal', String(body.meeting_link || ''), String(body.notes || '')
+    ], participants);
     const eventId = insert.lastID;
-    for (const userId of participants) {
-      const isCreatorParticipant = Number(userId) === Number(req.user.id);
-      await dbRun(`INSERT OR IGNORE INTO CalendarEventParticipants (event_id, user_id, role, response_status, notified_at) VALUES (?, ?, 'participant', ?, ?)`, [
-        eventId,
-        userId,
-        isCreatorParticipant ? 'accepted' : 'pending',
-        isCreatorParticipant ? null : new Date().toISOString()
-      ]);
-    }
     const event = await getCalendarEventFull(eventId);
+    await syncMonitoringInventoryScheduleFromCalendar(event);
     const notifyRecipients = participants.filter(id => Number(id) !== Number(req.user.id));
     if (notifyRecipients.length) notifyCalendarUsers({ req, event, recipients: notifyRecipients, type: 'calendar_event_created', message: `You have been added to a schedule: ${title}.`, alertKeyBase: `calendar_event_created:${eventId}` });
     auditCalendarEvent(eventId, req, 'CALENDAR_EVENT_CREATED', title);
@@ -158,6 +152,7 @@ const __routeController104 = async (req, res) => {
     const event = await getCalendarEventFull(Number(req.params.id));
     if (!event) return res.status(404).json({ error: 'Calendar event not found' });
     if (!(await canEditCalendarEvent(req.user, event))) return forbidden(res, 'Permission denied');
+    if (req.body?.series_scope && req.body.series_scope !== 'this') return calendarUpdateSeries(req,res,event);
     const body = req.body || {};
     const title = String(body.title ?? event.title).trim();
     if (!title) return res.status(400).json({ error: 'Title is required' });
@@ -181,18 +176,26 @@ const __routeController104 = async (req, res) => {
       const doc = await dbGet(`SELECT project_id FROM Documents WHERE id = ?`, [relatedDocumentId]);
       if (doc) relatedProjectId = Number(doc.project_id);
     }
+    if (relatedProjectId && !(await dbGet('SELECT id FROM Projects WHERE id=?',[relatedProjectId]))) return res.status(400).json({error:'Related project not found.'});
+    if (relatedDocumentId && !(await dbGet('SELECT id FROM Documents WHERE id=?',[relatedDocumentId]))) return res.status(400).json({error:'Related document not found.'});
+    if (Array.isArray(body.participant_user_ids)) {
+      const participantIds = uniqueIds(body.participant_user_ids);
+      if (participantIds.length) {
+        const found = await dbAll(`SELECT id FROM Users WHERE id IN (${participantIds.map(() => '?').join(',')}) AND role != 'system' AND COALESCE(hidden_from_workflows, 0) = 0`, participantIds);
+        if (found.length !== participantIds.length) return res.status(400).json({ error: 'One or more participants do not exist' });
+      }
+    }
+    if (!(await calendarCheckBeforeSave(req, res, { ...body, start_datetime: start.toISOString(), end_datetime: end?.toISOString(), participant_user_ids: body.participant_user_ids || event.participants.map(p => p.user_id) }, event.id))) return;
     const eventColor = body.color || (eventType === normalizeCalendarType(event.event_type) ? event.color : null) || CALENDAR_TYPE_COLORS[eventType];
-    await dbRun(`UPDATE CalendarEvents SET title=?, description=?, location=?, start_datetime=?, end_datetime=?, all_day=?, event_type=?, event_type_detail=?, visibility=?, related_project_id=?, related_document_id=?, color=?, reminder_minutes=?, recurrence_rule=?, status=?, updated_at=? WHERE id=?`, [
-      title, String(body.description ?? event.description ?? '').trim(), String(body.location ?? event.location ?? '').trim(), start.toISOString(), end ? end.toISOString() : null, 0, eventType, eventTypeDetail, visibility, relatedProjectId, relatedDocumentId, eventColor, Array.isArray(body.reminder_minutes) ? JSON.stringify(body.reminder_minutes) : String(body.reminder_minutes ?? event.reminder_minutes ?? ''), String(body.recurrence_rule ?? event.recurrence_rule ?? '').trim(), String(body.status || event.status || 'active'), new Date().toISOString(), event.id
+    await dbRun(`UPDATE CalendarEvents SET title=?, description=?, location=?, start_datetime=?, end_datetime=?, all_day=?, event_type=?, event_type_detail=?, visibility=?, related_project_id=?, related_document_id=?, color=?, reminder_minutes=?, recurrence_rule=?, status=?, updated_at=?, priority=?, meeting_link=?, notes=?, related_inventory_id=? WHERE id=?`, [
+      title, String(body.description ?? event.description ?? '').trim(), String(body.location ?? event.location ?? '').trim(), start.toISOString(), end ? end.toISOString() : null, (body.all_day ?? event.all_day) ? 1 : 0, eventType, eventTypeDetail, visibility, relatedProjectId, relatedDocumentId, eventColor, Array.isArray(body.reminder_minutes) ? JSON.stringify(body.reminder_minutes) : String(body.reminder_minutes ?? event.reminder_minutes ?? ''), String(body.recurrence_rule ?? event.recurrence_rule ?? '').trim(), String(body.status || event.status || 'active'), new Date().toISOString(), body.priority ?? event.priority ?? 'normal', String(body.meeting_link ?? event.meeting_link ?? ''), String(body.notes ?? event.notes ?? ''), body.related_inventory_id!==undefined?(Number(body.related_inventory_id)||null):event.related_inventory_id, event.id
     ]);
-    let participantSpecificNotificationsSent = false;
     if (Array.isArray(body.participant_user_ids)) {
       const nextIds = new Set(uniqueIds(body.participant_user_ids).map(Number));
       const currentIds = event.participants.map(p => Number(p.user_id));
       for (const id of currentIds.filter(id => !nextIds.has(id))) {
         await dbRun(`DELETE FROM CalendarEventParticipants WHERE event_id=? AND user_id=?`, [event.id, id]);
         notifyCalendarUsers({ req, event, recipients: [id], type: 'calendar_participant_removed', message: `You have been removed from the schedule: ${event.title}.`, alertKeyBase: `calendar_participant_removed:${event.id}:${id}` });
-        participantSpecificNotificationsSent = true;
       }
       for (const id of [...nextIds].filter(id => !currentIds.includes(Number(id)))) {
         const isCreatorParticipant = Number(id) === Number(event.created_by_user_id);
@@ -204,20 +207,20 @@ const __routeController104 = async (req, res) => {
         ]);
         if (!isCreatorParticipant) {
           notifyCalendarUsers({ req, event, recipients: [id], type: 'calendar_participant_added', message: `You have been added to a schedule: ${title}.`, alertKeyBase: `calendar_participant_added:${event.id}:${id}` });
-          participantSpecificNotificationsSent = true;
-        }
+          }
       }
       if (nextIds.has(Number(event.created_by_user_id))) {
         await dbRun(`UPDATE CalendarEventParticipants SET response_status='accepted' WHERE event_id=? AND user_id=?`, [event.id, event.created_by_user_id]);
       }
     }
+    if (body.related_inventory_id!==undefined && Number(body.related_inventory_id||0)!==Number(event.related_inventory_id||0)) await syncMonitoringInventoryScheduleFromCalendar(event,{removed:true});
     const updated = await getCalendarEventFull(event.id);
     await syncMonitoringInventoryScheduleFromCalendar(updated, { removed: String(updated.status || 'active').toLowerCase() !== 'active' || String(updated.event_type || '').toLowerCase() !== 'monitoring' });
-    if (importantChanged && !participantSpecificNotificationsSent) {
+    if (importantChanged) {
       const recipients = (await calendarRecipientsForEvent(event.id)).filter(id => Number(id) !== Number(req.user.id));
       notifyCalendarUsers({ req, event: updated, recipients, type: 'calendar_event_updated', message: `Schedule updated: ${title}.`, alertKeyBase: `calendar_event_updated:${event.id}`, cooldownMinutes: 10 });
     }
-    auditCalendarEvent(event.id, req, 'CALENDAR_EVENT_UPDATED', title);
+    auditCalendarEvent(event.id, req, 'CALENDAR_EVENT_UPDATED', `${title}; schedule: ${event.start_datetime} – ${event.end_datetime || ''} → ${updated.start_datetime} – ${updated.end_datetime || ''}`);
     logActivity({ req, action: 'CALENDAR_EVENT_UPDATED', projectId: updated.related_project_id, project: updated.related_project_name || '', docType: updated.related_document_name || '-', details: `Calendar event updated: ${title}` });
     res.json({ success: true, event: await normalizeManualCalendarEvent(req, updated) });
   } catch (err) {
@@ -249,21 +252,24 @@ const __routeController106 = async (req, res) => {
     const event = await getCalendarEventFull(Number(req.params.id));
     if (!event) return res.status(404).json({ error: 'Calendar event not found' });
     if (!(await canDeleteCalendarEvent(req.user, event))) return forbidden(res, 'Only the schedule creator with delete privilege can delete this schedule.');
-    const attachments = await dbAll(`SELECT file_path FROM CalendarEventAttachments WHERE event_id = ?`, [event.id]);
+    const targets = req.query.scope === 'series' && event.series_id ? await dbAll('SELECT * FROM CalendarEvents WHERE series_id=?',[event.series_id]) : [event];
+    for (const target of targets) if (!(await canDeleteCalendarEvent(req.user,target))) return forbidden(res);
+    const ids=targets.map(target=>target.id), placeholders=ids.map(()=>'?').join(',');
+    const attachments = await dbAll(`SELECT file_path FROM CalendarEventAttachments WHERE event_id IN (${placeholders})`, ids);
     await dbRun("BEGIN TRANSACTION");
     try {
-      await dbRun("DELETE FROM CalendarEventReminderLogs WHERE event_id = ?", [event.id]);
-      await dbRun("DELETE FROM CalendarEventParticipants WHERE event_id = ?", [event.id]);
-      await dbRun("DELETE FROM CalendarEventAttachments WHERE event_id = ?", [event.id]);
-      await dbRun("DELETE FROM CalendarEventNotes WHERE event_id = ?", [event.id]);
-      await dbRun("DELETE FROM CalendarEventAuditLogs WHERE event_id = ?", [event.id]);
-      await dbRun("DELETE FROM CalendarEvents WHERE id = ?", [event.id]);
+      await dbRun(`DELETE FROM CalendarEventReminderLogs WHERE event_id IN (${placeholders})`, ids);
+      await dbRun(`DELETE FROM CalendarEventParticipants WHERE event_id IN (${placeholders})`, ids);
+      await dbRun(`DELETE FROM CalendarEventAttachments WHERE event_id IN (${placeholders})`, ids);
+      await dbRun(`DELETE FROM CalendarEventNotes WHERE event_id IN (${placeholders})`, ids);
+      await dbRun(`DELETE FROM CalendarEventAuditLogs WHERE event_id IN (${placeholders})`, ids);
+      await dbRun(`DELETE FROM CalendarEvents WHERE id IN (${placeholders})`, ids);
       await dbRun("COMMIT");
     } catch (err) {
       await dbRun("ROLLBACK").catch(() => {});
       throw err;
     }
-    await syncMonitoringInventoryScheduleFromCalendar(event, { removed: true });
+    for(const target of targets) await syncMonitoringInventoryScheduleFromCalendar(target, { removed: true });
     attachments.forEach(a => {
       const filePath = safeCalendarAttachmentPath(a.file_path);
       if (filePath && fs.existsSync(filePath)) {
@@ -296,8 +302,8 @@ const __routeController107 = async (req, res) => {
       return res.json({ success: true, event_id: event.id, response_status: status });
     }
     await dbRun(`UPDATE CalendarEventParticipants SET response_status=? WHERE event_id=? AND user_id=?`, [status, event.id, req.user.id]);
-    const responseLabel = status === 'accepted' ? 'Accepted' : 'Had Prior Schedule';
-    const activityDetails = status === 'accepted' ? 'Accepted schedule invitation.' : 'Marked schedule invitation as Had Prior Schedule.';
+    const responseLabel = { accepted:'Accepted', had_prior_schedule:'Had Prior Schedule', tentative:'Tentative', declined:'Declined' }[status];
+    const activityDetails = `Responded to schedule invitation: ${responseLabel}.`;
     notifyCalendarUsers({ req, event, recipients: [event.owner_user_id], type: 'calendar_response_received', message: `${req.user.username} responded “${responseLabel}” to your schedule invitation.`, alertKeyBase: `calendar_response:${event.id}:${req.user.id}`, cooldownMinutes: 1440 });
     auditCalendarEvent(event.id, req, 'CALENDAR_RESPONSE_UPDATED', status);
     logActivity({ req, action: 'CALENDAR_RESPONSE_UPDATED', projectId: event.related_project_id, project: event.related_project_name || '', docType: event.related_document_name || '-', details: activityDetails });

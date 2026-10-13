@@ -99,6 +99,10 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_project ON MapMedia(project_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_location ON MapMedia(district, barangay)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_status ON MapMedia(map_status, location_status)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_updated ON MapMedia(updated_at)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_visibility_owner ON MapMedia(visibility, owner_user_id)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_project_category ON MapMedia(project_id, category)`);
+  db.run(`CREATE INDEX IF NOT EXISTS idx_mapmedia_inventory ON MapMedia(inventory_item_id)`);
 
   db.run(`CREATE TABLE IF NOT EXISTS ProjectDocumentMapMediaLinks (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

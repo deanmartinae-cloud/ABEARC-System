@@ -53,6 +53,7 @@
       applyCalendarSidebarState();
       renderCalendarUserSearch();
       renderCalendarSideFilters();
+      document.getElementById('calendarNewActivity')?.classList.toggle('hidden', !hasPrivilege('create_calendar_event'));
       document.getElementById('calendarCreateFab')?.classList.toggle('hidden', !hasPrivilege('create_calendar_event'));
     }
 
@@ -86,7 +87,7 @@
       calendarSelectedDateKeys = new Set([calendarSelectedDate]);
       calendarMonth = calendarSelectedDate.slice(0, 7);
       if (appCurrentView === 'calendar' && !restoringHistoryState) replaceAppHistory('calendar', { month: calendarMonth, scope: calendarScope });
-      loadCalendarView();
+      loadCalendarView({ silent: true });
     }
 
     function goToCalendarMonthViewToday() {
@@ -110,6 +111,7 @@
 
     function setCalendarDisplayView(view) {
       calendarDisplayView = ['month', 'week', 'day', 'agenda'].includes(view) ? view : 'month';
+      localStorage.setItem('abearcCalendarView', calendarDisplayView);
       calendarSelectedDateKeys = new Set([calendarSelectedDate]);
       setupCalendarScopeControls();
       if (appCurrentView === 'calendar' && !restoringHistoryState) replaceAppHistory('calendar', { month: calendarMonth, scope: calendarScope });
@@ -258,10 +260,12 @@
           ${renderUserAvatar(user, 32, 'text-xs')}
           <span class="min-w-0">
             <span class="block truncate text-sm font-black text-gray-900 dark:text-gray-100">${esc(calendarUserDisplayName(user))}</span>
-            <span class="block truncate text-xs text-gray-500 dark:text-gray-400">${esc(user.email || user.role || user.username || '')}</span>
+            <span class="block truncate text-xs text-gray-500 dark:text-gray-400">${esc(user.position || user.role || user.email || user.username || '')}</span>
+            ${resultsId === 'calendarModalUserSearchResults' ? `<small class="block cal-muted" data-calendar-availability="${Number(user.id)}">Checking availability…</small>` : ''}
           </span>
         </button>
       `).join('');
+      if (resultsId === 'calendarModalUserSearchResults') calendarLoadPickerAvailability(matches);
     }
 
     function handleCalendarUserPickerKeydown(event, { resultsId, open, close, render, getIndex, setIndex }) {
@@ -496,7 +500,7 @@
     }
 
     function calendarActiveQuickFilterTypes() {
-      const group = calendarQuickFilterState.expandedGroup || (calendarScope === 'abe' ? 'abe' : 'my');
+      const group = calendarScope === 'abe' ? 'abe' : 'my';
       return calendarQuickFilterState.selectedTypes?.[group] || [];
     }
 
@@ -547,17 +551,41 @@
 
     function setCalendarQuickFilterGroup(group) {
       if (!['my', 'abe'].includes(group)) return;
-      const wasExpanded = calendarQuickFilterState.expandedGroup === group;
-      calendarQuickFilterState.expandedGroup = wasExpanded ? null : group;
-      if (!wasExpanded) {
-        calendarScope = group;
-        selectAllCalendarTypes(group);
-      }
+      clearTimeout(setCalendarQuickFilterGroup.pendingTimer);
+      const expandedGroup = calendarQuickFilterState.expandedGroup;
+      const collapseOtherGroup = expandedGroup && expandedGroup !== group;
+      if (collapseOtherGroup) toggleCalendarQuickFilterGroupExpansion(expandedGroup);
+      if (!(calendarQuickFilterState.selectedTypes?.[group] || []).length) selectAllCalendarTypes(group);
+      calendarScope = group;
       syncCalendarQuickFilterTypeSelect();
-      setupCalendarScopeControls();
+      document.querySelectorAll('[data-calendar-filter-group]').forEach(element => {
+        const active = element.dataset.calendarFilterGroup === group;
+        element.classList.toggle('is-active', active);
+        element.querySelector('.calendar-filter-group-toggle')?.setAttribute('aria-pressed', String(active));
+      });
       if (appCurrentView === 'calendar' && !restoringHistoryState) replaceAppHistory('calendar', { month: calendarMonth, scope: calendarScope });
-      if (wasExpanded) renderCalendarSideFilters();
-      else loadCalendarView({ silent: true });
+      const finishSelection = () => {
+        setupCalendarScopeControls();
+        loadCalendarView({ silent: true });
+      };
+      if (!collapseOtherGroup || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return finishSelection();
+      setCalendarQuickFilterGroup.pendingTimer = setTimeout(finishSelection, 220);
+    }
+
+    function toggleCalendarQuickFilterGroupExpansion(group) {
+      if (!['my', 'abe'].includes(group)) return;
+      const expanded = calendarQuickFilterState.expandedGroup !== group;
+      calendarQuickFilterState.expandedGroup = expanded ? group : null;
+      const groupElement = document.querySelector(`[data-calendar-filter-group="${group}"]`);
+      const shell = document.getElementById(`calendarFilterTypes-${group}`);
+      const button = groupElement?.querySelector('.calendar-filter-expand');
+      if (!groupElement || !shell || !button) return renderCalendarSideFilters();
+      groupElement.classList.toggle('is-expanded', expanded);
+      shell.classList.toggle('is-expanded', expanded);
+      shell.classList.toggle('is-collapsed', !expanded);
+      button.setAttribute('aria-expanded', String(expanded));
+      button.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} ${group === 'my' ? 'My Calendar' : 'ABE Calendar'} filters`);
+      button.title = `${expanded ? 'Collapse' : 'Expand'} filters`;
     }
 
     function clearCalendarQuickFilterGroup(group) {
@@ -594,24 +622,37 @@
         const activeGroup = calendarScope === group;
         const selected = new Set(calendarQuickFilterState.selectedTypes?.[group] || []);
         const items = calendarQuickFilterTypes.filter(([, , scopes]) => scopes.includes(group));
+        const selectionLabel = selected.size === items.length ? 'All types' : `${selected.size} of ${items.length}`;
+        const groupIcon = group === 'my'
+          ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="12" cy="8" r="3" stroke-width="2"/><path d="M5.5 20c.7-4 2.9-6 6.5-6s5.8 2 6.5 6" stroke-linecap="round" stroke-width="2"/></svg>'
+          : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="9" cy="8" r="3" stroke-width="2"/><path d="M3.5 20c.6-4 2.4-6 5.5-6s4.9 2 5.5 6M16 5.5a3 3 0 0 1 0 5.5M16.5 14c2.3.5 3.6 2.5 4 6" stroke-linecap="round" stroke-width="2"/></svg>';
         return `
-          <div class="calendar-filter-group">
-            <button type="button" onclick="setCalendarQuickFilterGroup('${group}')" class="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-sm font-black transition ${activeGroup ? 'bg-cyan-50 dark:bg-cyan-950/30 text-cyan-800 dark:text-cyan-200' : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800'}">
-              <span class="flex items-center min-w-0"><span class="truncate">${esc(label)}</span></span>
-              <span class="flex items-center gap-2">
-                ${expanded && selected.size ? `<span onclick="event.stopPropagation(); clearCalendarQuickFilterGroup('${group}')" class="inline-flex w-5 h-5 items-center justify-center rounded-full text-xs hover:bg-white/70 dark:hover:bg-gray-800" title="Clear ${esc(label)}">&times;</span>` : ''}
-                <span class="text-base leading-none">${expanded ? 'v' : '>'}</span>
-              </span>
-            </button>
-            <div class="${expanded ? 'block' : 'hidden'} mt-1 ml-4 space-y-0.5">
-              ${items.map(([type, typeLabel]) => {
-                const active = selected.has(type);
-                const color = getCalendarTypeColor(type);
-                return `<button type="button" onclick="event.stopPropagation(); toggleCalendarQuickFilterType('${group}', '${type}')" aria-pressed="${active ? 'true' : 'false'}" class="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-bold transition ${active ? 'bg-gray-50 dark:bg-gray-800/70 text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'}">
-                  <span class="calendar-type-filter-box ${active ? 'is-selected' : ''}" style="--calendar-type-color:${esc(color)}">${active ? '&#10003;' : ''}</span>
-                  <span class="truncate">${esc(typeLabel)}</span>
-                </button>`;
-              }).join('')}
+          <div data-calendar-filter-group="${group}" class="calendar-filter-group${activeGroup ? ' is-active' : ''}${expanded ? ' is-expanded' : ''}">
+            <div class="calendar-filter-group-head">
+              <button type="button" onclick="setCalendarQuickFilterGroup('${group}')" class="calendar-filter-group-toggle" aria-pressed="${activeGroup}">
+                <span class="calendar-filter-group-icon">${groupIcon}</span>
+                <span class="calendar-filter-group-copy">
+                  <strong>${esc(label)}</strong>
+                  <small>${esc(selectionLabel)}</small>
+                </span>
+              </button>
+              <button type="button" onclick="toggleCalendarQuickFilterGroupExpansion('${group}')" class="calendar-filter-expand" aria-expanded="${expanded}" aria-controls="calendarFilterTypes-${group}" aria-label="${expanded ? 'Collapse' : 'Expand'} ${esc(label)} filters" title="${expanded ? 'Collapse' : 'Expand'} filters"><svg class="calendar-filter-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m9 7 5 5-5 5" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg></button>
+            </div>
+            <div id="calendarFilterTypes-${group}" class="calendar-filter-types-shell ${expanded ? 'is-expanded' : 'is-collapsed'}">
+              <div class="calendar-filter-types">
+                <div class="calendar-filter-types-head">
+                  <span>${selected.size} selected</span>
+                  ${selected.size ? `<button type="button" onclick="clearCalendarQuickFilterGroup('${group}')" class="calendar-filter-clear" aria-label="Clear ${esc(label)} filters" title="Clear ${esc(label)} filters"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 7 10 10M17 7 7 17" stroke-linecap="round" stroke-width="2"/></svg></button>` : ''}
+                </div>
+                ${items.map(([type, typeLabel]) => {
+                  const active = selected.has(type);
+                  const color = getCalendarTypeColor(type);
+                  return `<button type="button" onclick="toggleCalendarQuickFilterType('${group}', '${type}')" aria-pressed="${active ? 'true' : 'false'}" class="calendar-filter-type${active ? ' is-selected' : ''}">
+                    <span class="calendar-type-filter-box${active ? ' is-selected' : ''}" style="--calendar-type-color:${esc(color)}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true"><path d="m3 8 3 3 7-7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/></svg></span>
+                    <span>${esc(typeLabel)}</span>
+                  </button>`;
+                }).join('')}
+              </div>
             </div>
           </div>`;
       }).join('');
@@ -648,6 +689,7 @@
       const search = document.getElementById('calendarSearchInput')?.value || '';
       if (type) params.set('event_type', type);
       if (search.trim()) params.set('search', search.trim());
+      calendarAdvancedQuery(params);
       return params.toString();
     }
 
@@ -669,6 +711,7 @@
       const search = document.getElementById('calendarSearchInput')?.value || '';
       if (type) params.set('event_type', type);
       if (search.trim()) params.set('search', search.trim());
+      calendarAdvancedQuery(params);
       return params.toString();
     }
     function changeCalendarMonth(offset) {
@@ -684,21 +727,25 @@
       calendarSelectedDateKeys = new Set([calendarSelectedDate]);
       calendarMonth = calendarSelectedDate.slice(0, 7);
       if (appCurrentView === 'calendar' && !restoringHistoryState) replaceAppHistory('calendar', { month: calendarMonth, scope: calendarScope });
-      loadCalendarView();
+      loadCalendarView({ silent: true });
     }
     async function loadCalendarView(options = {}) {
+      const requestId = ++calendarLoadRequestId;
       try {
         setupCalendarScopeControls();
+        const fetchOptions = { cache: 'no-store', ...(options.silent ? { silentLoading: true } : {}) };
         const [data, monthAgendaData] = await Promise.all([
-          fetchJson(`${API}/calendar/events?${buildCalendarQuery()}`, options.silent ? { silentLoading: true } : {}),
-          fetchJson(`${API}/calendar/events?${buildCalendarMonthAgendaQuery()}`, { silentLoading: true }).catch(() => ({ events: [] }))
+          fetchJson(`${API}/calendar/events?${buildCalendarQuery()}`, fetchOptions),
+          fetchJson(`${API}/calendar/events?${buildCalendarMonthAgendaQuery()}`, { cache: 'no-store', silentLoading: true }).catch(() => ({ events: [] }))
         ]);
-        lastCalendarEventsCache = applyCalendarTimeFilter(data.events || []).filter(event => !calendarEventIsCheckedDocument(event)).filter(calendarEventMatchesQuickFilter);
-        lastCalendarMonthAgendaCache = applyCalendarTimeFilter(monthAgendaData.events || []).filter(event => !calendarEventIsCheckedDocument(event)).filter(calendarEventMatchesQuickFilter);
+        if (requestId !== calendarLoadRequestId) return;
+        lastCalendarEventsCache = applyCalendarTimeFilter(data.events || []).filter(event => !calendarEventIsCheckedDocument(event)).filter(calendarEventMatchesQuickFilter).filter(calendarMatchesAdvanced);
+        lastCalendarMonthAgendaCache = applyCalendarTimeFilter(monthAgendaData.events || []).filter(event => !calendarEventIsCheckedDocument(event)).filter(calendarEventMatchesQuickFilter).filter(calendarMatchesAdvanced);
         lastCalendarDuesCache = summarizeCalendarEventsForLegacyDetails(lastCalendarEventsCache);
         renderUnifiedCalendar(lastCalendarEventsCache);
       } catch (e) {
-        if (!options.silent) toast(e.message, 'error');
+        if (requestId !== calendarLoadRequestId) return;
+        toast(e.message || 'Calendar could not be loaded. Please try again.', 'error');
       }
     }
 
@@ -975,23 +1022,17 @@
 
     function calendarEventChip(event, compact = false) {
       const color = calendarEventColor(event);
-      return `<button type="button" onclick="openCalendarEventDetail('${esc(event.id)}')" class="w-full text-left px-2 py-1 rounded-md text-xs font-bold text-white truncate shadow-sm hover:opacity-90" style="background:${esc(color)}" title="${esc(event.title)}">${esc(event.title)}</button>`;
+      return `<button type="button" onclick="openCalendarEventDetail('${esc(event.id)}')" class="cal-activity-card w-full text-left truncate" style="--event-color:${esc(color)}" title="${esc(event.title)}">${esc(event.title)}</button>`;
     }
 
     function calendarEventListCard(event) {
       const color = calendarEventColor(event);
-      const typeLabel = calendarEventTypeLabel(event);
-      const meta = [typeLabel, calendarSourceLabel(event)].filter(Boolean).join(' - ');
-      const sub = [event.location, event.project_name || event.related_project_name].filter(Boolean).join(' - ');
-      return `<button onclick="openCalendarEventDetail('${esc(event.id)}')" class="calendar-schedule-card w-full text-left p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 transition" style="--calendar-type-color:${esc(color)}">
-        <div class="flex items-start gap-3">
-          <span class="mt-1 w-2.5 h-2.5 rounded-full flex-none" style="background:${esc(color)}"></span>
-          <div class="min-w-0 flex-1">
-            <div class="text-xs font-black text-gray-500 dark:text-gray-400">${esc(meta)}</div>
-            <div class="font-black text-gray-900 dark:text-gray-100 truncate">${esc(event.title || 'Untitled Schedule')}</div>
-            ${sub ? `<div class="text-sm text-gray-600 dark:text-gray-400 truncate">${esc(sub)}</div>` : ''}
-          </div>
-        </div>
+      return `<button type="button" onclick="openCalendarEventDetail('${esc(event.id)}')" class="cal-activity-card" style="--event-color:${esc(color)}">
+        <span class="cal-card-time">${esc(calendarEventTimeLabel(event))} · ${esc(calendarEventTypeLabel(event))}</span>
+        <strong>${esc(event.title || 'Untitled Activity')}</strong>
+        ${event.location ? `<span class="cal-card-location">${esc(event.location)}</span>` : ''}
+        <span class="cal-card-status">${esc(event.status && event.status !== 'active' ? event.status : 'Scheduled')}${event.project_id ? ' · Project linked' : ''}</span>
+        ${event.participants?.length ? `<span class="cal-card-people">${event.participants.slice(0,3).map(p=>renderUserAvatar({...p,id:p.user_id},20,'text-[10px]')).join('')}<small>${event.participants.length} participant${event.participants.length===1?'':'s'}</small></span>` : ''}
       </button>`;
     }
 
@@ -1219,8 +1260,8 @@
           .map(segment => {
             const event = segment.event;
             const color = event.color || '#2563eb';
-            const label = esc(event.title || 'Untitled Schedule');
-            return `<button type="button" onclick="openCalendarEventDetail('${esc(event.id)}')" class="calendar-span-event hover:opacity-90" style="grid-column:${segment.startCol + 1} / span ${segment.span}; grid-row:${segment.lane + 1}; background:${esc(color)}" title="${esc(event.title || 'Untitled Schedule')}">${label}</button>`;
+            const label = esc((event.all_day ? 'All day · ' : calendarEventTimeLabel(event) + ' · ') + (event.title || 'Untitled Activity'));
+            return `<button type="button" onclick="openCalendarEventDetail('${esc(event.id)}')" draggable="${event.can_edit ? 'true' : 'false'}" data-drag-calendar="${esc(event.id)}" class="calendar-span-event hover:opacity-90" style="grid-column:${segment.startCol + 1} / span ${segment.span}; grid-row:${segment.lane + 1}; --event-color:${esc(color)}" title="${esc(event.title || 'Untitled Schedule')}">${label}</button>`;
           }).join('');
         html += `<div class="calendar-week-row">${cells}<div class="calendar-week-event-layer">${bars}</div></div>`;
       }
@@ -1717,7 +1758,7 @@
     window.openCalendarEventModal = async function(eventId = null, dateKey = null) {
       if (!hasPrivilege('create_calendar_event') && !eventId) return toast('Permission denied: create_calendar_event', 'error');
       await ensureCalendarPickerData();
-      const event = eventId ? lastCalendarEventsCache.find(e => e.id === eventId || (e.source === 'manual_event' && String(e.raw_id) === String(eventId))) : null;
+      const event = eventId ? (await fetchJson(`${API}/calendar/events/${Number(String(eventId).replace('manual:', ''))}`, {silentLoading:true})).event : null;
       document.getElementById('calendarEventModalTitle').textContent = event ? 'Edit Schedule' : 'Create Schedule';
       document.getElementById('calendarEventId').value = event?.raw_id || '';
       document.getElementById('calendarEventTitle').value = event?.title || '';
@@ -1736,7 +1777,9 @@
       calendarModalUserSearchActiveIndex = -1;
       if (!event && currentUser?.id) selectedParticipantIds.add(String(currentUser.id));
       setCalendarParticipantSelection([...selectedParticipantIds].map(Number));
-      [...document.getElementById('calendarEventReminders').options].forEach(opt => opt.selected = false);
+      for (const minute of event?.reminder_minutes || []) if (![...document.getElementById('calendarEventReminders').options].some(opt=>Number(opt.value)===minute)) document.getElementById('calendarEventReminders').add(new Option(`${minute} minutes before`,String(minute)));
+      [...document.getElementById('calendarEventReminders').options].forEach(opt => opt.selected = (event?.reminder_minutes || []).includes(Number(opt.value)));
+      calendarSchedulingFields(event || {});
       calendarEventTypeChanged();
       document.getElementById('calendarEventModal').classList.remove('hidden');
     };
@@ -1753,7 +1796,7 @@
         title,
         event_type: eventType,
         event_type_detail: eventType === 'other' ? eventTypeDetail : '',
-        all_day: false,
+        all_day: document.getElementById('calendarAllDay').checked,
         start_datetime: start,
         end_datetime: document.getElementById('calendarEventEnd').value || null,
         location: document.getElementById('calendarEventLocation').value,
@@ -1761,6 +1804,20 @@
         participant_user_ids: selectedCalendarParticipantIds(),
         reminder_minutes: [...document.getElementById('calendarEventReminders').selectedOptions].map(o => Number(o.value))
       };
+      if (body.all_day) {
+        body.start_datetime = start.slice(0,10) + 'T00:00:00+08:00';
+        body.end_datetime = (body.end_datetime || start).slice(0,10) + 'T23:59:59+08:00';
+      }
+      body.series_scope = document.getElementById('calSeriesScope')?.value || 'this';
+      body.priority = document.getElementById('calPriority').value;
+      const customReminder = document.getElementById('calCustomReminder').value;
+      if (customReminder !== '') body.reminder_minutes = [...new Set([...body.reminder_minutes, Number(customReminder)])];
+      body.meeting_link = document.getElementById('calMeetingLink').value;
+      body.notes = document.getElementById('calNotes').value;
+      body.related_inventory_id = document.getElementById('calInventory').value || null;
+      body.status = document.getElementById('calEventStatus').value;
+      body.related_project_id = document.getElementById('calProject').value || null;
+      if (!eventId && document.getElementById('calRepeat')?.value) body.repeat = { frequency: document.getElementById('calRepeat').value === 'custom' ? document.getElementById('calRepeatBase').value : document.getElementById('calRepeat').value, interval: Number(document.getElementById('calRepeatInterval').value), count: Number(document.getElementById('calRepeatCount').value) };
       if (body.event_type === 'personal' && body.participant_user_ids.length > 1) {
         return toast('Personal schedules allow one involved user only.', 'error');
       }
@@ -1798,6 +1855,8 @@
         if (!confirmed) return;
       }
       try {
+        if (!(await calendarConfirmConflicts(body, eventId))) return;
+        body.acknowledge_conflicts = true;
         await fetchJson(eventId ? `${API}/calendar/events/${eventId}` : `${API}/calendar/events`, {
           method: eventId ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1850,7 +1909,7 @@
     function calendarResponseStatusLabel(status) {
       if (status === 'accepted') return 'Accepted';
       if (status === 'had_prior_schedule') return 'Had Prior Schedule';
-      return 'Pending';
+      return ({tentative:'Tentative',declined:'Declined'})[status] || 'Pending';
     }
 
     function calendarParticipantResponseClass(status) {
@@ -1871,6 +1930,8 @@
       return `<div class="flex flex-wrap gap-2">
         <button onclick="respondCalendarEvent(${Number(eventId)}, 'accepted')" class="px-3 py-2 rounded-lg bg-green-600 text-white font-bold">Accept</button>
         <button onclick="respondCalendarEvent(${Number(eventId)}, 'had_prior_schedule')" class="px-3 py-2 rounded-lg bg-blue-600 text-white font-bold">Had Prior Schedule</button>
+        <button onclick="respondCalendarEvent(${Number(eventId)}, 'tentative')" class="cal-button">Tentative</button>
+        <button onclick="respondCalendarEvent(${Number(eventId)}, 'declined')" class="cal-button">Decline</button>
       </div>`;
     }
 
@@ -1891,7 +1952,7 @@
           : 'Your response is pending.';
       return `<div id="calendarResponseBlock" class="p-3 rounded-lg ${calendarParticipantResponseClass(status)} flex flex-wrap items-center justify-between gap-2">
         <div class="text-sm font-black">Your response: ${esc(calendarResponseStatusLabel(status))}</div>
-        <div class="text-xs font-semibold opacity-80">${esc(message)}</div>
+        <div class="text-xs font-semibold opacity-80">${esc(message)}</div>${full.can_respond ? '<button class="cal-button" onclick="showCalendarResponseChoices()">Change response</button>' : ''}
       </div>`;
     }
 
@@ -1951,17 +2012,7 @@
       currentCalendarDetailEvent = full;
       document.getElementById('calendarEventDetailTitle').textContent = full.title;
       document.getElementById('calendarEventDetailWhen').textContent = calendarEventDateRangeLabel(full);
-      const participantChips = (full.participants || [])
-        .filter(p => String(p.role || '').toLowerCase() !== 'organizer')
-        .map(p => {
-          const isCreatorParticipant = Number(p.user_id) === Number(full.created_by_user_id);
-          if (isCreatorParticipant) {
-            return `<span class="px-2 py-1 rounded-full text-xs font-bold bg-indigo-100 dark:bg-indigo-950/30 text-indigo-800 dark:text-indigo-200 border border-indigo-200 dark:border-indigo-800">${esc(p.username)} - Creator</span>`;
-          }
-          const status = String(p.response_status || 'pending').toLowerCase();
-          return `<span class="px-2 py-1 rounded-full text-xs font-bold ${calendarParticipantResponseClass(status)}">${esc(p.username)} - ${esc(calendarResponseStatusLabel(status))}</span>`;
-        })
-        .join('');
+      const participantChips = (full.participants || []).filter(p => p.role !== 'organizer').map(p => `<div class="cal-participant">${renderUserAvatar({...p,id:p.user_id},28,'text-xs')}<span>${esc(p.username)}</span><small>${esc(calendarResponseStatusLabel(p.response_status || 'pending'))}</small></div>`).join('');
       document.getElementById('calendarEventDetailBody').innerHTML = `
         <div class="inline-flex px-2 py-1 rounded-full text-xs font-black text-white" style="background:${esc(full.color || '#2563eb')}">${esc(calendarEventTypeLabel(full))}</div>
         ${full.status && full.status !== 'active' ? `<div class="p-3 rounded-lg bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900 text-sm font-bold text-red-700 dark:text-red-200">Status: ${esc(full.status)}</div>` : ''}
@@ -1972,7 +2023,8 @@
         ${full.owner_username ? `<div class="text-sm"><span class="font-bold text-gray-700 dark:text-gray-200">Organizer / Created by:</span> ${esc(full.owner_username)}</div>` : ''}
         ${full.project_name ? `<div class="text-sm"><span class="font-bold text-gray-700 dark:text-gray-200">Project:</span> ${esc(full.project_name)}</div>` : ''}
         ${full.document_name ? `<div class="text-sm"><span class="font-bold text-gray-700 dark:text-gray-200">Document:</span> ${esc(full.document_name)}</div>` : ''}
-        ${full.source === 'manual_event' ? `<div><div class="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Participants</div><div class="flex flex-wrap gap-1">${participantChips || '<span class="text-sm text-gray-500">No participants</span>'}</div></div><div id="calendarDocumentationSection" class="pt-3 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">Loading documentation...</div>` : ''}`;
+        ${full.source === 'manual_event' ? `<div><div class="text-sm font-bold text-gray-700 dark:text-gray-200 mb-1">Participants</div><div class="cal-participants">${participantChips || '<span class="text-sm text-gray-500">No participants</span>'}</div></div><div id="calendarDocumentationSection" class="pt-3 border-t border-gray-100 dark:border-gray-700 text-sm text-gray-500 dark:text-gray-400">Loading documentation...</div>` : ''}`;
+      calendarEnhanceDetail(full);
       const stage = calendarTargetStage(full);
       const canCancelSchedule = full.status !== 'cancelled' && full.source === 'manual_event' && full.can_cancel;
       const canDeleteSchedule = full.source === 'manual_event' && full.can_delete;
@@ -1982,6 +2034,9 @@
         ${canDeleteSchedule ? `<button onclick="deleteCalendarEvent(${Number(full.raw_id)})" class="px-3 py-2 rounded-lg bg-red-700 text-white font-bold">Delete Schedule</button>` : ''}
         ${full.project_id ? `<button onclick="closeModal('calendarEventDetailModal'); goToTarget({ project_id:${Number(full.project_id)}, document_id:${full.document_id ? Number(full.document_id) : 'null'}, stage:'${esc(stage)}', target_kind:'${full.document_id ? 'document' : 'project'}', target_type:'${full.document_id ? 'document' : 'project'}' })" class="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 font-bold text-gray-700 dark:text-gray-200">${full.document_id ? 'Open Document' : 'Open Project'}</button>` : ''}
         <button onclick="closeModal('calendarEventDetailModal')" class="px-3 py-2 rounded-lg bg-gray-800 text-white font-bold">Close</button>`;
+      if (full.series_id && full.can_delete) document.getElementById('calendarEventDetailActions').insertAdjacentHTML('beforeend', `<button class="cal-button" onclick="deleteCalendarEvent(${Number(full.raw_id)}, 'series')">Delete Entire Series</button>`);
+      document.getElementById('calendarEventDetailActions').insertAdjacentHTML('afterbegin', `${full.can_edit ? '<button class="cal-button" onclick="calendarReschedule()">Reschedule</button>' : ''}${full.source === 'manual_event' && hasPrivilege('create_calendar_event') ? '<button class="cal-button" onclick="calendarDuplicate()">Duplicate</button>' : ''}`);
+      calendarOrganizeDetailActions();
       document.getElementById('calendarEventDetailModal').classList.remove('hidden');
       if (full.source === 'manual_event') loadCalendarDocumentation(full.raw_id, full.event_type);
     }
@@ -2335,12 +2390,12 @@
       );
     };
 
-    window.deleteCalendarEvent = async function(id) {
+    window.deleteCalendarEvent = async function(id, scope = 'this') {
       if (!currentCalendarDetailEvent?.can_delete) return toast('Only the schedule creator with delete privilege can delete this schedule.', 'error');
       openConfirmModal(
-        '<div class="space-y-2 text-sm"><p>Delete this schedule permanently?</p><p class="font-bold text-red-700 dark:text-red-300">This removes the schedule record, participants, notes, attachments, and reminders. This action cannot be undone.</p></div>',
+        '<div class="space-y-2 text-sm"><p>Delete ' + (scope === 'series' ? 'the entire series' : 'this occurrence') + ' permanently?</p><p class="font-bold text-red-700 dark:text-red-300">This removes the schedule record, participants, notes, attachments, and reminders. This action cannot be undone.</p></div>',
         async () => {
-          await fetchJson(`${API}/calendar/events/${id}/permanent`, { method: 'DELETE' });
+          await fetchJson(`${API}/calendar/events/${id}/permanent?scope=${scope}`, { method: 'DELETE' });
           toast('Schedule deleted');
           closeModal('calendarEventDetailModal');
           await loadCalendarView({ silent: true });

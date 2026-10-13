@@ -5,20 +5,20 @@
             <button id="calendarSidebarToggleBtn" type="button" onclick="toggleCalendarSidebar()" class="h-10 w-10 inline-flex items-center justify-center rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition" aria-label="Toggle Calendar sidebar" aria-pressed="false" title="Toggle sidebar">
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7h16M4 12h16M4 17h16"/></svg>
             </button>
-            <button type="button" onclick="goToCalendarMonthViewToday()" class="text-xl sm:text-2xl font-black text-gray-950 dark:text-gray-50 leading-none hover:text-cyan-700 dark:hover:text-cyan-300 cursor-pointer transition" title="Go to current month">Calendar</button>
             <button onclick="goToCurrentCalendarMonth()" class="h-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 px-4 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-bold">Today</button>
             <button onclick="changeCalendarMonth(-1)" class="h-10 w-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-black" title="Previous">&lt;</button>
             <button onclick="changeCalendarMonth(1)" class="h-10 w-10 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 font-black" title="Next">&gt;</button>
             <div id="calendarTitle" class="min-w-[135px] sm:min-w-[160px] text-lg sm:text-xl font-black text-gray-900 dark:text-gray-100"></div>
           </div>
           <div id="calendarToolbarRight" class="flex items-center gap-2 lg:justify-end">
-            <input id="calendarSearchInput" oninput="debouncedCalendarReload()" placeholder="Search schedules" class="w-full sm:w-72 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
-            <select id="calendarViewSelect" onchange="setCalendarDisplayView(this.value)" class="shrink-0 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-200">
+            <input aria-label="Search activities" id="calendarSearchInput" oninput="debouncedCalendarReload()" placeholder="Search schedules" class="w-full sm:w-72 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
+            <select aria-label="Calendar view" id="calendarViewSelect" onchange="setCalendarDisplayView(this.value)" class="shrink-0 border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-200">
               <option value="month">Month</option>
               <option value="week">Week</option>
               <option value="day">Day</option>
               <option value="agenda">Agenda</option>
             </select>
+            <button id="calendarNewActivity" type="button" onclick="openCalendarEventModal(null, calendarSelectedDate)" class="cal-button cal-primary">+ New Activity</button>
             <select id="calendarScopeSelect" onchange="setCalendarScope(this.value)" class="hidden border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm font-semibold text-gray-700 dark:text-gray-200">
               <option value="abe">ABE Calendar</option>
               <option value="my">My Calendar</option>
@@ -49,7 +49,7 @@
 
       <div id="calendarLayoutGrid" class="grid grid-cols-1 xl:grid-cols-[240px_minmax(0,1fr)_260px] gap-3">
         <aside id="calendarLeftSidebar" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3 space-y-4">
-          <button onclick="openCalendarEventModal(null, calendarSelectedDate)" class="hidden xl:block w-full bg-cyan-700 hover:bg-cyan-800 dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-gray-950 text-white px-4 py-3 rounded-xl font-black shadow-sm">+ Create Schedule</button>
+          <button onclick="openCalendarEventModal(null, calendarSelectedDate)" class="hidden xl:block w-full bg-cyan-700 hover:bg-cyan-800 dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-gray-950 text-white px-4 py-3 rounded-xl font-black shadow-sm">+ New Activity</button>
           <div>
             <div class="text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">Mini Calendar</div>
             <div id="calendarMiniGrid" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
@@ -64,10 +64,12 @@
             <input id="calendarUserSearchInput" type="text" placeholder="Search user schedule" autocomplete="off" onfocus="openCalendarUserSearch()" oninput="debouncedCalendarUserSearch()" onkeydown="handleCalendarUserSearchKeydown(event)" class="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-sm text-gray-700 dark:text-gray-200">
             <div id="calendarUserSearchResults" class="hidden absolute left-0 right-0 top-full mt-1 max-h-64 overflow-auto rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-lg z-30"></div>
           </div>
-          <div>
-            <div class="text-xs font-black uppercase text-gray-500 dark:text-gray-400 mb-2">Quick Filters</div>
-            <div id="calendarSideFilters" class="space-y-1"></div>
-          </div>
+          <section class="calendar-quick-filters" aria-label="Quick filters">
+            <header class="calendar-quick-filters-head">
+              <span>Quick filters</span>
+            </header>
+            <div id="calendarSideFilters"></div>
+          </section>
         </aside>
         <div id="calendarMonthShell" class="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
           <div id="calendarWeekHeader" class="grid grid-cols-7 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 text-xs font-semibold uppercase text-gray-500 dark:text-gray-400">
@@ -95,4 +97,3 @@
       </div>
       <button id="calendarCreateFab" onclick="openCalendarEventModal(null, calendarSelectedDate)" class="xl:hidden fixed bottom-5 right-5 z-40 bg-cyan-700 hover:bg-cyan-800 dark:bg-cyan-500 dark:hover:bg-cyan-400 dark:text-gray-950 text-white px-4 py-3 rounded-full font-black shadow-xl">+ Schedule</button>
     </div>
-

@@ -1,0 +1,74 @@
+/* SALT / contour farming layout - scoped map styles */
+.abearc-map-salt-panel {
+  right: 82px;
+  bottom: 34px;
+  width: min(360px, calc(100% - 24px));
+  max-height: min(690px, calc(100% - 58px));
+  overflow: auto;
+}
+.abearc-map-salt-panel .abearc-map-elevation-head { padding-bottom: .55rem; }
+.abearc-map-salt-panel .abearc-map-elevation-title-row { align-items: center; gap: .4rem; }
+.abearc-map-salt-body { padding: 0 .75rem .75rem; }
+.abearc-map-salt-controls { display: grid; gap: .55rem; }
+.abearc-map-salt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: .45rem; }
+.abearc-map-salt-controls label { display: grid; gap: .18rem; color: #526575; font-size: .65rem; font-weight: 800; }
+.abearc-map-salt-controls label > span:first-child { letter-spacing: .01em; }
+.abearc-map-salt-controls input,
+.abearc-map-salt-controls select {
+  width: 100%; min-height: 32px; padding: .34rem .45rem; border: 1px solid #cbd5e1; border-radius: 7px;
+  background: #fff; color: #172b3a; font-size: .72rem; font-weight: 750; outline: 0;
+}
+.abearc-map-salt-controls input:focus,
+.abearc-map-salt-controls select:focus { border-color: #16a34a; box-shadow: 0 0 0 2px rgba(22,163,74,.13); }
+.abearc-map-salt-controls .is-disabled { opacity: .48; }
+.abearc-map-salt-check { display: flex !important; grid-column: 1 / -1; align-items: center; gap: .45rem; }
+.abearc-map-salt-check input { width: 15px; min-height: 15px; accent-color: #16a34a; }
+.abearc-map-salt-actions { display: flex; flex-wrap: wrap; gap: .4rem; }
+.abearc-map-salt-actions button {
+  display: inline-flex; align-items: center; justify-content: center; gap: .3rem; min-height: 31px; padding: .35rem .6rem;
+  border: 1px solid #bbd8c4; border-radius: 7px; background: #f4fbf6; color: #166534; font-size: .67rem; font-weight: 850;
+}
+.abearc-map-salt-actions button:hover { background: #dcfce7; }
+.abearc-map-salt-actions button.is-primary { border-color: #15803d; background: #15803d; color: #fff; }
+.abearc-map-salt-actions button.is-primary:hover { background: #166534; }
+.abearc-map-salt-source-row { grid-column: 1 / -1; }
+.abearc-map-salt-help { padding: .48rem .55rem; border: 1px solid #d9e7dd; border-radius: 8px; background: #f7fbf8; color: #557064; font-size: .61rem; line-height: 1.4; }
+.abearc-map-salt-loading { position: relative; margin-top: .6rem; padding: .6rem .65rem .6rem 1.9rem; border-radius: 8px; background: #f3f8f4; color: #476653; font-size: .67rem; font-weight: 750; overflow: hidden; }
+.abearc-map-salt-loading span { position: absolute; left: .7rem; top: 50%; width: 10px; height: 10px; margin-top: -5px; border: 2px solid #86efac; border-top-color: #15803d; border-radius: 50%; animation: abearc-salt-spin .8s linear infinite; }
+@keyframes abearc-salt-spin { to { transform: rotate(360deg); } }
+.abearc-map-salt-status { display: grid; gap: .12rem; margin-top: .65rem; padding: .55rem .65rem; border: 1px solid; border-radius: 9px; }
+.abearc-map-salt-status strong { font-size: .7rem; }
+.abearc-map-salt-status span { font-size: .61rem; line-height: 1.35; }
+.abearc-map-salt-status.is-suitable { border-color: #86efac; background: #f0fdf4; color: #166534; }
+.abearc-map-salt-status.is-partial { border-color: #fde68a; background: #fffbeb; color: #92400e; }
+.abearc-map-salt-status.is-outside { border-color: #fecaca; background: #fef2f2; color: #991b1b; }
+.abearc-map-salt-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-top: .55rem; overflow: hidden; border: 1px solid #d8e2e8; border-radius: 9px; background: #d8e2e8; }
+.abearc-map-salt-metrics span { display: grid; gap: .12rem; min-width: 0; padding: .43rem .48rem; background: #fff; }
+.abearc-map-salt-metrics small { color: #72808c; font-size: .55rem; font-weight: 800; text-transform: uppercase; }
+.abearc-map-salt-metrics strong { overflow: hidden; color: #173443; font-size: .68rem; font-weight: 900; text-overflow: ellipsis; white-space: nowrap; }
+.abearc-map-salt-summary { display: grid; grid-template-columns: 1fr 1fr; gap: .2rem .6rem; margin-top: .5rem; color: #60717e; font-size: .61rem; }
+.abearc-map-salt-summary span { display: flex; justify-content: space-between; gap: .4rem; border-bottom: 1px dashed #d7e0e5; padding: .24rem 0; }
+.abearc-map-salt-summary b { color: #344b59; }
+.abearc-map-salt-warning { display: grid; gap: .3rem; margin-top: .5rem; padding: .5rem .6rem; border: 1px solid #fed7aa; border-radius: 8px; background: #fff7ed; color: #9a5415; font-size: .6rem; line-height: 1.35; }
+.abearc-map-salt-note { margin-top: .5rem; color: #71808d; font-size: .57rem; line-height: 1.4; }
+.abearc-map-salt-layout { pointer-events: none; }
+.abearc-map-salt-row { fill: none; stroke: #22c55e; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; vector-effect: non-scaling-stroke; filter: drop-shadow(0 1px 1px rgba(0,0,0,.45)); }
+.abearc-map-salt-layout.is-light-basemap .abearc-map-salt-row { stroke: #15803d; }
+.abearc-map-salt-label { fill: #dcfce7; stroke: rgba(3,40,20,.9); stroke-width: 2.6px; paint-order: stroke fill; font-size: 10px; font-weight: 900; letter-spacing: .02em; }
+.abearc-map-salt-layout.is-light-basemap .abearc-map-salt-label { fill: #166534; stroke: rgba(255,255,255,.95); }
+.dark .abearc-map-salt-controls label { color: #b6c5cf; }
+.dark .abearc-map-salt-controls input,
+.dark .abearc-map-salt-controls select { border-color: #475569; background: #1f2937; color: #edf6fa; }
+.dark .abearc-map-salt-help { border-color: #365044; background: #18251f; color: #a7c4b2; }
+.dark .abearc-map-salt-metrics { border-color: #36485a; background: #36485a; }
+.dark .abearc-map-salt-metrics span { background: #1f2937; }
+.dark .abearc-map-salt-metrics small { color: #9fb0bf; }
+.dark .abearc-map-salt-metrics strong { color: #edf6fa; }
+.dark .abearc-map-salt-summary { color: #a5b4c0; }
+.dark .abearc-map-salt-summary b { color: #d8e3e9; }
+.dark .abearc-map-salt-summary span { border-color: #3a4b58; }
+@media (max-width: 720px) {
+  .abearc-map-salt-panel { right: 10px; bottom: 22px; width: min(340px, calc(100% - 20px)); max-height: calc(100% - 42px); }
+  .abearc-map-salt-grid { grid-template-columns: 1fr 1fr; }
+  .abearc-map-salt-metrics { grid-template-columns: 1fr 1fr; }
+}

@@ -105,7 +105,7 @@ const normalizeRequirementState = (state) => {
 
 const getDocAndProjectStage = (docId, callback) => {
   db.get(`SELECT d.id, d.stage as doc_stage, p.stage as proj_stage, p.id as project_id, p.name as project_name, p.requester as requester, p.assigned_user_id as project_assigned_user_id,
-          d.project_id, d.document_type_name, d.file_path, d.file_name, d.status, d.requirement_state, d.document_type_id, d.uploader_user_id, d.assigned_user_id, d.manual_due_date, d.due_date_override,
+          d.project_id, d.document_type_name, d.file_path, d.file_name, d.status, d.requirement_state, d.document_type_id, d.uploader_user_id, d.assigned_user_id, d.document_date, d.manual_due_date, d.due_date_override,
           uu.username as uploader_username,
           COALESCE(p.outcome, CASE WHEN p.stage = 'Completed' THEN 'Completed' ELSE 'Active' END) as project_outcome
           FROM Documents d JOIN Projects p ON d.project_id = p.id 
@@ -189,9 +189,19 @@ const PRIVILEGE_CATALOG = [
   { name: 'attach_drive_file_to_project', display_name: 'Attach My Drive Files', description: 'Can copy My Drive files into project documents, project documentation, or calendar attachments when target permissions allow.', category: 'My Drive' },
   { name: 'view_abearc_map', display_name: 'View Geotag Map', description: 'Can view geotagged field photos on Geotag Map.', category: 'Geotag Map' },
   { name: 'upload_map_media', display_name: 'Upload Map Photos', description: 'Can upload GeoCamera photos directly to Geotag Map.', category: 'Geotag Map' },
-  { name: 'manage_own_map_media', display_name: 'Manage Own Map Photos', description: 'Can edit, hide, link, and delete own Geotag Map photos.', category: 'Geotag Map' },
-  { name: 'manage_all_map_media', display_name: 'Manage All Map Photos', description: 'Can review, edit, hide, link, and delete all Geotag Map photos.', category: 'Geotag Map' },
+  { name: 'manage_own_map_media', display_name: 'Manage Own Map Photos', description: 'Can edit, hide, and link own Geotag Map photos.', category: 'Geotag Map' },
+  { name: 'manage_all_map_media', display_name: 'Manage All Map Photos', description: 'Can review, edit, hide, and link all Geotag Map photos.', category: 'Geotag Map' },
+  { name: 'delete_other_map_media', display_name: "Delete Other Users' Map Photos", description: 'Can delete Geotag Map photos uploaded by other users. Users can always delete their own uploads.', category: 'Geotag Map' },
   { name: 'review_map_locations', display_name: 'Review Map Locations', description: 'Can correct missing, invalid, or low-accuracy Geotag Map photo locations.', category: 'Geotag Map' },
+  { name: 'manage_drone_orthomosaics', display_name: 'Manage Drone Orthomosaic Maps', description: 'Can upload, edit, activate, and delete drone orthomosaic maps.', category: 'Geotag Map' },
+  { name: 'view_telegram_integration', display_name: 'View Telegram Integration', description: 'Can view Telegram connection, chats, weather routes and delivery history.', category: 'Telegram' },
+  { name: 'manage_telegram_integration', display_name: 'Manage Telegram Integration', description: 'Can test the bot connection and register approved Telegram chats.', category: 'Telegram' },
+  { name: 'manage_telegram_notifications', display_name: 'Manage Telegram Notifications', description: 'Can route weather alerts and schedule Telegram reports.', category: 'Telegram' },
+  { name: 'view_weather_stations', display_name: 'View Weather Stations', description: 'Can view Automated Weather Stations, current conditions, historical weather data, and agricultural weather analytics.', category: 'Weather Stations' },
+  { name: 'export_weather_data', display_name: 'Export Weather Data', description: 'Can export permitted weather data and generate weather reports.', category: 'Weather Stations' },
+  { name: 'manage_weather_stations', display_name: 'Manage Weather Stations', description: 'Can configure weather station visibility, synchronization, and historical resynchronization.', category: 'Weather Stations' },
+  { name: 'manage_weather_alerts', display_name: 'Manage Weather Alerts', description: 'Can configure agricultural weather and station-health alert thresholds.', category: 'Weather Stations' },
+  { name: 'manage_weather_integration', display_name: 'Manage Weather Integration', description: 'Can run provider discovery and view system-level weather integration diagnostics. API credentials remain server-only.', category: 'Weather Stations' },
   { name: 'manage_backups', display_name: 'Manage Backups', description: 'Can create, download, restore, and delete system backups.', category: 'System Administration' },
   { name: 'manage_maintenance', display_name: 'Admin Maintenance', description: 'Can access maintenance tools and run technical maintenance actions.', category: 'System Administration' },
   { name: 'import_export_config', display_name: 'Import/Export Configuration', description: 'Can export and import project management configuration.', category: 'System Administration' },
@@ -209,11 +219,12 @@ const SYSTEM_PRIVILEGES = new Set([
   'system_health_check',
   'manage_all_user_drive'
 ]);
+const OPT_IN_PRIVILEGES = new Set(['manage_drone_orthomosaics']);
 
 const ROLE_DEFAULT_PRIVILEGES = {
   superadmin: PRIVILEGE_CATALOG
     .map(p => p.name)
-    .filter(name => !SYSTEM_PRIVILEGES.has(name) && name !== 'delete_any_calendar_event'),
+    .filter(name => !SYSTEM_PRIVILEGES.has(name) && !OPT_IN_PRIVILEGES.has(name) && name !== 'delete_any_calendar_event'),
   admin: [
     'create_project', 'edit_project', 'delete_project', 'transition_stage', 'confirm_duplicate_project_creation',
     'manage_project_disposition', 'request_project_disposition', 'request_project_closure', 'manage_direct_superiors', 'view_project_closure_attachments',
@@ -227,7 +238,8 @@ const ROLE_DEFAULT_PRIVILEGES = {
     'manage_due_schedules', 'manage_requirements', 'manage_project_types', 'manage_requestees', 'manage_document_types',
     'view_workload_analytics',
     'view_user_drive', 'upload_user_drive_file', 'manage_own_user_drive', 'share_user_drive_file', 'delete_own_user_drive_file', 'attach_drive_file_to_project',
-    'view_abearc_map', 'upload_map_media', 'manage_own_map_media', 'manage_all_map_media', 'review_map_locations'
+    'view_abearc_map', 'upload_map_media', 'manage_own_map_media', 'manage_all_map_media', 'review_map_locations',
+    'view_weather_stations', 'export_weather_data', 'manage_weather_stations', 'manage_weather_alerts', 'manage_weather_integration'
   ],
   user: [
     'create_project', 'edit_project', 'transition_stage', 'confirm_duplicate_project_creation',
@@ -238,7 +250,8 @@ const ROLE_DEFAULT_PRIVILEGES = {
     'print_project_summary', 'print_requirements_checklist',
     'manage_requirements', 'manage_document_types', 'manage_project_types', 'manage_requestees',
     'view_user_drive', 'upload_user_drive_file', 'manage_own_user_drive', 'share_user_drive_file', 'delete_own_user_drive_file', 'attach_drive_file_to_project',
-    'view_abearc_map', 'upload_map_media', 'manage_own_map_media', 'review_map_locations'
+    'view_abearc_map', 'upload_map_media', 'manage_own_map_media', 'review_map_locations',
+    'view_weather_stations', 'export_weather_data'
   ],
   system: [
     'manage_backups', 'manage_maintenance', 'import_export_config', 'view_activity_logs',
@@ -492,6 +505,7 @@ const createBackupFile = async (filename = safeBackupFilename()) => {
   addFolderToZip(zip, MONITORING_ATTACHMENTS_DIR, 'monitoring-attachments');
   addFolderToZip(zip, MAP_MEDIA_ORIGINALS_DIR, 'map-media/originals');
   addFolderToZip(zip, MAP_MEDIA_THUMBNAILS_DIR, 'map-media/thumbnails');
+  addFolderToZip(zip, MAP_ORTHOMOSAIC_DIR, 'map-orthomosaics');
   addFolderToZip(zip, USER_DRIVE_DIR, 'user-drive');
 
   // Keep config.json included for compatibility/reference.
@@ -733,41 +747,22 @@ const generateSessionToken = () => crypto.randomBytes(48).toString('hex');
 
 const base64UrlEncode = (value) => Buffer.from(value).toString('base64url');
 const base64UrlJson = (value) => base64UrlEncode(JSON.stringify(value));
-const requireMobileQrLoginSecret = () => {
-  if (Buffer.byteLength(MOBILE_QR_LOGIN_SECRET, 'utf8') < 32) {
-    const err = new Error('Mobile QR login requires MOBILE_QR_LOGIN_SECRET or SESSION_SECRET with at least 32 characters.');
-    err.code = 'MOBILE_QR_LOGIN_NOT_CONFIGURED';
-    throw err;
-  }
-  return MOBILE_QR_LOGIN_SECRET;
-};
 const mobileQrSignature = (payload) => crypto
-  .createHmac('sha256', requireMobileQrLoginSecret())
+  .createHmac('sha256', process.env.MOBILE_QR_LOGIN_SECRET || process.env.SESSION_SECRET || 'abearc-mobile-qr-login')
   .update(payload)
   .digest('base64url');
-const createMobileQrLoginToken = async (userId) => {
-  requireMobileQrLoginSecret();
-  const nonce = crypto.randomBytes(24).toString('hex');
-  const expiresAt = Date.now() + MOBILE_QR_LOGIN_TTL_MS;
+const createMobileQrLoginToken = (userId) => {
   const payload = base64UrlJson({
     typ: 'abearc-mobile-login',
     aud: MOBILE_QR_LOGIN_AUDIENCE,
     sub: Number(userId),
-    exp: expiresAt,
-    nonce
+    exp: Date.now() + MOBILE_QR_LOGIN_TTL_MS,
+    nonce: crypto.randomBytes(16).toString('hex')
   });
-  await dbRun(`DELETE FROM MobileQrLoginTokens WHERE expires_at < ? OR consumed_at IS NOT NULL`, [Date.now()]);
-  await dbRun(
-    `INSERT INTO MobileQrLoginTokens (nonce, user_id, expires_at, created_at) VALUES (?, ?, ?, ?)`,
-    [nonce, Number(userId), expiresAt, new Date().toISOString()]
-  );
   return `${payload}.${mobileQrSignature(payload)}`;
 };
-const verifyAndConsumeMobileQrLoginToken = async (token = '') => {
-  requireMobileQrLoginSecret();
-  const parts = String(token || '').split('.');
-  if (parts.length !== 2) return null;
-  const [payload, signature] = parts;
+const verifyMobileQrLoginToken = (token = '') => {
+  const [payload, signature] = String(token || '').split('.');
   if (!payload || !signature) return null;
   const expected = mobileQrSignature(payload);
   if (Buffer.byteLength(signature) !== Buffer.byteLength(expected)) return null;
@@ -780,15 +775,7 @@ const verifyAndConsumeMobileQrLoginToken = async (token = '') => {
   }
   if (data?.typ !== 'abearc-mobile-login' || data?.aud !== MOBILE_QR_LOGIN_AUDIENCE) return null;
   if (!Number.isInteger(Number(data.sub)) || Number(data.sub) <= 0) return null;
-  if (!/^[a-f0-9]{48}$/.test(String(data.nonce || ''))) return null;
   if (!Number(data.exp) || Date.now() > Number(data.exp)) return null;
-  const consumed = await dbRun(
-    `UPDATE MobileQrLoginTokens
-     SET consumed_at = ?
-     WHERE nonce = ? AND user_id = ? AND expires_at = ? AND consumed_at IS NULL AND expires_at >= ?`,
-    [new Date().toISOString(), data.nonce, Number(data.sub), Number(data.exp), Date.now()]
-  );
-  if (Number(consumed.changes || 0) !== 1) return null;
   return data;
 };
 const requestBaseUrl = (req) => {

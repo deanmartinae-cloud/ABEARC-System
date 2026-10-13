@@ -9,13 +9,6 @@ app.delete('/api/backups/:filename', requireManageBackups, __routeController132)
 const restoreBackupFromUploadedFile = async (req, res, { activityAction = 'RESTORE_BACKUP' } = {}) => {
   if (!req.file) return res.status(400).json({ error: 'Backup ZIP is required' });
   const restoreRoot = path.join(TEMP_DIR, `restore_${Date.now()}`);
-  let restoreArtifactsCleaned = false;
-  const cleanupRestoreArtifacts = () => {
-    if (restoreArtifactsCleaned) return;
-    restoreArtifactsCleaned = true;
-    try { if (req.file?.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (_) {}
-    try { fs.rmSync(restoreRoot, { recursive: true, force: true }); } catch (_) {}
-  };
   try {
     if (!String(req.file.originalname || '').toLowerCase().endsWith('.zip')) throw new Error('Backup file must be a ZIP archive.');
     const stat = fs.statSync(req.file.path);
@@ -23,26 +16,9 @@ const restoreBackupFromUploadedFile = async (req, res, { activityAction = 'RESTO
     const available = getAvailableStorageBytes(TEMP_DIR);
     if (stat.size > available) throw new Error(`Not enough server storage to restore this backup. Backup is ${formatBytes(stat.size)}, available ${formatBytes(available)}.`);
     const zip = new AdmZip(req.file.path);
-    const entries = zip.getEntries();
-    if (entries.length > BACKUP_RESTORE_MAX_ENTRIES) throw new Error(`Backup ZIP contains too many entries (maximum ${BACKUP_RESTORE_MAX_ENTRIES}).`);
-    let uncompressedBytes = 0;
-    for (const entry of entries) {
+    for (const entry of zip.getEntries()) {
       const normalized = entry.entryName.replace(/\\/g, '/');
       if (path.isAbsolute(normalized) || normalized.includes('..')) throw new Error('Unsafe backup ZIP path.');
-      const entryBytes = Number(entry.header?.size || 0);
-      if (!Number.isSafeInteger(entryBytes) || entryBytes < 0 || !Number.isSafeInteger(uncompressedBytes + entryBytes)) {
-        throw new Error('Backup ZIP reports an invalid uncompressed size.');
-      }
-      uncompressedBytes += entryBytes;
-      if (uncompressedBytes > BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES) {
-        throw new Error(`Backup expands to ${formatBytes(uncompressedBytes)}, exceeding the ${formatBytes(BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES)} restore limit.`);
-      }
-    }
-    const requiredTemporaryBytes = stat.size + uncompressedBytes;
-    const storageReserve = Math.min(512 * 1024 * 1024, Math.floor(available * 0.1));
-    const safeAvailable = Math.max(0, available - storageReserve);
-    if (!Number.isSafeInteger(requiredTemporaryBytes) || requiredTemporaryBytes > safeAvailable) {
-      throw new Error(`Not enough server storage to safely extract this backup. Required ${formatBytes(requiredTemporaryBytes)}, safely available ${formatBytes(safeAvailable)} after reserve.`);
     }
     if (!zip.getEntry('data.db')) throw new Error('Backup ZIP must contain data.db');
     zip.extractAllTo(restoreRoot, true);
@@ -56,15 +32,13 @@ const restoreBackupFromUploadedFile = async (req, res, { activityAction = 'RESTO
     const restoredMonitoringAttachments = path.join(restoreRoot, 'monitoring-attachments');
     const restoredMapMediaOriginals = path.join(restoreRoot, 'map-media', 'originals');
     const restoredMapMediaThumbnails = path.join(restoreRoot, 'map-media', 'thumbnails');
+    const restoredMapOrthomosaics = path.join(restoreRoot, 'map-orthomosaics');
     const restoredUserDrive = path.join(restoreRoot, 'user-drive');
     if (!fs.existsSync(restoredDb)) throw new Error('Backup database file is missing');
     const preBackup = await createBackupFile(`pre-restore-${safeBackupFilename()}`);
     logActivity({ req, action: activityAction, details: `Restored ${req.file.originalname}; pre-restore backup ${path.basename(preBackup)}` });
     db.close((closeErr) => {
-      if (closeErr) {
-        cleanupRestoreArtifacts();
-        return res.status(500).json({ error: 'Failed to prepare database restore' });
-      }
+      if (closeErr) return res.status(500).json({ error: 'Failed to prepare database restore' });
       try {
         for (const suffix of ['', '-wal', '-shm']) {
           const current = `${DB_PATH}${suffix}`;
@@ -89,18 +63,19 @@ const restoreBackupFromUploadedFile = async (req, res, { activityAction = 'RESTO
         if (fs.existsSync(restoredMapMediaOriginals)) fs.cpSync(restoredMapMediaOriginals, MAP_MEDIA_ORIGINALS_DIR, { recursive: true });
         removeDirContents(MAP_MEDIA_THUMBNAILS_DIR);
         if (fs.existsSync(restoredMapMediaThumbnails)) fs.cpSync(restoredMapMediaThumbnails, MAP_MEDIA_THUMBNAILS_DIR, { recursive: true });
+        removeDirContents(MAP_ORTHOMOSAIC_DIR);
+        if (fs.existsSync(restoredMapOrthomosaics)) fs.cpSync(restoredMapOrthomosaics, MAP_ORTHOMOSAIC_DIR, { recursive: true });
         removeDirContents(USER_DRIVE_DIR);
         if (fs.existsSync(restoredUserDrive)) fs.cpSync(restoredUserDrive, USER_DRIVE_DIR, { recursive: true });
-        cleanupRestoreArtifacts();
         res.json({ success: true, message: 'Restore complete. Restart the server to reopen the restored database.', pre_restore_backup: path.basename(preBackup) });
         setTimeout(() => process.exit(0), 750);
       } catch (e) {
-        cleanupRestoreArtifacts();
         res.status(500).json({ error: e.message || 'Restore failed' });
       }
     });
   } catch (e) {
-    cleanupRestoreArtifacts();
+    try { fs.unlinkSync(req.file.path); } catch (_) {}
+    try { fs.rmSync(restoreRoot, { recursive: true, force: true }); } catch (_) {}
     const message = backupZipErrorMessage(e);
     logError('RESTORE_BACKUP_INVALID_ZIP', message, e.stack);
     res.status(400).json({ error: message });

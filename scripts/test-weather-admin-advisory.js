@@ -1,0 +1,33 @@
+const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const os=require('node:os');
+const crypto=require('node:crypto');
+const sourceDir=path.resolve(__dirname,'..');
+const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'abearc-weather-secret-'));
+try {
+  const source=fs.readFileSync(path.join(sourceDir,'src/backend/config/21-weather.config.js'),'utf8');
+  const load=()=>new Function('fs','path','crypto','DATA_DIR','process','Buffer',source+'\nreturn {read:weatherReadApiCredential,write:weatherWriteApiCredential,get:()=>ZENTRA_API_KEY,configured:weatherApiKeyConfigured};')(fs,path,crypto,tmp,{env:{ZENTRA_API_KEY:'',WEATHER_PROVIDER:'zentra'}},Buffer);
+  const a=load();assert.equal(a.configured(),false);
+  const token='fixture-local-credential-never-log';a.write(token);
+  const disk=fs.readFileSync(path.join(tmp,'.weather-credential.enc'),'utf8');
+  assert(!disk.includes(token),'Token must not be persisted in plaintext');
+  assert.equal(fs.statSync(path.join(tmp,'.weather-credential.key')).mode&0o777,0o600);
+  assert.equal(fs.statSync(path.join(tmp,'.weather-credential.enc')).mode&0o777,0o600);
+  const b=load();assert.equal(b.get(),token,'Token must persist through restart');
+  assert.equal(b.read(),token);
+  const libSource=fs.readFileSync(path.join(sourceDir,'src/backend/services/22-weather-advisory.service.js'),'utf8');
+  const advisory=new Function(libSource+'\nreturn {build:weatherBuildCropAdvisories,library:WEATHER_CROP_ADVISORY_LIBRARY};')();
+  assert(advisory.library.length>=10);
+  const dryDays=Array.from({length:4},(_,i)=>({date:`2026-10-${String(7-i).padStart(2,'0')}`,rainfall_mm:0,rainfall_completeness_pct:100,temperature_max_c:36,relative_humidity_avg_pct:80}));
+  const fresh={fetched_at:'2026-10-08T05:00:00Z',daily:[{timestamp:Date.parse('2026-10-09T00:00:00+08:00')/1000,precipitation_sum:28,wind_gusts_10m_max:16,temperature_2m_max:33}],stale:false};
+  const calculated=advisory.build({daily:dryDays,forecast:fresh,station:{id:7},now:Date.parse('2026-10-08T06:00:00Z')/1000});
+  for(const id of ['observed_dry_run','observed_heat','forecast_rain','forecast_wind'])assert(calculated.advisories.some(a=>a.id===id));
+  assert(calculated.advisories.some(a=>a.source_label==='Observed station data'));
+  assert(calculated.advisories.some(a=>a.source_label==='Modeled forecast'));
+  const stale=advisory.build({daily:[],forecast:{...fresh,stale:true}});
+  assert(!stale.advisories.some(a=>a.source==='forecast'),'A stale forecast must not trigger future-weather crop advice');
+  const missing=advisory.build({daily:[{date:'2026-10-08',rainfall_mm:null,temperature_max_c:null}],forecast:null});
+  assert(!missing.advisories.some(a=>a.id==='observed_dry_run'),'Missing rain must not be considered a dry day');
+  console.log('Weather credential AES-GCM persistence, restrictive file permissions, 11-rule crop library, observations/forecast separation, stale forecast and missing-data tests passed.');
+}finally{fs.rmSync(tmp,{recursive:true,force:true});}

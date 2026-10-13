@@ -683,11 +683,13 @@ const __routeController098 = async (req, res) => {
            )
       `, [projectId, targetStage, set.id, projectId, targetStage]);
     } else {
+      const existingRemarks = await dbAll("SELECT document_type_id, remarks FROM Documents WHERE project_id = ? AND stage = ? AND remarks IS NOT NULL AND TRIM(remarks) != ''", [projectId, targetStage]);
+      const remarksByType = new Map((existingRemarks || []).map(row => [Number(row.document_type_id), row.remarks]));
       await dbRun("DELETE FROM Documents WHERE project_id = ? AND stage = ?", [projectId, targetStage]);
       const items = await dbAll("SELECT document_type_id, order_index FROM RequirementSetItems WHERE requirement_set_id = ? ORDER BY order_index", [set.id]);
       if (!items.length) throw new Error("No requirements configured for this stage.");
       for (const it of items) {
-        await dbRun("INSERT INTO Documents (project_id, document_type_id, document_type_name, stage, status, document_order_index) VALUES (?, ?, (SELECT name FROM DocumentTypes WHERE id = ?), ?, 'None', ?)", [projectId, it.document_type_id, it.document_type_id, targetStage, Number(it.order_index || 0)]);
+        await dbRun("INSERT INTO Documents (project_id, document_type_id, document_type_name, stage, status, document_order_index, remarks) VALUES (?, ?, (SELECT name FROM DocumentTypes WHERE id = ?), ?, 'None', ?, ?)", [projectId, it.document_type_id, it.document_type_id, targetStage, Number(it.order_index || 0), remarksByType.get(Number(it.document_type_id)) || null]);
       }
     }
     await dbRun("UPDATE Projects SET requirement_set_id = ?, updated_at = ?, last_activity_at = ? WHERE id = ?", [set.id, new Date().toISOString(), new Date().toISOString(), projectId]);

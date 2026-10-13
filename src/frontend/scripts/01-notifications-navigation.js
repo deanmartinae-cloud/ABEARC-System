@@ -1531,6 +1531,7 @@
         sort: document.getElementById('sortOrder')?.value ?? dashboardSavedFilters.sort,
         stage: dashboardStageFilter,
         page: dashboardPage,
+        pageSize: DASHBOARD_PAGE_SIZE,
         activeWorkPanel,
         workQueueFilter
       };
@@ -1547,6 +1548,9 @@
       dashboardOutcomeFilter = dashboardSavedFilters.outcome || 'Active';
       dashboardStageFilter = state.stage || dashboardStageFilter || 'All';
       dashboardPage = Number(state.page || dashboardPage || 1);
+      const pageSize = Number(state.pageSize);
+      if ([0, 10, 25, 50].includes(pageSize)) DASHBOARD_PAGE_SIZE = pageSize;
+      lastDashboardRenderKey = '';
       activeWorkPanel = state.activeWorkPanel || null;
       workQueueFilter = state.workQueueFilter || workQueueFilter || 'active';
     }

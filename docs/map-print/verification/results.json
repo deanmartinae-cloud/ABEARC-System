@@ -1,0 +1,26 @@
+{
+  "passed": true,
+  "pdfPages": 10,
+  "png": [
+    2480,
+    3508
+  ],
+  "writes": [],
+  "errors": [],
+  "sandboxUnchanged": true,
+  "directPrintDocument": true,
+  "crowded": [
+    {
+      "photos": 1,
+      "openMs": 379
+    },
+    {
+      "photos": 50,
+      "openMs": 873
+    },
+    {
+      "photos": 100,
+      "openMs": 515
+    }
+  ]
+}

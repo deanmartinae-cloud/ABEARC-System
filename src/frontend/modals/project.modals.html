@@ -97,10 +97,10 @@
         <div id="projectDocumentationUploadProgress" class="hidden rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/30 p-3">
           <div class="flex items-center justify-between text-xs font-bold text-cyan-900 dark:text-cyan-100 mb-2">
             <span>Uploading documentation...</span>
-            <span id="projectDocumentationUploadProgressText">Working</span>
+            <span id="projectDocumentationUploadProgressText" role="status">0%</span>
           </div>
           <div class="h-2 rounded-full bg-white dark:bg-gray-800 overflow-hidden">
-            <div class="h-full w-1/2 bg-cyan-700 dark:bg-cyan-400 animate-pulse rounded-full"></div>
+            <div id="projectDocumentationUploadProgressBar" role="progressbar" aria-label="Documentation upload" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" style="width: 0%" class="h-full bg-cyan-700 dark:bg-cyan-400 rounded-full transition-all"></div>
           </div>
         </div>
         <div class="pt-4 flex flex-col sm:flex-row justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
@@ -152,6 +152,30 @@
     </div>
   </div>
 
+  <div data-document-remark="modal" class="fixed inset-0 bg-black/45 hidden z-[105] flex items-end sm:items-center justify-center p-4 backdrop-blur-sm transition-all duration-200" onclick="if(event.target===this) closeDocumentRemarkModal()">
+    <div class="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full sm:max-w-xl overflow-hidden fade-in border border-gray-200 dark:border-gray-700" onclick="event.stopPropagation()">
+      <div class="px-5 py-4 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h3 data-document-remark="title" class="text-lg font-black text-gray-950 dark:text-gray-50 truncate">Document Remark</h3>
+          <p data-document-remark="subtitle" class="text-xs text-gray-500 dark:text-gray-400 mt-1"></p>
+        </div>
+        <button type="button" onclick="closeDocumentRemarkModal()" class="text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-2xl leading-none p-1" aria-label="Close document remark">&times;</button>
+      </div>
+      <div class="p-5 space-y-3">
+        <label class="block text-sm font-bold text-gray-800 dark:text-gray-200">Remark</label>
+        <textarea data-document-remark="text" aria-label="Document remark" rows="7" maxlength="2000" oninput="updateDocumentRemarkCounter()" class="w-full resize-y rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-3 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-500" placeholder="Add a short note, follow-up, deficiency, instruction, or document-specific remark..."></textarea>
+        <div class="flex items-center justify-between gap-3 text-xs">
+          <span data-document-remark="hint" class="text-gray-500 dark:text-gray-400"></span>
+          <span data-document-remark="counter" class="text-gray-400 dark:text-gray-500">0 / 2000</span>
+        </div>
+        <div class="pt-3 flex justify-end gap-3 border-t border-gray-100 dark:border-gray-700">
+          <button type="button" onclick="closeDocumentRemarkModal()" class="px-4 py-2.5 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 font-bold">Close</button>
+          <button type="button" data-document-remark="save" onclick="saveDocumentRemark()" class="px-5 py-2.5 bg-cyan-800 dark:bg-cyan-500 text-white dark:text-gray-950 rounded-lg hover:bg-cyan-900 dark:hover:bg-cyan-400 font-bold">Save Remark</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="fileViewerModal" class="fixed inset-0 bg-black/60 hidden z-50 flex items-stretch sm:items-center justify-center sm:p-4 backdrop-blur-sm transition-all duration-200">
     <div class="bg-white dark:bg-gray-900 shadow-2xl w-full h-full sm:w-[90vw] sm:h-[90vh] sm:rounded-2xl overflow-hidden fade-in flex flex-col border border-gray-200 dark:border-gray-700" onclick="event.stopPropagation()">
       <div class="px-4 sm:px-5 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-950 flex items-center gap-3 sticky top-0 z-10">
@@ -174,4 +198,3 @@
       </div>
     </div>
   </div>
-

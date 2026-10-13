@@ -7,7 +7,7 @@ const projectGeotagStampValue = (stampText, label) => {
 };
 
 const projectGeotagExtractStampText = (values = []) => {
-  const labels = ['GPS Datetime', 'Date/Time', 'Address', 'Coordinates', 'Latitude', 'Longitude', 'Accuracy', 'Elevation', 'Bearing', 'District', 'Barangay', 'Facing Zoning', 'Location Zoning', 'Zoning'];
+  const labels = ['GPS Datetime', 'Date/Time', 'Date Taken', 'GPS Location', 'Address', 'Coordinates', 'Latitude', 'Longitude', 'Accuracy', 'Elevation', 'Bearing', 'District', 'Barangay', 'Facing Zoning', 'Location Zoning', 'Zoning'];
   const lines = [];
   for (const value of values) {
     const text = String(value || '').replace(/\0+/g, '\n');
@@ -24,13 +24,20 @@ const projectGeotagExtractStampText = (values = []) => {
 
 const projectGeotagCoordinates = (value = '') => {
   const text = String(value || '');
-  const geo = text.match(/geo:\s*([+-]?\d{1,2}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)/i);
-  const pair = geo || text.match(/(?:coordinates?\s*[:=]\s*)?([+-]?\d{1,2}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)/i);
-  if (!pair) return null;
-  const latitude = Number(pair[1]);
-  const longitude = Number(pair[2]);
-  if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) return null;
-  return { latitude, longitude };
+  const patterns = [
+    /(?:GPS\s*Location|Coordinates?)\s*[:=]\s*([+-]?\d{1,2}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)/ig,
+    /geo:\s*([+-]?\d{1,2}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)/ig,
+    /([+-]?\d{1,2}(?:\.\d+)?)\s*,\s*([+-]?\d{1,3}(?:\.\d+)?)/g
+  ];
+  for (const pattern of patterns) {
+    for (const match of text.matchAll(pattern)) {
+      const latitude = Number(match[1]);
+      const longitude = Number(match[2]);
+      if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || Math.abs(latitude) > 90 || Math.abs(longitude) > 180) continue;
+      return { latitude, longitude };
+    }
+  }
+  return null;
 };
 
 const projectGeotagNumber = value => {
@@ -45,6 +52,14 @@ const projectGeotagCapturedAt = value => {
   if (/^\d{4}-\d{2}-\d{2}T/.test(String(normalizedExif || ''))) return normalizedExif;
   const parsed = new Date(`${text} GMT+0800`);
   return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
+};
+
+const projectGeotagFilenameCapturedAt = filename => {
+  const match = String(filename || '').match(/(?:^|[^0-9])(20\d{2})(0[1-9]|1[0-2])([0-2]\d|3[01])([0-2]\d)([0-5]\d)([0-5]\d)(?:[^0-9]|$)/);
+  if (!match) return null;
+  const iso = `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}+08:00`;
+  const date = new Date(iso);
+  return Number.isNaN(date.getTime()) ? null : iso;
 };
 
 const projectGeotagAddressParts = value => {
@@ -66,24 +81,36 @@ const decodeProjectGeotagQr = async sourcePath => {
   return decoded?.data ? String(decoded.data).trim() : '';
 };
 
-const inspectProjectGeotagImage = async sourcePath => {
+const inspectProjectGeotagImage = async (sourcePath, originalFilename = '') => {
   const buffer = fs.readFileSync(sourcePath);
   const exif = monitoringReadExifMetadata(buffer);
-  const candidates = [...monitoringPhotoTextCandidates(buffer), exif.text];
-  const stampText = projectGeotagExtractStampText(candidates);
+  const candidates = exif.text ? [exif.text] : monitoringPhotoTextCandidates(buffer);
+  const embeddedStampText = projectGeotagExtractStampText(candidates);
   const qrPayload = await decodeProjectGeotagQr(sourcePath).catch(() => '');
+  const qrStampText = projectGeotagExtractStampText([qrPayload]);
+  const stampText = [...new Set([embeddedStampText, qrStampText].filter(Boolean))].join('\n');
   const qrCoordinates = projectGeotagCoordinates(qrPayload);
   const stampedCoordinates = projectGeotagCoordinates(projectGeotagStampValue(stampText, 'Coordinates')) || (() => {
     const latitude = projectGeotagNumber(projectGeotagStampValue(stampText, 'Latitude'));
     const longitude = projectGeotagNumber(projectGeotagStampValue(stampText, 'Longitude'));
     return Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude } : null;
   })();
-  const capturedAt = exif.captured_at || projectGeotagCapturedAt(projectGeotagStampValue(stampText, 'GPS Datetime') || projectGeotagStampValue(stampText, 'Date/Time'));
+  const capturedAt = exif.captured_at
+    || projectGeotagCapturedAt(projectGeotagStampValue(stampText, 'GPS Datetime')
+      || projectGeotagStampValue(stampText, 'Date/Time')
+      || projectGeotagStampValue(stampText, 'Date Taken'))
+    || projectGeotagFilenameCapturedAt(originalFilename || path.basename(sourcePath));
   const accuracyM = projectGeotagNumber(projectGeotagStampValue(stampText, 'Accuracy'));
   const stampedBearing = projectGeotagNumber(projectGeotagStampValue(stampText, 'Bearing'));
-  const bearingDeg = Number.isFinite(stampedBearing) ? stampedBearing : (Number.isFinite(Number(exif.bearing_deg)) ? Number(exif.bearing_deg) : null);
+  const bearingDeg = Number.isFinite(stampedBearing) ? stampedBearing : (mapMediaCoordinatePresent(exif.bearing_deg) ? Number(exif.bearing_deg) : null);
   const altitudeM = Number.isFinite(Number(exif.altitude_m)) ? Number(exif.altitude_m) : projectGeotagNumber(projectGeotagStampValue(stampText, 'Elevation'));
   const address = projectGeotagAddressParts(projectGeotagStampValue(stampText, 'Address'));
+  const stampedBarangay = projectGeotagStampValue(stampText, 'Barangay');
+  const stampedDistrictRaw = projectGeotagStampValue(stampText, 'District');
+  if (!address.barangay && stampedBarangay) address.barangay = stampedBarangay;
+  if (!address.district && stampedDistrictRaw) {
+    address.district = /district$/i.test(stampedDistrictRaw) ? stampedDistrictRaw : `${stampedDistrictRaw} District`;
+  }
   const errors = [];
   if (!qrPayload || !qrCoordinates) errors.push('The image does not contain a readable geotag QR code.');
   if (!stampText || !stampedCoordinates) errors.push('The image is missing readable stamped coordinates.');
@@ -106,6 +133,8 @@ const inspectProjectGeotagImage = async sourcePath => {
     stampText: [stampText, qrPayload ? `QR payload: ${qrPayload}` : ''].filter(Boolean).join('\n'),
     latitude: qrCoordinates?.latitude ?? stampedCoordinates?.latitude ?? exif.latitude,
     longitude: qrCoordinates?.longitude ?? stampedCoordinates?.longitude ?? exif.longitude,
+    embeddedLatitude: exif.latitude,
+    embeddedLongitude: exif.longitude,
     capturedAt,
     accuracyM,
     altitudeM,

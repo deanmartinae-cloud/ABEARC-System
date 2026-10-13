@@ -6,7 +6,7 @@ const fs = require('fs');
 const rateLimit = require('express-rate-limit');
 const os = require('os');
 const crypto = require('crypto');
-const { PDFDocument, StandardFonts, rgb } = require('pdf-lib');
+const { PDFDocument, StandardFonts, rgb, degrees } = require('pdf-lib');
 const AdmZip = require('adm-zip');
 const { PDFParse } = require('pdf-parse');
 const mammoth = require('mammoth');
@@ -15,20 +15,12 @@ const QRCode = require('qrcode');
 const jsQR = require('jsqr');
 const zlib = require('zlib');
 const { pipeline } = require('stream/promises');
+const { execFile } = require('child_process');
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
-const MOBILE_QR_LOGIN_TTL_MS = 2 * 60 * 1000;
+const MOBILE_QR_LOGIN_TTL_MS = 30 * 24 * 60 * 60 * 1000;
 const MOBILE_QR_LOGIN_AUDIENCE = 'abearc-geocamera';
-const MOBILE_QR_LOGIN_SECRET = String(process.env.MOBILE_QR_LOGIN_SECRET || process.env.SESSION_SECRET || '');
-const backupRestoreMaxBytesEnv = Number(process.env.BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES);
-const backupRestoreMaxEntriesEnv = Number(process.env.BACKUP_RESTORE_MAX_ENTRIES);
-const BACKUP_RESTORE_MAX_UNCOMPRESSED_BYTES = Number.isFinite(backupRestoreMaxBytesEnv) && backupRestoreMaxBytesEnv > 0
-  ? Math.max(1024 * 1024, Math.floor(backupRestoreMaxBytesEnv))
-  : 20 * 1024 * 1024 * 1024;
-const BACKUP_RESTORE_MAX_ENTRIES = Number.isFinite(backupRestoreMaxEntriesEnv) && backupRestoreMaxEntriesEnv > 0
-  ? Math.max(1, Math.floor(backupRestoreMaxEntriesEnv))
-  : 100000;
 
 const normalizeIpAddress = (value = '') => String(value || '')
   .trim()
@@ -87,17 +79,30 @@ function getLocalIP() {
   return 'localhost';
 }
 
-// Fix 3: Fix Rate Limit Error
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 2000,
+  skip: req => Boolean(req.user) || !req.path.startsWith('/api') || ['GET', 'HEAD', 'OPTIONS'].includes(req.method),
+  keyGenerator: req => req.user?.id ? `user:${req.user.id}` : `ip:${getClientIp(req)}`,
   handler: (req, res) => {
     res.status(429).json({
       error: "Too many requests, please slow down."
     });
   }
 });
-app.use(limiter);
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, 'public')));
+app.use((req, res, next) => {
+  const requestPath = String(req.path || '');
+  if (requestPath === '/' || requestPath === '/index.html') {
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+  } else if (requestPath.startsWith('/assets/')) {
+    // Asset URLs are content-versioned by build-frontend.js. Revalidation here
+    // prevents a reverse proxy/browser from mixing scripts from different builds.
+    res.setHeader('Cache-Control', 'no-cache, must-revalidate');
+  }
+  next();
+});
+app.use(express.static(path.join(__dirname, 'public'), { etag: true, maxAge: 0 }));

@@ -87,7 +87,6 @@ const __routeController007 = async (req, res) => {
       title: req.body.title,
       description: req.body.description,
       tags,
-      idempotencyKey: req.get('X-Idempotency-Key'),
       pathPartsForFile: docScannerUpload ? abedDocScannerFolderParts : null
     });
     logActivity({
@@ -97,7 +96,7 @@ const __routeController007 = async (req, res) => {
         ? `Uploaded ${uploaded.length} ABEDDocScanner file(s) to ${ABED_DOCSCANNER_UPLOAD_FOLDER}`
         : `Uploaded ${uploaded.length} My Drive file(s)`
     });
-    res.status(uploaded.idempotentReplay ? 200 : 201).json({ success: true, idempotent_replay: Boolean(uploaded.idempotentReplay), files: uploaded });
+    res.status(201).json({ success: true, files: uploaded });
   } catch (err) {
     (req.files || []).forEach(file => { try { if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path); } catch (_) {} });
     res.status(err.statusCode || 400).json({ error: err.message || 'Failed to upload My Drive file' });
@@ -208,7 +207,8 @@ const __routeController016 = async (req, res) => {
   try {
     const folder = await ensureOwnDriveFolder(req.user.id, Number(req.params.id));
     const parent = normalizeUserDriveFolderId(req.body?.parent_folder_id);
-    await validateUserDriveFolderParent(req.user.id, folder.id, parent);
+    if (parent === folder.id) return res.status(400).json({ error: 'A folder cannot be moved into itself.' });
+    await ensureOwnDriveFolder(req.user.id, parent);
     const nextName = String(req.body?.name || folder.name).trim();
     await ensureUniqueDriveFolderName(req.user.id, parent, nextName, folder.id);
     await dbRun(`UPDATE UserDriveFolders SET name=?, parent_folder_id=?, updated_at=? WHERE id=?`, [nextName, parent, new Date().toISOString(), folder.id]);
@@ -459,7 +459,9 @@ const __routeController028 = async (req, res) => {
       if (!id) continue;
       if (kind === 'folder') {
         const folder = await ensureOwnDriveFolder(req.user.id, id);
-        await validateUserDriveFolderParent(req.user.id, folder.id, targetFolderId);
+        if (targetFolderId === folder.id) return res.status(400).json({ error: 'A folder cannot be moved into itself.' });
+        const descendants = await userDriveFolderDescendantIds(req.user.id, folder.id);
+        if (targetFolderId && descendants.includes(Number(targetFolderId))) return res.status(400).json({ error: 'A folder cannot be moved inside one of its subfolders.' });
         await dbRun(`UPDATE UserDriveFolders SET parent_folder_id=?, updated_at=? WHERE id=? AND owner_user_id=?`, [targetFolderId, new Date().toISOString(), folder.id, req.user.id]);
       } else {
         const file = await getDriveFileForAccess(req, id, { requireOwner: true });
@@ -575,6 +577,10 @@ const addUserDriveGeoCamToMapController = async (req, res) => {
       coordinate_source: 'my_drive_geocam_metadata'
     });
     validateMapMediaDavaoLocation(normalized);
+    // My Drive GeoCam imports may not carry Barangay/District text in the stamp.
+    // Resolve only missing administrative/zoning fields from the embedded GPS point
+    // using ABEARC's local offline CPDO boundary and zoning datasets before insert.
+    await fillMapMediaSpatialMetadataFromCoordinates(normalized);
     const stored = safeMapMediaFilename(file.original_name || 'my-drive-geocam.jpg');
     const originalAbsolute = path.join(MAP_MEDIA_ORIGINALS_DIR, stored);
     fs.copyFileSync(full, originalAbsolute);

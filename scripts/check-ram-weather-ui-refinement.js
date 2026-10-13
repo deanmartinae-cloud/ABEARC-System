@@ -1,0 +1,17 @@
+const fs = require('fs');const assert=require('assert').strict;
+const read = path=>fs.readFileSync(path,'utf8');
+const page=read('src/frontend/pages/map.page.html'),map=read('src/frontend/scripts/12-abearc-map.js');
+const wx=read('src/frontend/scripts/24-weather-experience.js'),wxBackend=read('src/backend/controllers/21-weather.controller.js'),modal=read('src/frontend/modals/map-weather.modals.html');
+const ram=read('src/frontend/scripts/22-map-ram-pump.js');
+assert(fs.existsSync('public/assets/media/ram-pump-manual-reference.png'),'Reference image missing from actual served frontend.');
+assert(ram.includes('ram-pump-manual-reference.png'),'Full calculation does not use supplied figure.');
+assert(!ram.includes('downloadRamPumpFigureSvg()')&&!ram.includes('downloadRamPumpFigureDxf()'),'Removed CAD/SVG controls found.');
+assert(map.includes('window.syncAbearcMapRail = syncAbearcMapRail'),'Drawer rail selection cannot sync across scripts.');
+assert(map.includes("['[data-map-ram-pump-toolbar]', '[data-map-ram-pump-panel]']"),'Ram Pump rail not synchronized.');
+assert(map.includes("['[data-weather-stations-rail]', '[data-weather-stations-drawer]']"),'Weather rail not synchronized.');
+assert(wx.includes('weatherStationConditionSymbol(weatherStationCondition(s).icon)'),'Weather drawer must reuse the forecast condition symbol without a pin.');
+assert(modal.includes('Download farm advisory · PDF'),'Station modal lacks farm advisory PDF download.');
+assert(wxBackend.includes("newPage('FARM WEATHER ADVISORY')"),'PDF was not redesigned as a farm advisory.');
+assert(wxBackend.includes('Observed')&&wxBackend.includes('Forecast'),'PDF source distinction missing.');
+assert(page.includes('data-map-rail-mine'),'Geotag rail control missing.');
+console.log('Ram-Pump figure, rail-state, weather icon and farm advisory checks passed.');

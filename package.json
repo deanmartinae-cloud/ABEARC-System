@@ -1,11 +1,13 @@
 {
-  "name": "abearc-project-management",
-  "version": "1.0.91",
+  "name": "abed-project-management",
+  "version": "1.0.96",
   "private": true,
   "scripts": {
     "build": "node scripts/build-frontend.js",
-    "check": "node scripts/check-structure.js && node scripts/check-runtime-wiring.js",
-    "start": "node server.js"
+    "check": "node scripts/check-structure.js && node scripts/check-dashboard-assignments.js && node scripts/check-frontend-cache-safety.js && node scripts/check-map-analysis.js && node scripts/check-runtime-wiring.js && node scripts/check-document-date.js && node scripts/check-orthomosaic.js && node scripts/check-map-layouts.js && node scripts/check-map-print.js && node scripts/check-map-ram-pump.js && node scripts/test-map-ram-pump-workflow.js && node scripts/check-map-salt.js && node scripts/check-map-view.js && node scripts/check-map-undo.js && node scripts/check-map-multi-measure.js && node scripts/check-map-gravity-path.js && node scripts/check-map-gravity-native.js && node scripts/check-map-gravity-ascent.js && node scripts/check-weather-stations.js && node scripts/test-weather-provider.js && node scripts/test-weather-workflow.js && node scripts/check-telegram-integration.js && node scripts/test-telegram-service.js && node scripts/test-telegram-workflow.js && node scripts/test-telegram-credentials.js && node scripts/test-weather-units.js && node scripts/test-weather-alert-rate.js",
+    "start": "node server.js",
+    "test:weather-forecast": "node scripts/test-weather-forecast.js",
+    "preview:weather": "node scripts/preview-weather.js"
   },
   "dependencies": {
     "adm-zip": "0.5.17",

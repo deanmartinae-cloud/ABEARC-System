@@ -1,0 +1,19 @@
+ABEARC Ram-Pump Gilman Offline Recommender Refinement
+Baseline: user-uploaded ABEARC_SYSTEM_v1.52(1).zip
+Date: 2026-10-07
+Changed/new application files: 13
+Deleted files: 0
+
+d48ee7857d946d8ab0fc9df71c6ac1ea9d669e10e7fcc4f34c617a6b604070ac  docs/GILMAN-RAM-PUMP-CATALOG-2026-10-07.json
+4a08e7077f8b54a17b58ee8a40b609acd24a0db2bc0fbfa0f15e55c742dfbe33  public/assets/css/map-ram-pump.css
+1fd477192fb3a5a20ac8325f7caba8f32dd7e5ae8712c274998cd9f919770ed4  public/assets/js/21-map-ram-pump-core.js
+22954a72e51d1ce83a50fbc548d9b027f7bfa1fdc841cd12102c05b85a7eb9fb  public/assets/js/22-map-ram-pump.js
+36a3099d1be3f3cc2f53f7d00304e23f0d5408c2ed24f922d5c74857afb577b3  public/assets/vendor/maplibre-gl.js
+4266937bfc24dfd7c4bad0d0cd6a8446d42aedbcbb2bf74c5c3c7c18af55ec53  public/index.html
+b23fe49c753170332a13e13c52035e7d4663ad7efa408db6cdcbfbd02adb7e45  scripts/check-map-ram-pump.js
+2b979cc9d8cc9c92fe0e9ef2b8857bc67fcb856fcbfca8a581b011bb0a66adba  scripts/test-map-ram-pump-browser.js
+556918edaa5c1077cf631826d3ffa8717aeb81bfa69f7510356a3c1855605411  scripts/test-map-ram-pump-workflow.js
+0093e4155d70fdcf11cd4cdbedb9897566660b9a187c849c67d7a519cb890593  src/frontend/pages/map.page.html
+1fd477192fb3a5a20ac8325f7caba8f32dd7e5ae8712c274998cd9f919770ed4  src/frontend/scripts/21-map-ram-pump-core.js
+22954a72e51d1ce83a50fbc548d9b027f7bfa1fdc841cd12102c05b85a7eb9fb  src/frontend/scripts/22-map-ram-pump.js
+4a08e7077f8b54a17b58ee8a40b609acd24a0db2bc0fbfa0f15e55c742dfbe33  src/frontend/styles/map-ram-pump.css

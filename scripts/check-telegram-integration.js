@@ -1,0 +1,65 @@
+const fs=require('fs');const path=require('path');const ROOT=path.resolve(__dirname,'..');
+const read=p=>fs.readFileSync(path.join(ROOT,p),'utf8');
+const must=(value,rx,message)=>{if(!rx.test(value))throw new Error(message);};
+const manifest=JSON.parse(read('src/backend/manifest.json'));
+const scriptManifest=JSON.parse(read('src/frontend/script-manifest.json'));
+const config=read('src/backend/config/22-telegram.config.js');
+const migration=read('src/backend/migrations/22-telegram.migration.js');
+const service=read('src/backend/services/22-telegram.service.js');
+const routes=read('src/backend/routes/22-telegram.routes.js');
+const core=read('src/backend/utils/00-core.utils.js');
+const page=read('src/frontend/pages/settings.page.html');
+const ui=read('src/frontend/scripts/24-telegram-integration.js');
+const startup=read('src/backend/startup/00-listen.startup.js');
+const idx=x=>manifest.indexOf(x);
+if(idx('src/backend/config/22-telegram.config.js')<0||idx('src/backend/migrations/22-telegram.migration.js')<0||idx('src/backend/services/22-telegram.service.js')<0||idx('src/backend/controllers/22-telegram.controller.js')<0||idx('src/backend/routes/22-telegram.routes.js')<0)throw new Error('Telegram backend modules must be in the backend manifest.');
+if(!(idx('src/backend/config/22-telegram.config.js')<idx('src/backend/migrations/22-telegram.migration.js')&&idx('src/backend/migrations/22-telegram.migration.js')<idx('src/backend/services/22-telegram.service.js')&&idx('src/backend/services/22-telegram.service.js')<idx('src/backend/controllers/22-telegram.controller.js')&&idx('src/backend/controllers/22-telegram.controller.js')<idx('src/backend/routes/22-telegram.routes.js')))throw new Error('Telegram module load order is invalid.');
+if(!scriptManifest.includes('src/frontend/scripts/24-telegram-integration.js'))throw new Error('Telegram frontend script is missing from script manifest.');
+must(config,/process\.env\.TELEGRAM_BOT_TOKEN/,'Telegram token must come from server environment.');
+must(service,/getUpdates/,'Telegram long polling must use getUpdates.');
+must(service,/deleteWebhook/,'Telegram startup must remove webhook before long polling.');
+must(service,/update_offset/,'Telegram long polling offset must be persisted.');
+must(service,/retry_after/,'Telegram delivery must respect API retry_after.');
+must(service,/WeatherAlertEvents/,'Telegram weather routing must consume existing WeatherAlertEvents.');
+must(migration,/TelegramDeliveries/,'Telegram delivery queue table is missing.');
+must(migration,/TelegramWeatherRouteState/,'Telegram weather route transition state table is missing.');
+must(service,/transition_seq/,'Telegram weather routing must track state transitions so recurring alerts can be re-sent after resolution.');
+must(service,/telegramSchedulerActive/,'Telegram scheduler must prevent overlapping ticks.');
+must(service,/telegramDeliveryProcessing/,'Telegram delivery processing must be single-flight.');
+must(service,/weekStartKey/,'Weekly Telegram reports must use a stable local-week run key for restart catch-up.');
+must(migration,/UNIQUE\(target_id, kind, source_key\)/,'Telegram delivery deduplication constraint is missing.');
+must(core,/view_telegram_integration/,'Telegram view privilege is missing.');
+must(core,/manage_telegram_integration/,'Telegram integration privilege is missing.');
+must(core,/manage_telegram_notifications/,'Telegram notification privilege is missing.');
+must(page,/id="nav-telegram-integration"/,'Telegram Settings navigation entry is missing.');
+must(page,/id="content-telegram-integration"/,'Telegram Settings content panel is missing.');
+must(ui,/telegramSaveCredential\(event\)/,'Telegram UI must support saving the bot token.');
+must(ui,/type="password"/,'Bot token input must be masked.');
+must(read('src/backend/controllers/22-telegram.controller.js'),/\['superadmin','system'\]\.includes\(req\.user\?\.role\)/,'Credential changes must be restricted to superadmin and system admin.');
+must(read('src/frontend/scripts/05-settings.js'),/'telegram-integration': \(\) => telegramCanView\(\)/,'Telegram Settings must enforce its privileges.');
+must(read('src/frontend/scripts/05-settings.js'),/await renderTelegramIntegration\(\)/,'Telegram Settings must render the integration panel.');
+must(read('src/frontend/scripts/02-auth-dashboard.js'),/nav-telegram-integration/,'Telegram Settings navigation must be connected to privilege visibility.');
+must(service,/allow_paid_broadcast:false/,'Telegram sends must disable paid broadcasts.');
+if(/TELEGRAM_BOT_TOKEN\s*=\s*['"][^'"]+['"]/.test(ui)||/TELEGRAM_BOT_TOKEN/.test(page))throw new Error('Telegram token must never be embedded in frontend HTML/JS.');
+must(startup,/ensureTelegramMigration\(\)/,'Telegram migration must run at startup.');
+must(startup,/startTelegramScheduler\(\)/,'Telegram scheduler must start with ABEARC.');
+must(routes,/manage_telegram_notifications/,'Telegram routes must be privilege protected.');
+console.log('Telegram integration structural/security checks passed.');
+if (!process.argv.includes('--runtime')) {
+const dockerfile=read('Dockerfile');
+must(dockerfile,/check-telegram-integration\.js/,'Docker build must run Telegram structural checks.');
+must(dockerfile,/test-telegram-service\.js/,'Docker build must run Telegram Bot API contract fixtures.');
+must(dockerfile,/test-telegram-workflow\.js/,'Docker build must run Telegram SQLite workflow fixtures.');
+const restartPath=path.join(ROOT,'2. Restart_Update ABEACR Server.bat');
+const localPath=path.join(ROOT,'run-local-server.bat');
+if(fs.existsSync(restartPath)&&fs.existsSync(localPath)){
+const restartBat=fs.readFileSync(restartPath,'utf8');
+const localBat=fs.readFileSync(localPath,'utf8');
+must(restartBat,/TELEGRAM_ENV_FILE/i,'NAS restart launcher must define persistent Telegram env file.');
+must(restartBat,/--env-file[^\r\n]*TELEGRAM_ENV_FILE/i,'NAS restart launcher must load telegram.env into the container.');
+must(localBat,/telegram\.env/i,'Local launcher must load persistent telegram.env.');
+}else{
+console.log('Credential-bearing local/NAS launchers are not tracked; launcher-specific checks skipped.');
+}
+console.log('Telegram deployment wiring checks passed.');
+}

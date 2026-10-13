@@ -1,0 +1,278 @@
+.abearc-map-ram-pump-drawer {
+  position: relative;
+  z-index: 22;
+  width: 390px;
+  min-width: 390px;
+  max-width: min(440px, 45vw);
+  flex: 0 0 390px;
+  min-height: 0;
+  align-self: stretch;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+  border-right: 1px solid #d4dfe7;
+  background: rgba(255,255,255,.988);
+  box-shadow: 6px 0 24px rgba(15,23,42,.09);
+  box-sizing: border-box;
+}
+.abearc-map-ram-pump-drawer.hidden { display: none; }
+.abearc-map-ram-pump-drawer *, .abearc-map-ram-pump-drawer *::before, .abearc-map-ram-pump-drawer *::after { box-sizing: border-box; min-width: 0; }
+.abearc-map-ram-pump-head { display:flex; align-items:center; justify-content:space-between; gap:.75rem; padding:.78rem .85rem; border-bottom:1px solid #dce5eb; }
+.abearc-map-ram-pump-head > div { display:grid; gap:.08rem; min-width:0; }
+.abearc-map-ram-pump-head strong { color:#1f2937; font-size:.92rem; }
+.abearc-map-ram-pump-head span { color:#64748b; font-size:.63rem; line-height:1.35; }
+.abearc-map-ram-pump-head button { width:32px; height:32px; flex:0 0 32px; display:grid; place-items:center; border:0; border-radius:50%; background:transparent; color:#64748b; cursor:pointer; }
+.abearc-map-ram-pump-head button:hover { background:#f1f5f9; }
+.abearc-map-ram-pump-head svg { width:18px; height:18px; }
+.abearc-map-ram-pump-body { min-height:0; overflow:auto; overscroll-behavior:contain; padding:.78rem; display:grid; align-content:start; gap:.72rem; scrollbar-gutter:stable; }
+.abearc-ram-intro { margin:0; color:#5d6b78; font-size:.66rem; line-height:1.45; }
+.abearc-ram-toolbar { display:flex; flex-wrap:wrap; gap:.4rem; }
+.abearc-ram-toolbar button, .abearc-ram-run, .abearc-ram-secondary {
+  min-height:34px; border:1px solid #cbd5e1; border-radius:6px; padding:.42rem .62rem; background:#fff; color:#334155; font-size:.66rem; font-weight:800; cursor:pointer;
+}
+.abearc-ram-toolbar button:hover, .abearc-ram-secondary:hover { background:#f1f5f9; }
+.abearc-ram-toolbar .is-danger { color:#b91c1c; }
+.abearc-ram-run { width:100%; min-height:40px; border-color:#0f6f9f; background:#0f6f9f; color:#fff; font-size:.72rem; }
+.abearc-ram-run:hover { background:#0c5d86; }
+.abearc-ram-form { display:grid; gap:.58rem; width:100%; height:auto; max-height:none; padding:.68rem; border:1px solid #d8e2e8; border-radius:8px; background:#f8fbfc; overflow:visible; }
+
+.abearc-ram-alignment-card { display:grid; gap:.5rem; width:100%; padding:.64rem; border:1px solid #cfe0e9; border-radius:8px; background:#f7fbfd; }
+.abearc-ram-section-head { display:grid; gap:.1rem; min-width:0; }
+.abearc-ram-section-head strong { color:#334155; font-size:.67rem; line-height:1.3; }
+.abearc-ram-section-head span { color:#718096; font-size:.55rem; line-height:1.35; }
+.abearc-ram-field-label { display:grid; gap:.25rem; color:#526272; font-size:.62rem; font-weight:800; }
+.abearc-ram-field-label select { width:100%; max-width:100%; min-height:36px; padding:.42rem .5rem; border:1px solid #cbd5e1; border-radius:5px; background:#fff; color:#1f2937; font:inherit; font-size:.68rem; }
+.abearc-ram-form-actions { display:grid; gap:.5rem; width:100%; padding:0 .02rem .04rem; }
+.abearc-ram-run { display:flex; align-items:center; justify-content:center; line-height:1.2; white-space:normal; padding:.62rem .72rem; overflow:visible; }
+.abearc-ram-form > label, .abearc-ram-grid label { display:grid; gap:.25rem; color:#526272; font-size:.62rem; font-weight:800; }
+.abearc-ram-form input, .abearc-ram-form select, .abearc-ram-grid input, .abearc-ram-grid select {
+  width:100%; max-width:100%; min-height:34px; padding:.42rem .5rem; border:1px solid #cbd5e1; border-radius:5px; background:#fff; color:#1f2937; font:inherit; font-size:.68rem;
+}
+.abearc-ram-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:.5rem; }
+.abearc-ram-form input.is-computed, .abearc-ram-grid input.is-computed { background:#eef6fa; border-color:#9dc4d5; color:#0f5f87; font-weight:850; cursor:not-allowed; }
+.abearc-ram-source-flow-note { color:#5f7382; font-size:.56rem; line-height:1.4; padding:.42rem .5rem; border-left:3px solid #8bb8cc; border-radius:4px; background:#f3f9fc; }
+.abearc-ram-drive-installation-note { color:#5f6f7f; font-size:.56rem; line-height:1.42; padding:.44rem .5rem; border-left:3px solid #0f766e; border-radius:4px; background:#f0fdfa; }
+.abearc-ram-grid label.is-disabled { opacity:.58; }
+.abearc-ram-grid label.is-disabled input { cursor:not-allowed; background:#f1f5f9; }
+.abearc-ram-input-note { color:#718096; font-size:.58rem; line-height:1.4; }
+.abearc-ram-inline-actions { display:flex; flex-wrap:wrap; gap:.4rem; align-items:center; }
+.abearc-ram-inline-actions label { display:inline-flex; align-items:center; gap:.35rem; color:#526272; font-size:.63rem; font-weight:750; }
+.abearc-ram-inline-actions input[type="checkbox"] { width:15px; min-height:15px; height:15px; accent-color:#0f6f9f; }
+.abearc-ram-progress { display:grid; gap:.38rem; padding:.65rem; border:1px solid #bdd7e5; border-radius:8px; background:#eff8fd; }
+.abearc-ram-progress.hidden { display:none; }
+.abearc-ram-progress > div:first-child { display:flex; justify-content:space-between; gap:.6rem; color:#244151; font-size:.65rem; }
+.abearc-ram-progress-track { height:6px; overflow:hidden; border-radius:999px; background:#dbeaf2; }
+.abearc-ram-progress-track span { display:block; width:0; height:100%; border-radius:inherit; background:#0f6f9f; transition:width .15s ease; }
+.abearc-ram-progress small { color:#607888; font-size:.59rem; line-height:1.35; }
+.abearc-ram-progress button { justify-self:end; border:0; background:transparent; color:#b91c1c; font-size:.61rem; font-weight:800; cursor:pointer; }
+.abearc-ram-results { display:grid; gap:.55rem; }
+.abearc-ram-results > header { display:flex; align-items:flex-start; justify-content:space-between; gap:.6rem; padding:.08rem .05rem; }
+.abearc-ram-results > header strong { color:#334155; font-size:.72rem; }
+.abearc-ram-results > header span { max-width:68%; color:#64748b; font-size:.58rem; text-align:right; line-height:1.35; }
+.abearc-ram-empty { display:block; padding:.8rem; border:1px dashed #cbd5e1; border-radius:7px; color:#718096; font-size:.64rem; line-height:1.5; text-align:center; }
+.abearc-ram-summary-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1px; overflow:hidden; border:1px solid #dce5eb; border-radius:7px; background:#dce5eb; }
+.abearc-ram-summary-grid > div { display:grid; gap:.18rem; min-height:56px; padding:.52rem; background:#fff; }
+.abearc-ram-summary-grid span { color:#718096; font-size:.56rem; font-weight:750; text-transform:uppercase; letter-spacing:.02em; }
+.abearc-ram-summary-grid strong { color:#253647; font-size:.67rem; line-height:1.35; overflow-wrap:anywhere; }
+.abearc-ram-profile { overflow:hidden; border:1px solid #dce5eb; border-radius:8px; background:#fff; }
+.abearc-ram-profile.hidden { display:none; }
+.abearc-ram-profile-meta { display:flex; justify-content:space-between; gap:.6rem; padding:.45rem .55rem .1rem; color:#64748b; font-size:.56rem; }
+.abearc-ram-profile-svg { display:block; width:100%; height:auto; min-height:180px; }
+.ram-profile-grid line { stroke:#e4ebef; stroke-width:1; }
+.ram-profile-grid text { fill:#718096; font-size:9px; font-weight:650; }
+.ram-profile-drive, .ram-profile-supply, .ram-profile-delivery, .ram-profile-drive-terrain { fill:none; stroke-linejoin:round; stroke-linecap:round; }
+.ram-profile-drive, .ram-profile-delivery { stroke-width:3; }
+.ram-profile-supply { stroke:#0f766e; stroke-width:2.2; stroke-dasharray:7 4; opacity:.75; }
+.ram-profile-drive { stroke:#0f766e; }
+.ram-profile-drive-terrain { stroke:#8b7355; stroke-width:1.5; stroke-dasharray:5 4; opacity:.8; }
+.ram-profile-delivery { stroke:#2563eb; }
+.ram-profile-marker line { stroke:#94a3b8; stroke-width:1; stroke-dasharray:3 3; }
+.ram-profile-marker circle { fill:#fff; stroke-width:2.5; }
+.ram-profile-marker text { fill:#334155; font-size:9px; font-weight:800; paint-order:stroke; stroke:#fff; stroke-width:3px; }
+.ram-profile-marker.source circle { stroke:#0f766e; }
+.ram-profile-marker.pump circle { stroke:#d97706; }
+.ram-profile-marker.destination circle { stroke:#2563eb; }
+.ram-profile-marker.high-point circle { stroke:#7c3aed; }
+.ram-profile-marker.standpipe circle { stroke:#7c3aed; }
+.ram-profile-marker.standpipe line { stroke:#a78bfa; }
+.ram-profile-marker.high-point line { stroke:#a78bfa; }
+.abearc-ram-candidate-head { display:grid; gap:.12rem; margin-top:.1rem; }
+.abearc-ram-candidate-head strong { color:#334155; font-size:.69rem; }
+.abearc-ram-candidate-head span { color:#718096; font-size:.58rem; line-height:1.35; }
+.abearc-ram-candidate-buttons { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.35rem; margin-top:.4rem; }
+.abearc-ram-candidate-buttons button { display:grid; gap:.15rem; min-height:52px; padding:.42rem .45rem; border:1px solid #cbd5e1; border-radius:6px; background:#fff; color:#334155; text-align:left; cursor:pointer; }
+.abearc-ram-candidate-buttons button.is-active { border-color:#0f6f9f; background:#eff8fd; box-shadow:inset 0 0 0 1px #0f6f9f; }
+.abearc-ram-candidate-buttons b { font-size:.6rem; }
+.abearc-ram-candidate-buttons small { color:#718096; font-size:.53rem; line-height:1.3; }
+.abearc-ram-assessment { padding:.66rem .72rem; border:1px solid #d7e1e7; border-left-width:4px; border-radius:7px; background:#f8fafc; }
+.abearc-ram-assessment strong { display:block; color:#334155; font-size:.67rem; line-height:1.35; }
+.abearc-ram-assessment ul { margin:.35rem 0 0 1rem; padding:0; color:#5f6f7f; font-size:.59rem; line-height:1.45; }
+.abearc-ram-assessment.is-feasible { border-left-color:#15803d; background:#f0fdf4; }
+.abearc-ram-assessment.is-review { border-left-color:#d97706; background:#fffbeb; }
+.abearc-ram-assessment.is-not-feasible { border-left-color:#b91c1c; background:#fef2f2; }
+
+.abearc-map-ram-pump-layer { position:absolute; inset:0; width:100%; height:100%; z-index:8; overflow:visible; pointer-events:none; }
+.abearc-map-ram-pump-layer .abearc-ram-route { pointer-events:none; stroke-width:4; stroke-linejoin:round; stroke-linecap:round; filter:drop-shadow(0 1px 1px rgba(15,23,42,.25)); }
+.abearc-map-ram-pump-layer .abearc-ram-route.is-drive { stroke:#0f766e; }
+.abearc-map-ram-pump-layer .abearc-ram-route.is-supply { stroke:#0f766e; stroke-dasharray:7 5; opacity:.72; stroke-width:3.2; }
+.abearc-map-ram-pump-layer .abearc-ram-route.is-delivery { stroke:#2563eb; stroke-dasharray:10 5; }
+.abearc-map-ram-pump-layer .abearc-ram-route-hit { pointer-events:stroke; stroke:transparent; stroke-width:18; cursor:copy; }
+.abearc-map-ram-pump-layer .abearc-ram-route-vertex { pointer-events:all; fill:#fff; stroke:#334155; stroke-width:1.8; cursor:grab; }
+.abearc-map-ram-pump-layer .abearc-ram-route-vertex:active { cursor:grabbing; }
+.abearc-map-ram-pump-layer .abearc-ram-marker { pointer-events:all; cursor:grab; }
+.abearc-map-ram-pump-layer .abearc-ram-marker:active { cursor:grabbing; }
+.abearc-map-ram-pump-layer .abearc-ram-marker-halo { fill:#fff; stroke:#fff; stroke-width:3.5; opacity:.92; }
+.abearc-map-ram-pump-layer .abearc-ram-marker-core { stroke:#fff; stroke-width:.9; }
+.abearc-map-ram-pump-layer .abearc-ram-marker-dot { fill:#fff; pointer-events:none; }
+.abearc-map-ram-pump-layer .abearc-ram-marker.is-source .abearc-ram-marker-core { fill:#0f766e; }
+.abearc-map-ram-pump-layer .abearc-ram-marker.is-pump .abearc-ram-marker-core { fill:#d97706; }
+.abearc-map-ram-pump-layer .abearc-ram-marker.is-standpipe .abearc-ram-marker-core { fill:#7c3aed; }
+.abearc-map-ram-pump-layer .abearc-ram-marker.is-destination .abearc-ram-marker-core { fill:#2563eb; }
+.abearc-map-ram-pump-layer .abearc-ram-label { pointer-events:all; cursor:move; }
+.abearc-map-ram-pump-layer .abearc-ram-label-leader { stroke:#526575; stroke-width:.9; }
+.abearc-map-ram-pump-layer .abearc-ram-label-box { fill:rgba(255,255,255,.94); stroke:#9aa9b5; stroke-width:1; }
+.abearc-map-ram-pump-layer .abearc-ram-label-text { fill:#334155; font-size:10px; font-weight:650; dominant-baseline:alphabetic; }
+.abearc-map-ram-pump-layer .abearc-ram-label-text .is-title { font-weight:900; }
+
+.dark .abearc-map-ram-pump-drawer { border-color:#334155; background:rgba(17,24,39,.99); }
+.dark .abearc-map-ram-pump-head { border-color:#334155; }
+.dark .abearc-map-ram-pump-head strong, .dark .abearc-ram-results > header strong, .dark .abearc-ram-summary-grid strong, .dark .abearc-ram-candidate-head strong { color:#e5edf5; }
+.dark .abearc-map-ram-pump-head button:hover, .dark .abearc-ram-toolbar button:hover, .dark .abearc-ram-secondary:hover { background:#273449; }
+.dark .abearc-ram-form, .dark .abearc-ram-alignment-card, .dark .abearc-ram-assessment { border-color:#334155; background:#172033; }
+.dark .abearc-ram-form input, .dark .abearc-ram-form select, .dark .abearc-ram-field-label select, .dark .abearc-ram-grid input, .dark .abearc-ram-grid select, .dark .abearc-ram-toolbar button, .dark .abearc-ram-secondary, .dark .abearc-ram-summary-grid > div, .dark .abearc-ram-profile, .dark .abearc-ram-candidate-buttons button { border-color:#475569; background:#1e293b; color:#e5edf5; }
+.dark .abearc-ram-summary-grid { border-color:#334155; background:#334155; }
+.dark .abearc-ram-candidate-buttons button.is-active { border-color:#22d3ee; background:#164e63; }
+.dark .abearc-ram-profile-meta, .dark .abearc-ram-intro, .dark .abearc-ram-form > label, .dark .abearc-ram-field-label, .dark .abearc-ram-grid label { color:#a9b7c6; }
+.dark .abearc-ram-section-head strong { color:#e5edf5; }
+.dark .abearc-ram-section-head span { color:#94a3b8; }
+.dark .ram-profile-grid line { stroke:#334155; }
+.dark .ram-profile-grid text, .dark .ram-profile-marker text { fill:#cbd5e1; }
+.dark .ram-profile-marker text { stroke:#111827; }
+.dark .abearc-ram-assessment.is-feasible { border-left-color:#22c55e; background:#132a20; }
+.dark .abearc-ram-assessment.is-review { border-left-color:#f59e0b; background:#34270d; }
+.dark .abearc-ram-assessment.is-not-feasible { border-left-color:#ef4444; background:#351619; }
+.dark .abearc-map-ram-pump-layer .abearc-ram-label-box { fill:rgba(17,24,39,.94); stroke:#64748b; }
+.dark .abearc-map-ram-pump-layer .abearc-ram-label-text { fill:#e5edf5; }
+.dark .abearc-map-ram-pump-layer .abearc-ram-label-leader { stroke:#94a3b8; }
+
+@media (max-width: 1100px) {
+  .abearc-map-ram-pump-drawer { width:360px; min-width:360px; flex-basis:360px; }
+}
+@media (max-width: 900px) {
+  .abearc-map-ram-pump-drawer {
+    position:absolute; inset:0 auto 0 0; z-index:34; width:min(390px, calc(100% - 1rem)); min-width:0; max-width:none; flex-basis:auto;
+    padding-bottom:env(safe-area-inset-bottom, 0px);
+  }
+}
+@media (max-width: 520px) {
+  .abearc-map-ram-pump-drawer { width:100%; inset:0; }
+  .abearc-map-ram-pump-head { padding:max(.68rem, env(safe-area-inset-top, 0px)) .72rem .68rem; }
+  .abearc-map-ram-pump-body { padding:.65rem; padding-bottom:max(.8rem, env(safe-area-inset-bottom, 0px)); }
+  .abearc-ram-grid, .abearc-ram-summary-grid { grid-template-columns:minmax(0,1fr); }
+  .abearc-ram-candidate-buttons { grid-template-columns:minmax(0,1fr); }
+  .abearc-ram-profile-svg { min-height:165px; }
+}
+
+/* Ram-pump refinement: selected measurement, engineering calculation link and movable profile. */
+.abearc-ram-measurement-summary {
+  display:grid; gap:.36rem; padding:.52rem .58rem; margin-top:-.18rem;
+  border:1px solid #d7e3ea; border-radius:7px; background:#fff; color:#526272;
+}
+.abearc-ram-measurement-summary.is-empty { border-style:dashed; color:#718096; font-size:.59rem; }
+.abearc-ram-measurement-summary > strong { color:#253647; font-size:.64rem; overflow-wrap:anywhere; }
+.abearc-ram-measurement-summary > div { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:.35rem; }
+.abearc-ram-measurement-summary span { display:grid; gap:.12rem; min-width:0; font-size:.54rem; line-height:1.35; overflow-wrap:anywhere; }
+.abearc-ram-measurement-summary span b { color:#64748b; font-size:.52rem; text-transform:uppercase; letter-spacing:.025em; }
+.abearc-ram-measurement-summary small { color:#64748b; font-size:.54rem; line-height:1.35; }
+.abearc-ram-results-title { display:grid; gap:.18rem; align-content:start; }
+.abearc-ram-full-calculation {
+  justify-self:start; padding:0; border:0; background:transparent; color:#0f6f9f; font-size:.57rem; font-weight:850; line-height:1.25; cursor:pointer; text-decoration:underline; text-underline-offset:2px;
+}
+.abearc-ram-full-calculation:hover:not(:disabled) { color:#084d70; }
+.abearc-ram-full-calculation:disabled { color:#94a3b8; cursor:not-allowed; text-decoration:none; }
+.abearc-ram-profile-slot { display:none; }
+.abearc-ram-profile { position:relative; pointer-events:auto; }
+.abearc-ram-profile-head { display:flex; align-items:flex-start; justify-content:space-between; gap:.5rem; padding:.42rem .48rem .12rem; }
+.abearc-ram-profile-meta { flex:1 1 auto; padding:0; min-width:0; }
+.abearc-ram-profile-actions { display:flex; flex:0 0 auto; gap:.2rem; }
+.abearc-ram-profile-actions button {
+  display:inline-flex; align-items:center; gap:.2rem; min-height:26px; padding:.25rem .34rem;
+  border:1px solid #d7e1e7; border-radius:5px; background:#f8fafc; color:#526272;
+  font-size:.52rem; font-weight:800; cursor:pointer;
+}
+.abearc-ram-profile-actions button:hover { border-color:#9db5c4; background:#eef6fa; color:#0f5f87; }
+.abearc-ram-profile-actions svg { width:12px; height:12px; flex:0 0 12px; }
+.abearc-ram-profile.is-floating {
+  position:absolute; z-index:38; width:min(720px, calc(100% - 24px)); max-width:none; max-height:calc(100% - 24px);
+  overflow:auto; border-color:#9fb7c5; box-shadow:0 16px 44px rgba(15,23,42,.28); background:rgba(255,255,255,.985);
+}
+.abearc-ram-profile.is-floating { display:grid; grid-template-rows:auto minmax(0,1fr); height:310px; min-height:180px; min-width:min(300px, calc(100% - 16px)); max-width:calc(100% - 16px); overflow:hidden; }
+.abearc-ram-profile.is-floating.is-expanded { height:min(620px, calc(100% - 24px)); }
+.abearc-ram-profile.is-floating .abearc-ram-profile-svg { width:100%; height:100%; min-height:0; }
+.ram-profile-marker [data-ram-profile-label] { cursor:grab; touch-action:none; user-select:none; }
+.ram-profile-marker [data-ram-profile-label]:focus { outline:none; text-decoration:underline; }
+.ram-profile-marker .ram-profile-label-leader { stroke:#475569; stroke-dasharray:none; stroke-width:1.2; pointer-events:none; }
+.ram-profile-resize { display:none; position:absolute; z-index:5; touch-action:none; }
+.is-floating > .ram-profile-resize { display:block; }
+.ram-profile-resize:focus-visible { outline:2px solid #0ea5e9; background:#0ea5e944; }
+.ram-profile-resize-n,.ram-profile-resize-s { left:10px; right:10px; height:7px; cursor:ns-resize; }
+.ram-profile-resize-n { top:0; }.ram-profile-resize-s { bottom:0; }
+.ram-profile-resize-e,.ram-profile-resize-w { top:10px; bottom:10px; width:7px; cursor:ew-resize; }
+.ram-profile-resize-e { right:0; }.ram-profile-resize-w { left:0; }
+.ram-profile-resize-ne,.ram-profile-resize-nw,.ram-profile-resize-se,.ram-profile-resize-sw { width:12px; height:12px; }
+.ram-profile-resize-ne { top:0; right:0; cursor:nesw-resize; }.ram-profile-resize-nw { top:0; left:0; cursor:nwse-resize; }
+.ram-profile-resize-se { bottom:0; right:0; cursor:nwse-resize; border-right:3px double #64748b; border-bottom:3px double #64748b; }
+.ram-profile-resize-sw { bottom:0; left:0; cursor:nesw-resize; }
+.abearc-ram-profile.is-floating .abearc-ram-profile-head { position:sticky; top:0; z-index:2; padding:.5rem .55rem; border-bottom:1px solid #e2e8f0; background:rgba(255,255,255,.97); cursor:move; touch-action:none; }
+.abearc-ram-profile.is-floating.is-dragging .abearc-ram-profile-head { cursor:grabbing; }
+.abearc-ram-profile.is-expanded { width:min(1080px, calc(100% - 24px)); }
+
+
+.abearc-ram-rail-icon .ram-water { opacity:.92; }
+.abearc-ram-rail-icon .ram-body { fill:currentColor; fill-opacity:.09; }
+.abearc-ram-rail-icon .ram-rise { stroke-width:2.1; }
+.dark .abearc-ram-measurement-summary { border-color:#475569; background:#1e293b; color:#b7c4d1; }
+.dark .abearc-ram-measurement-summary > strong { color:#edf3f8; }
+.dark .abearc-ram-measurement-summary span b, .dark .abearc-ram-measurement-summary small { color:#94a3b8; }
+.dark .abearc-ram-full-calculation { color:#67d5ff; }
+.dark .abearc-ram-full-calculation:disabled { color:#64748b; }
+.dark .abearc-ram-profile-actions button { border-color:#475569; background:#1e293b; color:#cbd5e1; }
+.dark .abearc-ram-profile-actions button:hover { border-color:#64748b; background:#273449; color:#e5edf5; }
+.dark .abearc-ram-profile.is-floating { border-color:#475569; background:rgba(17,24,39,.985); box-shadow:0 16px 44px rgba(0,0,0,.5); }
+.dark .abearc-ram-profile.is-floating .abearc-ram-profile-head { border-color:#334155; background:rgba(17,24,39,.97); }
+.dark .abearc-ram-form input.is-computed, .dark .abearc-ram-grid input.is-computed { background:#13283a; border-color:#3d6f87; color:#8ed7f3; }
+.dark .abearc-ram-source-flow-note { background:#162634; border-left-color:#4b8199; color:#b5c6d1; }
+@media (max-width:520px) {
+  .abearc-ram-measurement-summary > div { grid-template-columns:minmax(0,1fr); }
+  .abearc-ram-profile-head { align-items:stretch; }
+  .abearc-ram-profile-actions button span { display:none; }
+  .abearc-ram-profile-actions button { width:28px; justify-content:center; padding:.25rem; }
+  .abearc-ram-profile.is-floating, .abearc-ram-profile.is-expanded { width:calc(100% - 12px); max-height:calc(100% - 12px); }
+  
+}
+
+
+/* Offline Gilman model recommender (catalog snapshot embedded in Ram Pump core). */
+.abearc-ram-model-suggestion {
+  grid-column:1 / -1; display:grid; gap:.38rem; padding:.52rem .58rem; margin-top:.08rem;
+  border:1px solid #d6e2e9; border-radius:7px; background:#f8fbfd; color:#445566;
+  font-size:.56rem; line-height:1.42; overflow-wrap:anywhere;
+}
+.abearc-ram-model-suggestion:empty { display:none; }
+.abearc-ram-model-suggestion > div { display:grid; gap:.18rem; min-width:0; }
+.abearc-ram-model-suggestion b { color:#203246; font-size:.59rem; }
+.abearc-ram-model-suggestion strong { color:#0f4f59; font-size:.61rem; }
+.abearc-ram-model-suggestion span { color:#5d6b79; font-size:.53rem; font-weight:800; }
+.abearc-ram-model-suggestion small { color:#64748b; font-size:.52rem; }
+.abearc-ram-model-suggestion > button,
+.abearc-ram-model-chip { justify-self:start; border:1px solid #9bc4c9; border-radius:6px; background:#fff; color:#0f5d66; padding:.3rem .48rem; font-size:.53rem; font-weight:800; cursor:pointer; }
+.abearc-ram-model-suggestion.is-warning { border-color:#f1c97a; background:#fffbeb; }
+.abearc-ram-model-suggestion.is-selected { border-color:#a9d4ba; background:#f0fdf4; }
+.abearc-ram-model-nearest { display:flex; flex-wrap:wrap; gap:.25rem; align-items:center; margin-top:.15rem; }
+.abearc-ram-model-nearest > span { width:100%; }
+.abearc-ram-catalog-note { border-top:1px dashed #cbd5e1; padding-top:.28rem; }
+.dark .abearc-ram-model-suggestion { border-color:#475569; background:#172033; color:#cbd5e1; }
+.dark .abearc-ram-model-suggestion b, .dark .abearc-ram-model-suggestion strong { color:#e5edf5; }
+.dark .abearc-ram-model-suggestion.is-warning { background:#34270d; border-color:#7c5d13; }
+.dark .abearc-ram-model-suggestion.is-selected { background:#132a20; border-color:#246b43; }
+.dark .abearc-ram-model-suggestion > button, .dark .abearc-ram-model-chip { background:#1e293b; border-color:#475569; color:#cbd5e1; }

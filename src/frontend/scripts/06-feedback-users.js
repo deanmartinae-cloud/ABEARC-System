@@ -153,12 +153,219 @@
             <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
               <div>
                 <div class="text-xs font-black uppercase tracking-wide text-cyan-700 dark:text-cyan-300">Current Version</div>
-                <h4 class="text-xl font-black text-gray-950 dark:text-gray-50">ABEARC Projects &amp; Services Monitoring Information System v1.47</h4>
+                <h4 class="text-xl font-black text-gray-950 dark:text-gray-50">ABEARC Projects &amp; Services Monitoring Information System v1.53</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">Release notes for the latest ABEARC updates.</p>
               </div>
               <div class="flex flex-col sm:items-end gap-2">
-                <span class="inline-flex w-fit rounded-full border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/30 px-3 py-1 text-xs font-black text-cyan-800 dark:text-cyan-200">v1.47</span>
+                <span class="inline-flex w-fit rounded-full border border-cyan-200 dark:border-cyan-800 bg-cyan-50 dark:bg-cyan-950/30 px-3 py-1 text-xs font-black text-cyan-800 dark:text-cyan-200">v1.53</span>
                 <button type="button" onclick="openChangelogFeedbackModal()" class="px-3 py-2 rounded-lg bg-cyan-700 hover:bg-cyan-800 dark:bg-cyan-500 dark:hover:bg-cyan-400 text-white dark:text-gray-950 text-xs font-black">Submit Bug / Change / Improvement</button>
+              </div>
+            </div>
+            <div class="rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/20 overflow-hidden">
+              <div class="px-4 py-3 border-b border-cyan-200 dark:border-cyan-800">
+                <div class="font-black text-gray-900 dark:text-gray-100">v1.53</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">October 13, 2026 update: Ram-Pump engineering, automated weather stations, forecasts and farm advisories, Telegram distribution, and map/interface refinements.</div>
+              </div>
+              <div class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Ram-Pump System Layout</div><ul class="list-disc pl-5 space-y-1"><li>Adds Generate Ram Pump System Layout to the Distance Measure context menu.</li><li>Treats Point A as Water Source / Intake and Point B as Service Area / Reservoir.</li><li>Searches surrounding terrain for practical pump sites instead of forcing the pump onto the original A→B line.</li><li>Retains up to three spatially separated candidate sites.</li><li>Uses strict descending terrain routing for the drive side and a separate pressure-capable terrain route for the delivery side.</li><li>Provides editable source, pump, destination, drive/delivery vertices and movable engineering annotations.</li><li>Integrates with My Map Layouts, Undo, Print Mode, progress/cancellation and responsive map drawers.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Ram-Pump hydraulics, pipe sizing and feasibility</div><ul class="list-disc pl-5 space-y-1"><li>Calculates drive head, delivery head, H/h ratio, route lengths/slopes, high-point lift and Hazen-Williams losses.</li><li>Calculates net drive head, estimated delivery flow, waste flow, source/delivery/waste daily volumes and planning efficiency.</li><li>Adds automatic/manual drive and delivery pipe sizing with standard-diameter, velocity and head-loss screening.</li><li>Supports desired delivery flow and solves required source flow when a delivery target is entered.</li><li>Adds governing delivery-lift checking with a configurable limit up to 180 m.</li><li>Provides Feasible, Engineering Review Required, and No Practical Ram Pump Layout Found diagnostics with engineering reasons.</li><li>Includes an offline Gilman model catalog and conservative model suggestion/cross-check without runtime vendor queries.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Drive-pipe construction, profile and drawing</div><ul class="list-disc pl-5 space-y-1"><li>Adds On Ground / Terrain-Following and Elevated on Support Frames installation modes.</li><li>Adds Straight Preferred, Terrain-Following Allowed and Straight Only alignment choices.</li><li>Calculates descending design grade, required variable support-frame heights, maximum support height and terrain intrusion.</li><li>Adds downloadable, expandable and movable/dockable combined elevation profile.</li><li>Adds a full calculation sheet with substituted equations, pipe-size screening and engineering limitations.</li><li>Reworks the hydraulic-ram schematic to a physically coherent source → drive pipe → pump/waste branch → delivery check/air chamber → delivery line → reservoir arrangement.</li><li>Adds SVG export and AutoCAD-compatible R12 DXF export.</li><li>Hides the originating distance measurement after successful Ram-Pump generation and restores it when the layout is cleared.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Peace Corps / Warwick S-2 reference and long-drive treatment</div><ul class="list-disc pl-5 space-y-1"><li>Adds selectable Peace Corps / Warwick S-2 screening.</li><li>Adds rigid drive-pipe guideline checks using Lmin = 150D and Lmax = 1000D.</li><li>Adds automatic open standpipe or optional drive-tank treatment when the source-to-pump run exceeds the reference maximum.</li><li>Separates upstream supply pipe from the final rigid drive pipe and applies friction/straightness/support checks to the effective rigid segment.</li><li>Adds standpipe/drive-tank chainage, elevations, riser height, supply length and diameters.</li><li>Adds an engineering-review warning for flexible HDPE/PE when the rigid-pipe reference rule is selected.</li><li>Extends map/profile/CSV/GeoJSON/drawing output for supply pipe, rigid drive and dissipation device.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Automated Weather Stations / ZENTRA Cloud</div><ul class="list-disc pl-5 space-y-1"><li>Adds a native Automated Weather Stations map layer with clustered health-aware markers and cached current-condition popups.</li><li>Adds a backend-only ZENTRA Cloud v5 provider using X-API-Key; credentials never reach browser assets or exports.</li><li>Adds multi-station/device/sensor discovery and normalized station/series metadata.</li><li>Adds local SQLite tables for stations, series, readings, sync state, backfill jobs, sync runs, alert rules/events and weather system settings.</li><li>Adds reading-ID incremental synchronization, duplicate prevention, durable pagination/cursor state and restart-safe retry/backoff for historical backfill.</li><li>Adds station health logic based on configured upload/logging intervals.</li><li>Adds station settings, weather privileges, alerts and existing-notification-system integration.</li><li>Persists weather-layer visibility through My Map Layouts.</li><li>Persists the server credential in NAS/local data/weather.env across container recreation.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Weather dashboard, analytics and exports</div><ul class="list-disc pl-5 space-y-1"><li>Adds Overview, Charts, Rainfall, Agriculture, Data Table, Reports and Station views.</li><li>Adds measurement-specific aggregation for rainfall/counts, temperature/RH, wind/gust/direction and solar irradiance/energy.</li><li>Preserves missing/null measurements separately from genuine zero values and surfaces source error codes.</li><li>Adds configurable GDD, VPD and guarded FAO-56 Penman-Monteith ET0, with measured reference ET preferred where available.</li><li>Adds crop coefficient inputs and clearly labeled indicative crop-water deficit.</li><li>Adds interactive tooltips, series visibility, dense-series Fit/Detail pan mode, rainfall bars and PNG chart export.</li><li>Adds CSV, XLSX and A4 PDF weather exports/reports.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Telegram weather distribution</div><ul class="list-disc pl-5 space-y-1"><li>Adds backend-only bot configuration, connection tests, approved chat registration with single-use expiring codes, and target management.</li><li>Routes triggered/cleared weather alerts to registered chats and schedules daily, weekly and monthly station-local reports.</li><li>Adds durable delivery queues, duplicate prevention, retry/backoff, rate-limit handling, restart recovery and delivery audit history.</li><li>Adds Telegram integration privileges and administrator credential management.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Weather setup, forecast and farm advisories</div><ul class="list-disc pl-5 space-y-1"><li>Adds administrator ZENTRA token validation, encrypted persistent credential storage and automatic station discovery through the interface.</li><li>Adds modeled forecast outlooks, explicitly separated from station observations, with stale-forecast guards.</li><li>Adds crop-focused advisory cards for observed rainfall, wetness, dry days, temperature/humidity and forecast rain, wind and temperature.</li><li>Adds the Farm Weather Advisory A4 PDF with City Agriculturist Office/Davao City branding, observed metrics, charts, advisory cards and optional forecast outlook.</li><li>Refines sensor/unit handling, weather report charts, station icons/popups and sidebar presentation, and weather alert rate handling.</li></ul></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Map and interface refinements</div><ul class="list-disc pl-5 space-y-1"><li>Refines Ram-Pump/weather controls and responsive map panels.</li><li>Updates orthomosaic integration, map printing and saved-layout handling, plus frontend build/cache recovery and project/dashboard integration.</li></ul></div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/20 overflow-hidden">
+              <div class="px-4 py-3 border-b border-cyan-200 dark:border-cyan-800">
+                <div class="font-black text-gray-900 dark:text-gray-100">v1.52</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">October 6, 2026 update: Geotag Map monitoring timeline, offline barangay/district GIS, geotag-photo workflows, NAMRIA-only gravity routing, and map reliability improvements.</div>
+              </div>
+              <div class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Geotag Monitoring Timeline and Site History</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds a viewport-aware historical photo timeline with three states: a Timeline icon beside Search, a compact mini timeline, and a full timeline.</li>
+                    <li>Uses real capture-date spacing with clickable observation marks, photo counts, All Dates, Exact Date and As-of Date modes, Previous/Next, playback, and timeline zoom.</li>
+                    <li>Adds conflict-safe keyboard navigation for timeline dates and staged Escape behavior for full timeline, mini timeline, and closed state.</li>
+                    <li>Groups repeated monitoring photos into Site History series, with observation navigation, before/after comparison, privilege-aware per-photo deletion, and preview-driven map thumbnail/bearing updates.</li>
+                    <li>Automatically shortens the full timeline when Photo Details or Site History is open and recenters selected photos within the unobstructed map area.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Geotag Map Performance and Photo Interaction</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Changes geotag-photo loading to viewport-scoped requests with buffered bounds and incremental background synchronization instead of repeatedly loading the entire archive.</li>
+                    <li>Enforces map-media visibility server-side and adds supporting database indexes for large geotag-photo collections.</li>
+                    <li>Adds adaptive cluster zoom so clicking a cluster continues to a useful zoom level until the cluster breaks into fewer groups or individual photos.</li>
+                    <li>Moves Reset Map Photo Layout below Measure Tools and asks for confirmation only when a moved, resized, expanded, annotated, or exploded photo layout can actually be reset.</li>
+                    <li>Improves Photo Details and Site History map centering so the selected location stays centered in the visible map area beside the open drawer.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Offline Barangay and District GIS</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Packages the CPDO Davao City administrative boundary dataset for offline use, covering 186 barangays and 11 administrative districts.</li>
+                    <li>Removes the CPDO GeoServer fallback for barangay/district lookup; search and coordinate identification now use the local boundary database only.</li>
+                    <li>Adds fuzzy barangay/district search for misspellings, highlights the selected polygon, fits the map to its extent, and filters geotagged photos by true point-in-polygon location.</li>
+                    <li>Adds clear no-result and local-database error feedback instead of silently doing nothing when a boundary cannot be found.</li>
+                    <li>Makes searched administrative polygons right-clickable through the area-measure menu and labels them with barangay/district name and hectares, with label placement adjusted away from visible photo markers where possible.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Geotag Photo Upload, Metadata, and Sidebar</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds compact Upload and Eye controls to the Geotag Photos sidebar and moves Drone Orthomap upload to a matching icon beside its visibility control.</li>
+                    <li>Unifies Geotag Photos naming and counters so the sidebar and map do not present conflicting photo totals.</li>
+                    <li>Requires valid GPS coordinates embedded in the original image metadata for manual geotag-photo upload; non-geotagged files are rejected individually with accepted/rejected batch summaries.</li>
+                    <li>Prioritizes original capture time for map/timeline dates instead of upload time and adds recovery paths for missing capture metadata.</li>
+                    <li>Adds coordinate-based enrichment and repair paths for missing barangay, district, and zoning metadata using local spatial datasets while preserving valid existing values.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Gravity Flow Path</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Standardizes Gravity Flow Path on the local NAMRIA DTM 5 m PRS92 dataset and removes other DEM sources from gravity routing while leaving them available to unrelated terrain tools where supported.</li>
+                    <li>Uses the native server-side NAMRIA raster solver with reverse reachability, masked path search, sub-cell interpolation, contour-guided rescue, and bottleneck/any-angle connections for difficult terrain.</li>
+                    <li>Preserves strict final-profile validation so an accepted gravity route remains level/downhill when resampled from the same NAMRIA terrain source.</li>
+                    <li>Improves routing diagnostics, progress behavior, and compatibility with generated contours and multi-measure workflows.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Search, Keyboard, Permissions, and Deployment Reliability</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds two-stage Escape handling in Search: first Escape clears the current search/result state, second Escape exits the search field; a free Escape on the map fits the full Davao City extent.</li>
+                    <li>Applies keyboard shortcuts only when their owning feature has focus or no conflicting action is active, preserving existing map and text-entry shortcuts.</li>
+                    <li>Retains owner deletion of My geotagged photos and dedicated cross-owner delete privileges, including privilege-aware Site History delete controls.</li>
+                    <li>Updates Docker/runtime wiring checks for the expanded offline-boundary routes while preserving the frontend DOM compatibility baseline and deployment safety checks.</li>
+                    <li>Improves sidebar, search, map drawer, cluster, and refresh-state behavior without changing unrelated ABEARC project-management workflows.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/20 overflow-hidden">
+              <div class="px-4 py-3 border-b border-cyan-200 dark:border-cyan-800">
+                <div class="font-black text-gray-900 dark:text-gray-100">v1.51</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">September 16, 2026 update: advances ABEARC to version 1.51.</div>
+              </div>
+              <div class="p-4 text-sm text-gray-700 dark:text-gray-300">
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Version update</div><p>Updates the system version and release information to v1.51.</p></div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/20 overflow-hidden">
+              <div class="px-4 py-3 border-b border-cyan-200 dark:border-cyan-800">
+                <div class="font-black text-gray-900 dark:text-gray-100">v1.50</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">September 7, 2026 update: Calendar 2.0 scheduling, availability, recurring activities, conflict detection, responsive views, and linked project and monitoring context.</div>
+              </div>
+              <div class="p-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Scheduling and collaboration</div><p>Introduces month, week, day, and agenda views, participant availability, server-side conflict warnings, reminders, four response states, and recurring activity series controls.</p></div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3"><div class="font-black text-gray-900 dark:text-gray-100 mb-1">Connected field work</div><p>Links schedules to projects, documents, and monitoring inventory while retaining permissions, notifications, audit history, attachments, exports, and dark-mode responsive layouts.</p></div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/20 overflow-hidden">
+              <div class="px-4 py-3 border-b border-cyan-200 dark:border-cyan-800">
+                <div class="font-black text-gray-900 dark:text-gray-100">v1.49</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">September 7, 2026 update: professional map measurement and terrain analysis, richer coordinate search, refined calendar interactions, and stronger interface persistence.</div>
+              </div>
+              <div class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Measurement and KML Workflows</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds KML import for individual or multiple line and polygon measurements, including overlapping geometry, accurate interior labels, selection stacking, and editable vertices.</li>
+                    <li>Adds Ctrl-click multi-selection, Ctrl+A select all, Escape deselect all, and Ctrl+Z measurement editing shortcuts.</li>
+                    <li>Adds selected-polygon totals for area and perimeter, contextual editing rules, point insertion and removal, and consistent manual/imported measurement styling.</li>
+                    <li>Adds georeferenced KML export for measurements and lets users choose between area perimeter and generated contours when both are available.</li>
+                    <li>Corrects polygon interaction so users can add points, pan, and zoom while the pointer is inside a measured area.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Elevation Profiles and Annotations</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds local NAMRIA DTM 5 m PRS92 terrain data as the default elevation source while retaining supported online elevation datasets.</li>
+                    <li>Marks measurement vertices on the elevation graph and synchronizes the active point between graph and map.</li>
+                    <li>Adds movable, automatically sized text annotations with adaptive guide lines on both the graph and map, including contextual removal.</li>
+                    <li>Updates affected profile values and points without replacing the whole graph tile and places progress feedback along the chart axis.</li>
+                    <li>Adds confirmed elevation-profile image download without a date-time stamp and keeps the profile panel draggable.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Contour Analysis</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds terrain contour generation for one or multiple selected polygons with adjustable contour and index intervals.</li>
+                    <li>Uses the elevation-profile source menu for contour datasets, defaults to NAMRIA DTM, and removes the redundant Open Topo Data Mapzen option.</li>
+                    <li>Places elevation labels along contour lines using index-contour conventions and supports Enter to apply interval changes.</li>
+                    <li>Exports georeferenced 3D contour KML with preserved elevation and supports importing exported contours back into ABEARC Map.</li>
+                    <li>Introduces a compact draggable contour tile with source selection, pending-change feedback, terrain metrics, legend, and dataset summary.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Map Search, Boundaries, and Layers</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds coordinate entry and pinned search results with barangay, district, zoning, and CPDO source details.</li>
+                    <li>Adds reusable map-search history and displays verified barangay or district boundaries for administrative searches.</li>
+                    <li>Aligns the Davao City outline with the CPDO zoning extent and keeps Project NOAH flood hazards on their fast direct source for all available areas.</li>
+                    <li>Improves measurement annotation contrast automatically for satellite and other basemaps.</li>
+                    <li>Refines Drone Orthomap area reporting, thumbnail alignment, grouped-series controls, opacity layout, menus, and persistent visibility defaults.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Calendar and Dashboard Experience</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Redesigns quick filters with aligned controls, clear actions inside expanded groups, selected states, mutual My Calendar/ABE Calendar expansion, and smooth animations.</li>
+                    <li>Makes cleared calendar groups select all applicable filters and animates the quick-filter sidebar when hidden or restored.</li>
+                    <li>Displays newly created schedules immediately, changes calendar months without blurring the whole page, and preserves continuous week-view day boundaries while scrolling.</li>
+                    <li>Retains dashboard pagination and View all preferences after refresh.</li>
+                    <li>Renames Established assets to Established Projects and Established Projects Monitoring to Monitoring Dashboard.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Permissions and Reliability</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds a role privilege for deleting other users' Geotag Map photos while preserving owner deletion of My geotag photos.</li>
+                    <li>Hides unavailable delete actions completely instead of displaying controls that end in permission errors.</li>
+                    <li>Improves request handling to reduce avoidable HTTP 429 responses without slowing normal map interaction.</li>
+                    <li>Corrects Docker deployment wiring for frontend validation and required runtime assets while preserving NAS data and databases.</li>
+                    <li>Improves map drawer, contextual-menu, measurement, and refresh-state reliability across user roles.</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+            <div class="rounded-lg border border-cyan-200 dark:border-cyan-800 bg-cyan-50/60 dark:bg-cyan-950/20 overflow-hidden">
+              <div class="px-4 py-3 border-b border-cyan-200 dark:border-cyan-800">
+                <div class="font-black text-gray-900 dark:text-gray-100">v1.48</div>
+                <div class="text-xs text-gray-500 dark:text-gray-400">August 20, 2026 update: drone orthomap time series, refined map controls and overlays, reliable project-document output, and repeatable NAS deployment.</div>
+              </div>
+              <div class="p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 text-sm text-gray-700 dark:text-gray-300">
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Drone Orthomaps and Time Series</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Adds a dedicated compact Drone Orthomaps drawer with centered thumbnails, selection states, show-all visibility, opacity, and contextual management actions.</li>
+                    <li>Makes ready orthomaps visible to every authenticated role while keeping upload, rename, activation, and deletion behind the explicit management privilege.</li>
+                    <li>Groups strongly overlapping survey captures into dated series with capture-count badges, expandable history, latest-only defaults, timeline scrubbing, playback speeds, and before/after blending.</li>
+                    <li>Keeps group expansion independent from map zoom, zooms from the main group row, and automatically collapses a previous series when another orthomap is selected.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Map Layers and Controls</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Separates Satellite, Terrain, and TopoMap basemaps from Zoning and Flood Hazard overlays and preserves overlay order above drone imagery.</li>
+                    <li>Improves Terrain with topography and elevation while reducing rendering lag.</li>
+                    <li>Refines environmental-layer toggles, exclusive selection, manual expansion, separators, and popup close controls.</li>
+                    <li>Adds draggable elevation profiles, collapsible map search, and restores usable filter fields beside the compact search control.</li>
+                    <li>Adds a user-role privilege for deleting other users' Geotag Map photos while owners retain deletion of their own uploads.</li>
+                  </ul>
+                </div>
+                <div class="rounded-lg bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 p-3">
+                  <div class="font-black text-gray-900 dark:text-gray-100 mb-1">Documents and NAS Deployment</div>
+                  <ul class="list-disc pl-5 space-y-1">
+                    <li>Makes Export Project Documents available outside monitoring, completed, and inactive project stages.</li>
+                    <li>Formats exported project documents for extended long paper in portrait orientation and rotates landscape pages appropriately.</li>
+                    <li>Corrects document-download failures across project requirements while preserving valid downloads.</li>
+                    <li>Adds full-stack NAS copy automation that preserves data and databases, validates required frontend assets, and builds the Docker image before replacing the running container.</li>
+                  </ul>
+                </div>
               </div>
             </div>
             <div class="rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/60 dark:bg-emerald-950/20 overflow-hidden">

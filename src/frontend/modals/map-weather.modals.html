@@ -1,0 +1,112 @@
+<div id="weatherIntegrationModal" class="abearc-weather-modal hidden" role="dialog" aria-modal="true" aria-labelledby="weatherIntegrationTitle" onclick="if(event.target===this)closeWeatherIntegrationModal()">
+  <div class="wx-integration-shell">
+    <header class="abearc-map-weather-drawer-head"><strong id="weatherIntegrationTitle">Weather station integration</strong><button type="button" onclick="closeWeatherIntegrationModal()" aria-label="Close weather station integration">&times;</button></header>
+                <section data-weather-admin-setup class="wx-admin-setup hidden">
+                  <div class="wx-admin-title"><small>System administrators only</small></div>
+                  <p>Connect ZENTRA Cloud using an API token. ABEARC discovers linked devices automatically; no NAS weather.env editing is needed.</p>
+                  <form onsubmit="saveWeatherApiCredential(event)" autocomplete="off">
+                    <label for="weatherDrawerApiKey">ZENTRA API token</label>
+                    <input id="weatherDrawerApiKey" type="password" autocomplete="new-password" spellcheck="false" placeholder="Paste the API token" minlength="12" maxlength="2048" required>
+                    <div class="wx-admin-actions"><button type="submit">Save &amp; discover stations</button><button type="button" onclick="discoverWeatherDrawerStations()">Discover again</button></div>
+                  </form>
+                  <p id="weatherDrawerApiStatus" role="status" aria-live="polite">Checking connection…</p>
+                  <button type="button" class="wx-admin-remove" onclick="removeWeatherApiCredential()">Remove saved API token</button>
+                </section>
+  </div>
+</div>
+<div id="abearcWeatherDashboard" class="abearc-weather-modal hidden" role="dialog" aria-modal="true" aria-labelledby="abearcWeatherTitle">
+  <div class="abearc-weather-shell">
+    <header class="abearc-weather-header">
+      <div class="abearc-weather-station-head">
+        <span class="abearc-weather-mark" aria-hidden="true">AWS</span>
+        <div><small>ABEARC · Agricultural Weather</small><h2 id="abearcWeatherTitle">Weather Station</h2><p id="abearcWeatherSubtitle">Loading station information…</p></div>
+      </div>
+      <div class="abearc-weather-header-actions">
+        <span id="abearcWeatherHealth" class="abearc-weather-health is-unknown">No data</span>
+        <button type="button" class="wx-farm-advisory-download" data-weather-advisory-download onclick="downloadAbearcWeatherExport('pdf')" title="Download farm weather advisory for selected reporting period">Download farm advisory · PDF</button>
+        <button type="button" data-weather-sync class="hidden" onclick="syncAbearcWeatherStation()" title="Synchronize this station">Sync</button>
+        <button type="button" class="abearc-weather-close" onclick="closeAbearcWeatherDashboard()" aria-label="Close weather dashboard">×</button>
+      </div>
+    </header>
+
+    <div class="abearc-weather-toolbar">
+      <label><span>Period</span><select id="abearcWeatherPreset" onchange="applyAbearcWeatherPreset(this.value)">
+        <option value="today">Today</option><option value="yesterday">Yesterday</option><option value="24h">Last 24 hours</option>
+        <option value="7d" selected>Last 7 days</option><option value="30d">Last 30 days</option><option value="this-month">This month</option><option value="previous-month">Previous month</option>
+        <option value="3m">Last 3 months</option><option value="6m">Last 6 months</option><option value="this-year">This year</option><option value="previous-year">Previous year</option><option value="1y">Last 12 months</option><option value="custom">Custom date range</option>
+      </select></label>
+      <label><span>From</span><input id="abearcWeatherFrom" type="date" onchange="weatherDateRangeChanged()"></label>
+      <label><span>To</span><input id="abearcWeatherTo" type="date" onchange="weatherDateRangeChanged()"></label>
+      <label><span>Interval</span><select id="abearcWeatherAggregation" onchange="reloadAbearcWeatherDashboardData()"><option value="raw">Raw / station interval</option><option value="hourly" selected>Hourly</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label>
+      <button type="button" class="abearc-weather-refresh" onclick="reloadAbearcWeatherDashboardData()">Refresh view</button>
+    </div>
+
+    <nav role="tablist" class="abearc-weather-tabs" aria-label="Weather dashboard sections">
+      <button type="button" role="tab" id="wxTab-overview" aria-controls="wxPanel-overview" aria-selected="true" data-weather-tab="overview" class="is-active" onclick="setAbearcWeatherTab('overview')">Overview</button>
+      <button type="button" role="tab" id="wxTab-forecast" aria-controls="wxPanel-forecast" aria-selected="false" data-weather-tab="forecast" onclick="setAbearcWeatherTab('forecast')">Forecast</button>
+      <button type="button" role="tab" id="wxTab-charts" aria-controls="wxPanel-charts" aria-selected="false" data-weather-tab="charts" onclick="setAbearcWeatherTab('charts')">Charts</button>
+      <button type="button" role="tab" id="wxTab-rainfall" aria-controls="wxPanel-rainfall" aria-selected="false" data-weather-tab="rainfall" onclick="setAbearcWeatherTab('rainfall')">Rainfall</button>
+      <button type="button" role="tab" id="wxTab-agriculture" aria-controls="wxPanel-agriculture" aria-selected="false" data-weather-tab="agriculture" onclick="setAbearcWeatherTab('agriculture')">Agriculture</button>
+      <button type="button" role="tab" id="wxTab-data" aria-controls="wxPanel-data" aria-selected="false" data-weather-tab="data" onclick="setAbearcWeatherTab('data')">Data Table</button>
+      <button type="button" role="tab" id="wxTab-reports" aria-controls="wxPanel-reports" aria-selected="false" data-weather-tab="reports" onclick="setAbearcWeatherTab('reports')">Reports</button>
+      <button type="button" role="tab" id="wxTab-station" aria-controls="wxPanel-station" aria-selected="false" data-weather-tab="station" onclick="setAbearcWeatherTab('station')">Station</button>
+    </nav>
+
+    <main class="abearc-weather-body">
+      <div id="abearcWeatherLoading" class="abearc-weather-loading hidden"><span></span><span></span><span></span><p>Loading weather data…</p></div>
+      <div id="abearcWeatherError" class="abearc-weather-error hidden" role="alert"></div>
+
+      <section role="tabpanel" id="wxPanel-overview" aria-labelledby="wxTab-overview" data-weather-panel="overview" class="abearc-weather-panel">
+        <div class="wx-section-heading"><div><small>OBSERVED · ZENTRA AWS</small><h3>Current conditions</h3></div><span>Latest valid station measurements</span></div><div id="wxActiveAlerts"></div><div id="abearcWeatherCurrentCards" class="abearc-weather-current-grid"></div>
+        <div id="wxTodaySummary" class="wx-today"></div><article id="wxForecastPreview" class="wx-surface"></article><div class="abearc-weather-overview-grid">
+          <article><header><div><small>Recent trends</small><h3>Weather at a glance</h3></div><button type="button" onclick="setAbearcWeatherTab('charts')">Open charts</button></header><div id="abearcWeatherOverviewChart" class="abearc-weather-chart"></div></article>
+          <article><header><div><small>Data quality</small><h3>Station freshness</h3></div></header><div id="abearcWeatherQuality"></div></article>
+        </div>
+      </section>
+
+      <section role="tabpanel" id="wxPanel-forecast" aria-labelledby="wxTab-forecast" data-weather-panel="forecast" class="abearc-weather-panel hidden"><div id="wxForecast"></div><div class="wx-section-heading"><h3>Observed → forecast</h3><span>Solid observations · dashed model forecast</span></div><div id="wxTransition"></div></section>
+      <section role="tabpanel" id="wxPanel-charts" aria-labelledby="wxTab-charts" data-weather-panel="charts" class="abearc-weather-panel hidden">
+        <div class="abearc-weather-panel-head"><div><small>Historical measurements</small><h3>Interactive weather charts</h3><p>Choose the station measurements to compare. Missing periods remain gaps.</p></div><button type="button" onclick="exportAbearcWeatherChartPng()">Export chart PNG</button></div>
+        <details class="wx-measurements"><summary>Measurements <span>Select series to compare</span></summary><div id="abearcWeatherSeriesChooser" class="abearc-weather-series-chooser"></div></details>
+        <div id="abearcWeatherMainChart" class="abearc-weather-chart is-large"></div><article id="wxWindRose" class="wx-surface"></article>
+      </section>
+
+      <section role="tabpanel" id="wxPanel-rainfall" aria-labelledby="wxTab-rainfall" data-weather-panel="rainfall" class="abearc-weather-panel hidden">
+        <div class="abearc-weather-panel-head"><div><small>Rain monitoring</small><h3>Rainfall analytics</h3><p>Measured rainfall is summed; missing rainfall is never treated as zero.</p></div></div>
+        <div id="abearcWeatherRainCards" class="abearc-weather-current-grid"></div>
+        <p class="wx-freshness">Gauge totals are shown separately. Bars show recorded rainfall; blank periods are missing data.</p><div id="abearcWeatherRainChart" class="abearc-weather-chart is-large"></div><div id="wxCumulativeRain" class="abearc-weather-chart is-large"></div><div id="wxRainComparisons" class="wx-surface"></div>
+      </section>
+
+      <section role="tabpanel" id="wxPanel-agriculture" aria-labelledby="wxTab-agriculture" data-weather-panel="agriculture" class="abearc-weather-panel hidden">
+        <div class="abearc-weather-panel-head"><div><small>Agricultural decision support</small><h3>Crop-weather indicators</h3><p>Derived values are shown only when the required measurements are available.</p></div></div>
+        <div id="wxAdvisories" class="wx-advisories"></div><div id="wxCropAdvisoryLibrary" class="wx-crop-advisory-library"><p>Loading crop-field advisories from station measurements…</p></div><div class="abearc-weather-agri-controls"><label>GDD base temperature (°C)<input id="abearcWeatherGddBase" type="number" step="0.5" value="10" min="-10" max="35" onchange="loadAbearcWeatherAgriculture()"></label><label>Crop Kc (optional)<input id="abearcWeatherCropKc" type="number" step="0.05" min="0.1" max="2.0" placeholder="e.g. 1.0" onchange="loadAbearcWeatherAgriculture()"></label></div>
+        <div id="abearcWeatherAgriCards" class="abearc-weather-current-grid"></div>
+        <div id="abearcWeatherAgriTable" class="abearc-weather-table-wrap"></div>
+        <div id="abearcWeatherAgriNotes" class="abearc-weather-method-notes"></div>
+      </section>
+
+      <section role="tabpanel" id="wxPanel-data" aria-labelledby="wxTab-data" data-weather-panel="data" class="abearc-weather-panel hidden">
+        <div class="abearc-weather-panel-head"><div><small>Observed and aggregated values</small><h3>Weather data table</h3><p id="abearcWeatherTableMeta"></p></div><div class="abearc-weather-table-actions"><input id="abearcWeatherTableSearch" type="search" aria-label="Filter weather data" placeholder="Filter measurements…" oninput="renderAbearcWeatherTable()"><button type="button" onclick="weatherChangeTablePage(-1)">Previous</button><button type="button" onclick="weatherChangeTablePage(1)">Next</button></div></div>
+        <div id="abearcWeatherDataTable" class="abearc-weather-table-wrap"></div>
+      </section>
+
+      <section role="tabpanel" id="wxPanel-reports" aria-labelledby="wxTab-reports" data-weather-panel="reports" class="abearc-weather-panel hidden">
+        <div class="abearc-weather-panel-head"><div><small>Exports and reporting</small><h3>Weather reports</h3><p>PDF reports include observed charts and field indicators for the selected dates. Add the current forecast as a separate outlook.</p><label><input type="checkbox" data-weather-report-forecast checked> Include current forecast in PDF (7-day outlook and next 24 hours)</label><p>CSV and Excel exports contain the selected historical measurements. PDF summaries cover all station measurements.</p></div></div>
+        <div class="abearc-weather-report-grid">
+          <button type="button" onclick="downloadAbearcWeatherExport('csv')"><strong>CSV</strong><span>Open tabular data for analysis</span></button>
+          <button type="button" onclick="downloadAbearcWeatherExport('xlsx')"><strong>Excel / XLSX</strong><span>Metadata and weather-data worksheets</span></button>
+          <button type="button" onclick="downloadAbearcWeatherExport('pdf')"><strong>Farm Weather Advisory / A4 PDF</strong><span>Observed rainfall, crop guidance and optional forecast</span></button>
+        </div>
+        <div id="abearcWeatherReportMeta" class="abearc-weather-report-meta"></div>
+      </section>
+
+      <section role="tabpanel" id="wxPanel-station" aria-labelledby="wxTab-station" data-weather-panel="station" class="abearc-weather-panel hidden">
+        <article class="abearc-weather-admin"><header><div><small>Display preferences</small><h3>Measurement units</h3><p>Saved for this station in this browser. Readings, alert thresholds, report downloads and advisory text keep their source units. Raw sensor values and counts have no alternative units.</p></div></header><form id="abearcWeatherUnitSettings" onsubmit="event.preventDefault()"></form></article>
+        <div class="abearc-weather-station-grid"><article><h3>Station information</h3><div id="abearcWeatherStationInfo"></div></article><article><h3>Operational status</h3><div id="abearcWeatherStationHealth"></div></article><article class="abearc-weather-sensors-card"><h3>Installed sensors</h3><div id="abearcWeatherSensorInventory"></div></article></div>
+        <article data-weather-manager class="abearc-weather-admin hidden"><header><div><small>Authorized management</small><h3>Station settings</h3></div></header><form onsubmit="saveAbearcWeatherStation(event)"><label>ABEARC display name<input id="abearcWeatherDisplayName" type="text" maxlength="160"></label><label>Station timezone (IANA)<input id="abearcWeatherTimezone" type="text" maxlength="100" placeholder="Asia/Manila" list="abearcWeatherTimezoneOptions"><datalist id="abearcWeatherTimezoneOptions"><option value="Asia/Manila"><option value="Asia/Singapore"><option value="Asia/Tokyo"><option value="UTC"></datalist></label><label>Sync interval (minutes)<input id="abearcWeatherSyncInterval" type="number" min="5" max="1440" step="5"></label><label class="is-check"><input id="abearcWeatherVisible" type="checkbox"> Show on ABEARC Map</label><label class="is-check"><input id="abearcWeatherEnabled" type="checkbox"> Enable synchronization</label><button type="submit">Save station settings</button><button type="button" onclick="queueAbearcWeatherResync()">Resync selected date range</button></form></article>
+        <article data-weather-alert-manager class="abearc-weather-admin hidden"><header><div><small>Threshold notifications</small><h3>Weather alerts</h3></div></header><div id="abearcWeatherAlertRules"></div><form class="abearc-weather-alert-form" onsubmit="createAbearcWeatherAlert(event)"><select id="abearcWeatherAlertType" aria-label="Weather alert type and threshold units" onchange="updateAbearcWeatherAlertThreshold()"><option value="heavy_rainfall">Heavy rainfall (mm/hr)</option><option value="high_temperature">High temperature (°C)</option><option value="low_temperature">Low temperature (°C)</option><option value="strong_wind">Strong wind / gust (m/s)</option><option value="extended_dry_period">Extended dry period (days)</option><option value="high_vpd">High VPD (kPa)</option><option value="low_soil_moisture">Low soil moisture (m³/m³)</option><option value="station_offline">Station offline (automatic)</option><option value="sensor_error">Sensor error (automatic)</option><option value="missing_data">Missing data (automatic)</option></select><input id="abearcWeatherAlertThreshold" type="number" step="0.1" placeholder="Threshold (mm/hr)" aria-label="Alert threshold in source units"><button type="submit">Add alert</button></form></article>
+        <article data-weather-integration-manager class="abearc-weather-admin hidden"><header><div><small>System integration</small><h3>ZENTRA Cloud status</h3></div><button type="button" onclick="discoverAbearcWeatherStations()">Discover stations</button></header><div id="abearcWeatherIntegrationStatus"></div></article>
+      </section>
+    </main>
+  </div>
+</div>

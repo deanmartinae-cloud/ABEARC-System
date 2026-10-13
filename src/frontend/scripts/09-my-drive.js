@@ -1377,6 +1377,11 @@
       const isSelectAllKey = key === 'a' || code === 'keya' || event.keyCode === 65;
       if (!(event.ctrlKey || event.metaKey) || !isSelectAllKey) return;
       if (isAppTextEntryTarget(event.target) || isPreviewSurfaceOpen() || appCurrentView === 'myDrive') return;
+      if (appCurrentView === 'map' && window.selectAllAbearcImportedPolygons?.()) {
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
       event.preventDefault();
       event.stopPropagation();
     }

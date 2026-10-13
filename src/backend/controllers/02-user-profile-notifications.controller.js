@@ -87,7 +87,42 @@ const __routeController047 = (req, res) => {
   });
 };
 
-const __routeController048 = (req, res) => {
+// Also reconcile older decisions whose original notification was left pending.
+const syncDeletionRequestNotifications = async (recipientUserId) => {
+  const rows = await dbAll(`
+    SELECT n.*, dr.status AS decision_status, dr.responded_at AS decision_at
+    FROM Notifications n
+    JOIN DeletionRequests dr ON dr.id = json_extract(
+      CASE WHEN json_valid(n.target_meta) THEN n.target_meta ELSE '{}' END,
+      '$.deletion_request_id')
+    WHERE n.recipient_user_id = ? AND n.target_kind = 'deletion_request'
+      AND n.type = 'deletion_request_pending' AND dr.status IN ('approved', 'denied')
+  `, [recipientUserId]);
+  for (const { decision_status, decision_at, ...row } of rows) {
+    const notification = {
+      ...row,
+      type: `deletion_request_${decision_status}`,
+      message: `${row.message.replace(/\s*Approve or deny\?\s*$/, '')} Deletion request ${decision_status}.`,
+      target_meta: { ...parseNotificationMeta(row.target_meta), status: decision_status },
+      read_at: row.read_at || decision_at || new Date().toISOString(),
+      updated_at: decision_at || new Date().toISOString()
+    };
+    const result = await dbRun(`
+      UPDATE Notifications SET type = ?, message = ?, target_meta = ?,
+        read_at = COALESCE(read_at, ?), updated_at = ?
+      WHERE id = ? AND type = 'deletion_request_pending'
+    `, [notification.type, notification.message, JSON.stringify(notification.target_meta),
+        notification.read_at, notification.updated_at, row.id]);
+    if (result.changes) sendNotificationEvent(row.recipient_user_id, hydrateNotificationRow(notification, { is_update: true }));
+  }
+};
+
+const __routeController048 = async (req, res) => {
+  try {
+    await syncDeletionRequestNotifications(req.user.id);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update deletion request notifications' });
+  }
   const limit = Math.min(Math.max(parseInt(req.query.limit || 50, 10), 1), 100);
   const offset = Math.max(parseInt(req.query.offset || 0, 10), 0);
   db.all(`
@@ -114,7 +149,12 @@ const __routeController048 = (req, res) => {
   });
 };
 
-const __routeController049 = (req, res) => {
+const __routeController049 = async (req, res) => {
+  try {
+    await syncDeletionRequestNotifications(req.user.id);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to update deletion request notifications' });
+  }
   db.get("SELECT COUNT(*) as count FROM Notifications WHERE recipient_user_id = ? AND read_at IS NULL", [req.user.id], (err, row) => {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ count: row?.count || 0 });
@@ -242,6 +282,7 @@ const __routeController055 = async (req, res) => {
     if (Number(request.owner_user_id) !== Number(req.user.id) && !bypass) return forbidden(res, 'Only the owner can approve this deletion request.');
     const label = await performApprovedDeletionRequest(req, request);
     await dbRun(`UPDATE DeletionRequests SET status='approved', responded_at=?, responded_by_user_id=?, response_note=? WHERE id=?`, [new Date().toISOString(), req.user.id, req.body?.response_note || '', request.id]);
+    await syncDeletionRequestNotifications(request.owner_user_id);
     insertNotifications({
       recipients: [request.requested_by_user_id],
       actorId: req.user.id,
@@ -269,6 +310,7 @@ const __routeController056 = async (req, res) => {
     const bypass = await canBypassAssignmentOwnership(req.user);
     if (Number(request.owner_user_id) !== Number(req.user.id) && !bypass) return forbidden(res, 'Only the owner can deny this deletion request.');
     await dbRun(`UPDATE DeletionRequests SET status='denied', responded_at=?, responded_by_user_id=?, response_note=? WHERE id=?`, [new Date().toISOString(), req.user.id, req.body?.response_note || '', request.id]);
+    await syncDeletionRequestNotifications(request.owner_user_id);
     const snapshot = parseNotificationMeta(request.target_snapshot);
     const label = snapshot.document_type_name || snapshot.file_name || snapshot.name || request.target_type;
     insertNotifications({

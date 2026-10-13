@@ -113,6 +113,308 @@ const mapZoningLabelMinimumZoom = area => {
   return 17;
 };
 
+const mapZoningGeometryContainsPoint = (geometry, pointX, pointY) => {
+  if (!Buffer.isBuffer(geometry) || geometry.length < 8 || geometry.readUInt32LE(0) !== MAP_ZONING_GEOMETRY_MAGIC) return false;
+  let offset = 4;
+  const ringCount = geometry.readUInt32LE(offset);
+  offset += 4;
+  let inside = false;
+  for (let ringIndex = 0; ringIndex < ringCount; ringIndex++) {
+    if (offset + 4 > geometry.length) return false;
+    const pointCount = geometry.readUInt32LE(offset);
+    offset += 4;
+    if (pointCount < 3 || offset + pointCount * 16 > geometry.length) return false;
+    const ring = [];
+    for (let pointIndex = 0; pointIndex < pointCount; pointIndex++) {
+      ring.push([geometry.readDoubleLE(offset), geometry.readDoubleLE(offset + 8)]);
+      offset += 16;
+    }
+    let ringContainsPoint = false;
+    for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+      const [x, y] = ring[index];
+      const [previousX, previousY] = ring[previous];
+      if ((y > pointY) !== (previousY > pointY)
+          && pointX < (previousX - x) * (pointY - y) / (previousY - y) + x) ringContainsPoint = !ringContainsPoint;
+    }
+    if (ringContainsPoint) inside = !inside;
+  }
+  return inside;
+};
+
+const getMapZoningAtCoordinate = async (latitude, longitude) => {
+  const [pointX, pointY] = mapZoningProject(latitude, longitude);
+  const database = await getMapZoningDatabase();
+  const rows = await mapZoningAll(database, `
+    SELECT z.zone_code, z.zone_class, z.lu_desc, z.source_area, z.geometry
+    FROM zone_rtree r JOIN zones z ON z._id = r._id
+    WHERE r.minx <= ? AND r.maxx >= ? AND r.miny <= ? AND r.maxy >= ?
+    ORDER BY COALESCE(z.source_area, 0), z._id
+  `, [pointX, pointX, pointY, pointY]);
+  const match = rows.find(row => mapZoningGeometryContainsPoint(row.geometry, pointX, pointY));
+  return match ? String(match.zone_class || match.lu_desc || match.zone_code || '').trim() : '';
+};
+
+const MAP_ADMIN_BOUNDARIES_PATH = path.join(__dirname, 'src', 'backend', 'assets', 'davao-admin-boundaries.geojson');
+const MAP_ADMIN_BOUNDARIES_SOURCE = 'CPDO offline boundary database';
+const MAP_ADMIN_BOUNDARIES_MODE = 'offline-only';
+let mapAdministrativeDataset = null;
+const mapCoordinateBarangayCache = new Map();
+const mapAdministrativeBoundaryCache = new Map();
+
+const normalizeMapAdministrativeName = value => String(value || '')
+  .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .toLowerCase()
+  .replace(/\b(?:barangay|brgy|bgry)\.?\b/g, ' ')
+  .replace(/\bdistrict\b/g, ' ')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim()
+  .replace(/\s+/g, ' ');
+
+const loadMapAdministrativeDataset = () => {
+  if (mapAdministrativeDataset) return mapAdministrativeDataset;
+  if (!fs.existsSync(MAP_ADMIN_BOUNDARIES_PATH)) {
+    const err = new Error('Packaged Davao City barangay/district boundary database is missing. Online CPDO fallback is disabled.');
+    err.statusCode = 503;
+    err.code = 'MAP_ADMIN_BOUNDARIES_OFFLINE_DATASET_MISSING';
+    throw err;
+  }
+  const parsed = JSON.parse(fs.readFileSync(MAP_ADMIN_BOUNDARIES_PATH, 'utf8'));
+  const features = Array.isArray(parsed?.features) ? parsed.features : [];
+  mapAdministrativeDataset = {
+    ...parsed,
+    features: features.filter(feature => ['Polygon', 'MultiPolygon'].includes(feature?.geometry?.type)),
+  };
+  return mapAdministrativeDataset;
+};
+
+const mapAdministrativePointInRing = (longitude, latitude, ring) => {
+  if (!Array.isArray(ring) || ring.length < 3) return false;
+  let inside = false;
+  for (let index = 0, previous = ring.length - 1; index < ring.length; previous = index++) {
+    const x = Number(ring[index]?.[0]);
+    const y = Number(ring[index]?.[1]);
+    const previousX = Number(ring[previous]?.[0]);
+    const previousY = Number(ring[previous]?.[1]);
+    if (![x, y, previousX, previousY].every(Number.isFinite)) continue;
+    if ((y > latitude) !== (previousY > latitude)
+        && longitude < (previousX - x) * (latitude - y) / (previousY - y) + x) inside = !inside;
+  }
+  return inside;
+};
+
+const mapAdministrativePointInPolygonCoordinates = (longitude, latitude, polygon) => {
+  if (!Array.isArray(polygon) || !polygon.length) return false;
+  if (!mapAdministrativePointInRing(longitude, latitude, polygon[0])) return false;
+  for (let index = 1; index < polygon.length; index++) {
+    if (mapAdministrativePointInRing(longitude, latitude, polygon[index])) return false;
+  }
+  return true;
+};
+
+const mapAdministrativeFeatureContainsPoint = (feature, longitude, latitude) => {
+  const x = Number(longitude);
+  const y = Number(latitude);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || !feature?.geometry) return false;
+  const bbox = feature.bbox;
+  if (Array.isArray(bbox) && bbox.length === 4) {
+    if (x < Number(bbox[0]) || x > Number(bbox[2]) || y < Number(bbox[1]) || y > Number(bbox[3])) return false;
+  }
+  if (feature.geometry.type === 'Polygon') {
+    return mapAdministrativePointInPolygonCoordinates(x, y, feature.geometry.coordinates);
+  }
+  if (feature.geometry.type === 'MultiPolygon') {
+    return feature.geometry.coordinates.some(polygon => mapAdministrativePointInPolygonCoordinates(x, y, polygon));
+  }
+  return false;
+};
+
+const mapAdministrativeFeatureKey = feature => {
+  const properties = feature?.properties || {};
+  return `${String(properties.boundary_type || '')}:${String(properties.brgy_code || '')}:${normalizeMapAdministrativeName(properties.name)}`;
+};
+
+const mapAdministrativeEditDistance = (left, right) => {
+  const a = String(left || '');
+  const b = String(right || '');
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let previous = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let row = 1; row <= a.length; row++) {
+    const current = [row];
+    for (let column = 1; column <= b.length; column++) {
+      const cost = a[row - 1] === b[column - 1] ? 0 : 1;
+      current[column] = Math.min(
+        current[column - 1] + 1,
+        previous[column] + 1,
+        previous[column - 1] + cost
+      );
+    }
+    previous = current;
+  }
+  return previous[b.length];
+};
+
+const mapAdministrativeSimilarity = (left, right) => {
+  const a = String(left || '');
+  const b = String(right || '');
+  const longest = Math.max(a.length, b.length);
+  return longest ? 1 - mapAdministrativeEditDistance(a, b) / longest : 1;
+};
+
+const mapAdministrativeFuzzyScore = (query, candidate) => {
+  if (!query || !candidate) return 0;
+  if (candidate === query) return 120;
+  if (candidate.startsWith(query)) return 108;
+  if (candidate.includes(query)) return 94;
+  if (query.length >= 4 && query.includes(candidate)) return 86;
+  const wholeSimilarity = mapAdministrativeSimilarity(query, candidate);
+  let best = wholeSimilarity >= 0.68 ? 54 + wholeSimilarity * 42 : 0;
+  const queryTokens = query.split(' ').filter(Boolean);
+  const candidateTokens = candidate.split(' ').filter(Boolean);
+  if (queryTokens.length && candidateTokens.length) {
+    const tokenScores = queryTokens.map(token => {
+      let tokenBest = 0;
+      for (const candidateToken of candidateTokens) {
+        if (candidateToken === token) tokenBest = Math.max(tokenBest, 1);
+        else if (Math.min(candidateToken.length, token.length) >= 3 && (candidateToken.startsWith(token) || token.startsWith(candidateToken))) tokenBest = Math.max(tokenBest, 0.9);
+        else tokenBest = Math.max(tokenBest, mapAdministrativeSimilarity(token, candidateToken));
+      }
+      return tokenBest;
+    });
+    const tokenAverage = tokenScores.reduce((sum, value) => sum + value, 0) / tokenScores.length;
+    if (tokenAverage >= 0.72) best = Math.max(best, 50 + tokenAverage * 40);
+  }
+  return best;
+};
+
+const getMapAdministrativeSearch = (rawQuery, rawLimit = 12) => {
+  const dataset = loadMapAdministrativeDataset();
+  const raw = String(rawQuery || '').trim().replace(/\s+/g, ' ').slice(0, 100);
+  const query = normalizeMapAdministrativeName(raw);
+  if (!query) return [];
+  const wantsDistrict = /\bdistrict\b/i.test(raw);
+  const wantsBarangay = /\b(?:barangay|brgy|bgry)\.?\b/i.test(raw);
+  const scored = dataset.features.map(feature => {
+    const properties = feature.properties || {};
+    const type = String(properties.boundary_type || '');
+    const normalizedName = normalizeMapAdministrativeName(properties.name);
+    const normalizedDistrict = normalizeMapAdministrativeName(properties.district);
+    let score = mapAdministrativeFuzzyScore(query, normalizedName);
+    if (type === 'barangay') {
+      const districtScore = mapAdministrativeFuzzyScore(query, normalizedDistrict);
+      if (districtScore) score = Math.max(score, Math.min(58, districtScore * 0.52));
+    }
+    if (wantsDistrict && type === 'district') score += 20;
+    if (wantsDistrict && type !== 'district') score -= 24;
+    if (wantsBarangay && type === 'barangay') score += 20;
+    if (wantsBarangay && type !== 'barangay') score -= 24;
+    if (score < 70) return null;
+    const name = String(properties.name || '').trim();
+    const district = String(properties.district || '').trim();
+    return {
+      type,
+      name,
+      district: type === 'barangay' ? district : name,
+      code: type === 'barangay' ? String(properties.brgy_code || '').trim() : '',
+      label: type === 'barangay' ? `${name} · ${district}` : name,
+      match_score: Math.round(score * 10) / 10
+    };
+  }).filter(Boolean);
+  scored.sort((a, b) => b.match_score - a.match_score || a.name.localeCompare(b.name) || a.district.localeCompare(b.district));
+  const seen = new Set();
+  const limit = Math.min(30, Math.max(1, Number(rawLimit) || 12));
+  return scored.filter(item => {
+    const key = `${item.type}:${item.code || ''}:${item.name}:${item.district}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, limit);
+};
+
+const getMapAdministrativeBoundaryFeature = (rawQuery, rawType, rawCode = '') => {
+  const dataset = loadMapAdministrativeDataset();
+  const type = String(rawType || '').toLowerCase();
+  const query = normalizeMapAdministrativeName(rawQuery);
+  const code = String(rawCode || '').trim();
+  if (!query || !['district', 'barangay'].includes(type)) return null;
+  const candidates = dataset.features.filter(feature => {
+    const properties = feature.properties || {};
+    if (String(properties.boundary_type || '') !== type) return false;
+    if (type === 'barangay' && code && String(properties.brgy_code || '').trim() === code) return true;
+    return normalizeMapAdministrativeName(properties.name) === query;
+  });
+  if (type === 'barangay' && code) {
+    return candidates.find(feature => String(feature?.properties?.brgy_code || '').trim() === code) || null;
+  }
+  return candidates[0] || null;
+};
+
+const getMapBarangayAtCoordinate = async (latitude, longitude) => {
+  const cacheKey = `${latitude.toFixed(5)},${longitude.toFixed(5)}`;
+  if (mapCoordinateBarangayCache.has(cacheKey)) return mapCoordinateBarangayCache.get(cacheKey);
+  const dataset = loadMapAdministrativeDataset();
+  const match = dataset.features.find(feature => feature?.properties?.boundary_type === 'barangay'
+    && mapAdministrativeFeatureContainsPoint(feature, longitude, latitude));
+  const result = match ? {
+    barangay: String(match.properties?.name || '').trim() || null,
+    district: String(match.properties?.district || '').trim() || null
+  } : null;
+  mapCoordinateBarangayCache.set(cacheKey, result);
+  return result;
+};
+
+const getMapAdministrativeBoundary = async (rawQuery, rawType, rawCode = '') => {
+  const type = String(rawType || '').toLowerCase();
+  const query = String(rawQuery || '').trim().replace(/\s+/g, ' ').slice(0, 100);
+  const code = String(rawCode || '').trim().slice(0, 32);
+  if (!query || !['district', 'barangay'].includes(type)) {
+    const err = new Error('A district or barangay name is required.');
+    err.statusCode = 400;
+    throw err;
+  }
+  const cacheKey = `${type}:${code}:${normalizeMapAdministrativeName(query)}`;
+  if (mapAdministrativeBoundaryCache.has(cacheKey)) return mapAdministrativeBoundaryCache.get(cacheKey);
+  const feature = getMapAdministrativeBoundaryFeature(query, type, code);
+  const result = feature ? {
+    type: 'FeatureCollection',
+    features: [feature],
+    bbox: Array.isArray(feature.bbox) ? feature.bbox : null,
+    name: String(feature.properties?.name || query),
+    boundary_type: type,
+    code: String(feature.properties?.brgy_code || code || ''),
+    district: String(feature.properties?.district || ''),
+    source: MAP_ADMIN_BOUNDARIES_SOURCE,
+    offline_only: true
+  } : { type: 'FeatureCollection', features: [], bbox: null, name: query, boundary_type: type, code, district: '', source: MAP_ADMIN_BOUNDARIES_SOURCE, offline_only: true };
+  mapAdministrativeBoundaryCache.set(cacheKey, result);
+  return result;
+};
+
+const getMapCoordinateInfo = async (rawLatitude, rawLongitude) => {
+  const latitude = Number(rawLatitude);
+  const longitude = Number(rawLongitude);
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90
+      || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    const err = new Error('Valid latitude and longitude are required.');
+    err.statusCode = 400;
+    throw err;
+  }
+  const [zoning, location] = await Promise.all([
+    getMapZoningAtCoordinate(latitude, longitude).catch(() => ''),
+    getMapBarangayAtCoordinate(latitude, longitude)
+  ]);
+  return {
+    latitude,
+    longitude,
+    barangay: location?.barangay || null,
+    district: location?.district || null,
+    zoning: zoning || null,
+    administrative_boundary_source: MAP_ADMIN_BOUNDARIES_SOURCE,
+    administrative_boundary_mode: MAP_ADMIN_BOUNDARIES_MODE
+  };
+};
+
 const getMapZoningLabels = async (query = {}) => {
   const west = Number(query.west);
   const south = Number(query.south);

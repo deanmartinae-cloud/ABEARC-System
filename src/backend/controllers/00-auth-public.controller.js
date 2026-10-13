@@ -63,7 +63,7 @@ const __routeController001 = (req, res) => {
 
 const __routeController002 = async (req, res) => {
   try {
-    const qrToken = await createMobileQrLoginToken(req.user.id);
+    const qrToken = createMobileQrLoginToken(req.user.id);
     const serverUrl = requestBaseUrl(req);
     const payload = JSON.stringify({
       type: 'abearc-mobile-login',
@@ -82,25 +82,14 @@ const __routeController002 = async (req, res) => {
       expires_at: new Date(Date.now() + MOBILE_QR_LOGIN_TTL_MS).toISOString()
     });
   } catch (e) {
-    if (e?.code === 'MOBILE_QR_LOGIN_NOT_CONFIGURED') {
-      return res.status(503).json({ error: e.message, code: e.code });
-    }
     res.status(500).json({ error: 'Failed to generate QR login code.' });
   }
 };
 
-const __routeController003 = async (req, res) => {
+const __routeController003 = (req, res) => {
   const qrToken = String(req.body?.qr_token || '').trim();
-  let data;
-  try {
-    data = await verifyAndConsumeMobileQrLoginToken(qrToken);
-  } catch (e) {
-    if (e?.code === 'MOBILE_QR_LOGIN_NOT_CONFIGURED') {
-      return res.status(503).json({ error: e.message, code: e.code });
-    }
-    return res.status(500).json({ error: 'QR login verification failed.' });
-  }
-  if (!data) return unauthorized(res, 'QR login code is invalid, expired, or already used.');
+  const data = verifyMobileQrLoginToken(qrToken);
+  if (!data) return unauthorized(res, 'QR login code is invalid or expired.');
 
   db.get(`SELECT id, username, role, theme_preference, avatar_path,
                  is_system_account, hidden_from_workflows

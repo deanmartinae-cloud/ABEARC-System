@@ -18,6 +18,7 @@
   "src/frontend/modals/access-session.modals.html",
   "src/frontend/modals/monitoring.modals.html",
   "src/frontend/modals/calendar.modals.html",
+  "src/frontend/modals/map-weather.modals.html",
   "src/frontend/modals/settings-users.modals.html",
   "src/frontend/modals/feedback-and-requirements.modals.html",
   "src/frontend/components/toast-and-print.html"

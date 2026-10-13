@@ -4,6 +4,7 @@ const vm = require('vm');
 const { buildFrontend } = require('./build-frontend');
 
 const ROOT = path.resolve(__dirname, '..');
+require('./check-map-photo-upload');
 function fail(message) { console.error(`CHECK FAILED: ${message}`); process.exitCode = 1; }
 
 const backendManifest = JSON.parse(fs.readFileSync(path.join(ROOT, 'src/backend/manifest.json'), 'utf8'));
@@ -29,6 +30,11 @@ const stripScripts = text => text.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,
 const ids = text => [...stripScripts(text).matchAll(idPattern)].map(m => m[1]).sort();
 const generatedIds = ids(generated);
 if (JSON.stringify(baselineIds) !== JSON.stringify(generatedIds)) fail('Generated frontend DOM IDs differ from compatibility baseline.');
+
+const calendarCss = fs.readFileSync(path.join(ROOT, 'src/frontend/styles/calendar.css'), 'utf8');
+if (/#calendarView:not\(\.hidden\)\s*\{[^}]*height:\s*auto\s*!important/s.test(calendarCss)) fail('Calendar stylesheet must not disable the fixed-height desktop scroll workspace.');
+const frontendStateService = fs.readFileSync(path.join(ROOT, 'src/frontend/services/00-state-api.service.js'), 'utf8');
+if (!frontendStateService.includes('object-fit:cover;object-position:center 35%')) fail('Shared user avatars must keep portrait faces centered without utility-CSS-dependent cropping.');
 
 for (const relative of JSON.parse(fs.readFileSync(path.join(ROOT, 'src/frontend/script-manifest.json'), 'utf8'))) {
   const source = fs.readFileSync(path.join(ROOT, relative), 'utf8');

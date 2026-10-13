@@ -1,0 +1,73 @@
+.abearc-map-measure-manager {
+  width: 100%;
+  border-top: 1px solid rgba(148, 163, 184, .24);
+  padding: 8px 8px 9px;
+}
+.abearc-map-measure-manager-head,
+.abearc-map-measure-manager-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.abearc-map-measure-manager-head { margin-bottom: 6px; }
+.abearc-map-measure-manager-head strong { font-size: 11px; font-weight: 800; color: #334155; }
+.abearc-map-measure-manager-head span { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; display: inline-flex; align-items: center; justify-content: center; background: #e2e8f0; color: #475569; font-size: 10px; font-weight: 800; }
+.abearc-map-measure-list { display: grid; gap: 5px; max-height: 190px; overflow-y: auto; overscroll-behavior: contain; padding-right: 2px; }
+.abearc-map-measure-empty { padding: 7px 5px 8px; color: #94a3b8; font-size: 10px; line-height: 1.35; }
+.abearc-map-measure-item { display: flex; align-items: center; gap: 4px; min-width: 0; border: 1px solid rgba(148, 163, 184, .2); background: rgba(248,250,252,.82); border-radius: 8px; padding: 3px; }
+.abearc-map-measure-item.is-selected { border-color: rgba(79,70,229,.45); background: rgba(238,242,255,.94); box-shadow: inset 3px 0 0 #4f46e5; }
+.abearc-map-measure-item.is-hidden { opacity: .58; }
+.abearc-map-measure-item-main { min-width: 0; flex: 1; display: flex; align-items: center; gap: 7px; text-align: left; padding: 4px 5px; border-radius: 6px; }
+.abearc-map-measure-item-main:hover { background: rgba(226,232,240,.62); }
+.abearc-map-measure-item-main > span:last-child { min-width: 0; display: grid; }
+.abearc-map-measure-item-main strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10.5px; color: #1e293b; }
+.abearc-map-measure-item-main small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 9px; color: #64748b; }
+.abearc-map-measure-item-icon { width: 21px; height: 21px; flex: 0 0 21px; display: inline-flex; align-items: center; justify-content: center; border-radius: 6px; background: #e0e7ff; color: #4338ca; font-size: 13px; font-weight: 900; }
+.abearc-map-measure-item-actions { display: flex; align-items: center; gap: 1px; }
+.abearc-map-measure-item-actions button { width: 23px; height: 23px; border-radius: 6px; display: inline-flex; align-items: center; justify-content: center; color: #64748b; font-size: 12px; font-weight: 800; }
+.abearc-map-measure-item-actions button:hover { background: #e2e8f0; color: #334155; }
+.abearc-map-measure-item-actions button.is-danger:hover { background: #fee2e2; color: #b91c1c; }
+.abearc-map-measure-item { flex-wrap: wrap; }
+.abearc-map-measure-item svg { width: 16px; height: 16px; }
+.abearc-map-measure-rename { width: 100%; display: flex; gap: 5px; padding: 5px; }
+.abearc-map-measure-rename input { min-width: 0; flex: 1; border: 1px solid #94a3b8; border-radius: 6px; padding: 5px; font-size: 12px; background: transparent; color: inherit; }
+.abearc-map-measure-rename button { font-size: 11px; padding: 5px; border-radius: 6px; }
+.abearc-map-measure-rename button[type="submit"] { background: #0e7490; color: white; }
+.abearc-map-measure-manager-foot button.is-primary { background: #0e7490; color: white; }
+.abearc-map-measure-item-actions button:focus-visible,
+.abearc-map-measure-manager-foot button:focus-visible { outline: 2px solid #0891b2; outline-offset: 2px; }
+.abearc-map-measure-manager-foot { margin-top: 7px; }
+.abearc-map-measure-manager-foot button { flex: 1; min-height: 28px; border: 1px solid rgba(148,163,184,.28); border-radius: 7px; padding: 4px 7px; color: #475569; background: rgba(255,255,255,.78); font-size: 9.5px; font-weight: 750; }
+.abearc-map-measure-manager-foot button:hover { background: #f1f5f9; }
+.abearc-map-measure-manager-foot button.is-danger { color: #b91c1c; }
+.abearc-map-multi-measurement { opacity: .78; cursor: pointer; }
+.abearc-map-multi-measurement .abearc-map-multi-measure-line { stroke-dasharray: 5 3; }
+.abearc-map-multi-measurement .abearc-map-multi-measure-fill { opacity: .62; }
+.abearc-map-multi-measurement .abearc-map-multi-measure-label { opacity: .9; }
+.abearc-map-multi-analysis { opacity: .5; pointer-events: none; }
+.dark .abearc-map-measure-manager { border-top-color: rgba(100,116,139,.35); }
+.dark .abearc-map-measure-manager-head strong { color: #e2e8f0; }
+.dark .abearc-map-measure-manager-head span { background: #334155; color: #cbd5e1; }
+.dark .abearc-map-measure-item { background: rgba(15,23,42,.74); border-color: rgba(100,116,139,.28); }
+.dark .abearc-map-measure-item.is-selected { background: rgba(49,46,129,.3); border-color: rgba(129,140,248,.5); }
+.dark .abearc-map-measure-item-main strong { color: #e2e8f0; }
+.dark .abearc-map-measure-item-main small { color: #94a3b8; }
+.dark .abearc-map-measure-item-main:hover,
+.dark .abearc-map-measure-item-actions button:hover { background: rgba(51,65,85,.7); }
+.dark .abearc-map-measure-manager-foot button { background: rgba(15,23,42,.62); border-color: rgba(100,116,139,.34); color: #cbd5e1; }
+@media (max-width: 640px) {
+  .abearc-map-measure-list { max-height: 150px; }
+  .abearc-map-measure-item-actions button { width: 26px; height: 26px; }
+}
+.abearc-map-measure-tools.is-collapsed .abearc-map-measure-manager { display: none; }
+.abearc-map-measure-rename.hidden,
+.abearc-map-measure-manager-foot.hidden { display: none; }
+.abearc-map-measure-export { position: relative; flex: 1; min-width: 0; font-size: 11px; }
+.abearc-map-measure-export summary { cursor: pointer; min-height: 28px; padding: 6px 7px; border: 1px solid rgba(148,163,184,.28); border-radius: 7px; color: #475569; background: rgba(255,255,255,.78); font-size: 9.5px; font-weight: 750; }
+.abearc-map-measure-export summary:focus-visible { outline: 2px solid #0891b2; outline-offset: 2px; }
+.abearc-map-measure-export-menu { position: absolute; z-index: 30; bottom: calc(100% + 5px); left: 0; min-width: 120px; display: grid; gap: 3px; padding: 4px; border: 1px solid #cbd5e1; border-radius: 7px; background: #fff; box-shadow: 0 4px 12px rgba(15,23,42,.18); }
+.abearc-map-measure-export-menu button { text-align: left; border: 0; }
+.dark .abearc-map-measure-export summary,
+.dark .abearc-map-measure-export-menu { background: #0f172a; border-color: #475569; color: #cbd5e1; }
+.dark .abearc-map-measure-export-menu button:hover { background: #334155; }

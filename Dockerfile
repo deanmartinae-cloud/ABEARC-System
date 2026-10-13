@@ -25,14 +25,13 @@ ENV NODE_ENV=production \
     TZ=Asia/Manila
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates tzdata \
+    && apt-get install -y --no-install-recommends ca-certificates tzdata gdal-bin \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY package.json package-lock.json server.js psabe.png ./
+COPY package.json package-lock.json server.js psabe.png Dockerfile ./
 COPY scripts ./scripts
 COPY src ./src
-COPY public ./public
 COPY docs ./docs
 
 # Rebuild the generated browser bundle and verify the modular compatibility
@@ -40,6 +39,10 @@ COPY docs ./docs
 RUN node scripts/build-frontend.js \
     && node scripts/check-structure.js \
     && node scripts/check-runtime-wiring.js \
+    && node scripts/check-telegram-integration.js --runtime \
+    && node scripts/test-telegram-service.js \
+    && node scripts/test-telegram-credentials.js \
+    && node scripts/test-telegram-workflow.js \
     && mkdir -p \
         /data/temp \
         /data/uploads \
@@ -52,6 +55,8 @@ RUN node scripts/build-frontend.js \
         /data/map-media/originals \
         /data/map-media/thumbnails \
         /data/map-media/temp \
+        /data/map-orthomosaics/temp \
+        /data/map-elevation/namria \
         /data/user-drive \
         /data/backups
 

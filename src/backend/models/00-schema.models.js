@@ -38,14 +38,6 @@ db.serialize(() => {
     last_activity_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY(user_id) REFERENCES Users(id)
   )`);
-  db.run(`CREATE TABLE IF NOT EXISTS MobileQrLoginTokens (
-    nonce TEXT PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    expires_at INTEGER NOT NULL,
-    consumed_at DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES Users(id)
-  )`);
   
   // ActivityLogs table for audit trail
   db.run(`CREATE TABLE IF NOT EXISTS ActivityLogs (
@@ -119,7 +111,8 @@ db.serialize(() => {
 
   db.run(`CREATE TABLE IF NOT EXISTS Documents (
     id INTEGER PRIMARY KEY AUTOINCREMENT, project_id INTEGER NOT NULL, document_type_id INTEGER, document_type_name TEXT,
-    file_path TEXT, file_name TEXT, status TEXT DEFAULT 'None', upload_date DATETIME, checked_at DATETIME, requirement_state TEXT DEFAULT 'Required',
+    file_path TEXT, file_name TEXT, status TEXT DEFAULT 'None', upload_date DATETIME, document_date DATETIME, checked_at DATETIME, requirement_state TEXT DEFAULT 'Required',
+    remarks TEXT,
     stage TEXT DEFAULT 'Proposal',
     due_date DATETIME,
     manual_due_date DATETIME,
@@ -506,6 +499,7 @@ db.serialize(() => {
     FOREIGN KEY(owner_user_id) REFERENCES Users(id),
     FOREIGN KEY(parent_folder_id) REFERENCES UserDriveFolders(id)
   )`);
+
   db.run(`CREATE TABLE IF NOT EXISTS UserDriveFiles (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     owner_user_id INTEGER NOT NULL,
@@ -524,10 +518,10 @@ db.serialize(() => {
     uploaded_at TEXT DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
     deleted_at TEXT,
-    upload_idempotency_key TEXT,
     FOREIGN KEY(owner_user_id) REFERENCES Users(id),
     FOREIGN KEY(parent_folder_id) REFERENCES UserDriveFolders(id)
   )`);
+
   db.run(`CREATE TABLE IF NOT EXISTS UserDriveShares (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     file_id INTEGER NOT NULL,
@@ -670,6 +664,7 @@ db.serialize(() => {
   columnExists('Documents', 'document_type_id', (err, exists) => { if (!exists) db.run("ALTER TABLE Documents ADD COLUMN document_type_id INTEGER", (e)=>{}); });
   columnExists('Documents', 'document_type_name', (err, exists) => { if (!exists) db.run("ALTER TABLE Documents ADD COLUMN document_type_name TEXT", (e)=>{}); });
   columnExists('Documents', 'checked_at', (err, exists) => { if (!exists) db.run("ALTER TABLE Documents ADD COLUMN checked_at DATETIME", (e)=>{}); });
+  // document_date is migrated in the ordered startup migration before app.listen().
   columnExists('Documents', 'checked_by_user_id', (err, exists) => { if (!exists) db.run("ALTER TABLE Documents ADD COLUMN checked_by_user_id INTEGER", (e)=>{}); });
   columnExists('Documents', 'checked_by_username', (err, exists) => { if (!exists) db.run("ALTER TABLE Documents ADD COLUMN checked_by_username TEXT", (e)=>{}); });
   columnExists('Documents', 'requirement_state', (err, exists) => { if (!exists) db.run("ALTER TABLE Documents ADD COLUMN requirement_state TEXT DEFAULT 'Required'", (e)=>{}); });
@@ -831,11 +826,11 @@ db.serialize(() => {
   db.run(`CREATE INDEX IF NOT EXISTS idx_documents_due_date ON Documents(due_date)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_documents_assigned_user ON Documents(assigned_user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_documents_upload_date ON Documents(upload_date)`);
+  // idx_documents_document_date is created by ensureDocumentDateMigration() after the column exists.
   db.run(`CREATE INDEX IF NOT EXISTS idx_project_documentation_project_stage ON ProjectDocumentationFiles(project_id, stage, deleted_at)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_project_documentation_uploaded_by ON ProjectDocumentationFiles(uploaded_by_user_id)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_project_documentation_uploaded_at ON ProjectDocumentationFiles(uploaded_at)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_recipient ON Notifications(recipient_user_id, read_at, created_at)`);
-  db.run(`CREATE INDEX IF NOT EXISTS idx_mobile_qr_login_expiry ON MobileQrLoginTokens(expires_at, consumed_at)`);
   db.run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_notifications_daily_alert ON Notifications(recipient_user_id, alert_key, alert_date) WHERE alert_key IS NOT NULL AND alert_date IS NOT NULL`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_notifications_alert_key_recent ON Notifications(recipient_user_id, alert_key, created_at)`);
   db.run(`CREATE INDEX IF NOT EXISTS idx_config_requests_superior_status ON ConfigurationChangeRequests(direct_superior_user_id, status, created_at)`);

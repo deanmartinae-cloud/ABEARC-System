@@ -1,0 +1,50 @@
+#mapPage .abearc-map-print-control { position:absolute; right:10px; bottom:26px; z-index:35; width:29px; height:29px; display:grid; place-items:center; padding:5px; border:0; border-radius:8px; color:#333; background:#fff; box-shadow:0 1px 5px #0005; cursor:pointer; }
+#mapPage .abearc-map-print-control:hover { background:#eee; }
+#mapPage .abearc-map-print-control:active { background:#ccecf3; }
+#mapPage .abearc-map-print-control svg { width:19px; height:19px; }
+.dark #mapPage .abearc-map-print-control { background:#303134; color:#e8eaed; }
+@media(min-width:901px) { #mapPage .abearc-map-stage:has(.abearc-map-details:not(.hidden)) .abearc-map-print-control { right:436px; } }
+.map-print { position:fixed; inset:0; z-index:200; background:#e2e8f0; color:#172b3a; display:flex; flex-direction:column; font:14px Arial,sans-serif; }
+.map-print header { display:flex; align-items:center; flex-wrap:wrap; gap:8px; padding:10px 14px; background:#fff; border-bottom:1px solid #cbd5e1; }
+.map-print header strong { margin-right:auto; }
+.map-print header [data-export=pdf] { background:#0e7490; color:white; border-color:#0e7490; }
+.map-print aside h3 { margin:16px 0 10px; padding-top:12px; border-top:1px solid #e2e8f0; font-size:12px; color:#475569; text-transform:uppercase; letter-spacing:.05em; }
+.map-print aside h3:first-child { margin-top:0; padding-top:0; border-top:0; }
+.map-print [data-page-summary] { padding:8px; background:#e0f2fe; border-radius:6px; color:#075985; }
+.map-print button,.map-print select,.map-print input { box-sizing:border-box; font:inherit; color:inherit; border:1px solid #cbd5e1; border-radius:6px; background:#fff; padding:7px; }
+.map-print button { cursor:pointer; }
+.map-print button:hover { background:#e0f2fe; }
+.map-print button:disabled { opacity:.5; cursor:wait; }
+.map-print :focus-visible { outline:2px solid #0284c7; outline-offset:2px; }
+.map-print-main { display:flex; flex:1; min-height:0; }
+.map-print aside { flex:0 0 260px; overflow:auto; padding:14px; background:#f8fafc; border-right:1px solid #cbd5e1; }
+.map-print aside label { display:block; margin:0 0 12px; }
+.map-print aside label>input:not([type=checkbox]),.map-print aside select { width:100%; margin-top:4px; }
+.map-print aside input[type=checkbox] { display:inline-block; width:auto; min-height:0; margin:0 4px 0 0; vertical-align:middle; }
+.map-print aside summary { cursor:pointer; font-weight:bold; padding:10px 0; }
+.map-print aside p { font-size:12px; line-height:1.5; }
+.map-print aside button { margin:3px 0; }
+.map-print-layer { border-bottom:1px solid #e2e8f0; padding:6px 0; overflow-wrap:anywhere; }
+.map-print-layer input[type=range] { padding:0; }
+.map-print-work { flex:1; min-width:0; overflow:auto; padding:22px; display:flex; align-items:flex-start; justify-content:center; }
+.map-print-page-wrap { flex-shrink:0; position:relative; }
+.map-print-page { position:absolute; top:0; left:0; transform-origin:top left; background:white; box-shadow:0 2px 12px #0005; }
+.map-print-map,.map-print-overlay,.map-print-hits { position:absolute; }
+.map-print-overlay,.map-print-hits { pointer-events:none; }
+.map-print-photo { position:absolute; pointer-events:auto; background:transparent!important; border:0!important; border-radius:0!important; padding:0!important; touch-action:none; }
+.map-print-photo.is-selected { outline:2px solid #1683ff; }
+.map-print-photo i { display:none; position:absolute; width:10px; height:10px; background:#fff; border:2px solid #1683ff; }
+.map-print-photo.is-selected i { display:block; }
+.map-print-photo i[data-corner=nw] { left:-5px; top:-5px; cursor:nwse-resize; }
+.map-print-photo i[data-corner=ne] { right:-5px; top:-5px; cursor:nesw-resize; }
+.map-print-photo i[data-corner=sw] { left:-5px; bottom:-5px; cursor:nesw-resize; }
+.map-print-photo i[data-corner=se] { right:-5px; bottom:-5px; cursor:nwse-resize; }
+.map-print-menu { position:fixed; z-index:4; display:grid; padding:5px; background:white; border:1px solid #94a3b8; box-shadow:0 4px 16px #0003; border-radius:8px; }
+.map-print-menu button { text-align:left; border:0; }
+.map-print-status { background:#fff; padding:8px 14px; min-height:32px; font-size:12px; }
+.map-print-viewer { position:absolute; inset:10%; z-index:6; overflow:auto; background:#fff; padding:16px; box-shadow:0 5px 25px #0007; }
+.map-print-viewer img { display:block; max-width:100%; max-height:65vh; object-fit:contain; margin:auto; }
+.map-print-viewer pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+.map-print [hidden] { display:none!important; }
+.map-print.is-exporting .map-print-main { pointer-events:none; }
+@media(max-width:700px) { .map-print aside { flex-basis:210px; } .map-print-work { padding:12px; } .map-print header { padding:8px; } }

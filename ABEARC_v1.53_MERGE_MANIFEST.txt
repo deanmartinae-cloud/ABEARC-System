@@ -1,0 +1,98 @@
+ABEARC v1.53 MERGE / RELEASE MANIFEST
+Date: 2026-10-07
+
+Merge parents:
+- ABEARC_1.52_AWS_ZENTRA_NAS_Deployment.zip  SHA-256 3e6a438132926a32a73c2b306185a6b4dcb764af08ea85901c9ca8167085092c
+- ABEARC_RamPump_PeaceCorps_Standpipe_S2_FINAL_FULL_BUILD.zip  SHA-256 f2048840619f8b1fdabb6640ad86253f01b7d6b6bbbd2999e80af550710c7e18
+
+Reference v1.52 baseline: ABEARC_SYSTEM_v1.52.zip  SHA-256 5f8064086c914697b102a48c058f1a57f01574f35d5838a60937ac7f5c04698b
+
+Version:
+- User-facing ABEARC release: v1.53
+- Internal package version: 1.0.96
+
+Delta vs ABEARC_SYSTEM_v1.52.zip (excluding this manifest):
+- Added files: 35
+- Changed files: 28
+- Deleted files: 0
+
+Verification:
+- Frontend build: PASS
+- Structure: PASS (80 backend modules / 707 DOM IDs)
+- Runtime wiring: PASS (306 routes)
+- Ram-Pump static/workflow: PASS
+- Weather structural/provider/workflow: PASS
+- Orthomosaic / Layouts / Print / SALT / Undo / Multi-Measure / Gravity Flow path/native/ascent: PASS
+- check-map-view.js: known pre-existing baseline assertion 1 !== 0
+- Merge conflict marker scan: PASS
+- JWT-like credential scan: PASS
+
+ADDED FILES (SHA-256):
+f7738574dfffe06df3ceabc21c9fcafca95570b3150c053e11c294e1f1e4ef64  ABEARC_RamPump_Gilman_Offline_Refinement_MANIFEST.txt
+989f781858f66f71cda0adfebf70f1ec46ce81a523b0d4db32370cd3c7802b49  ABEARC_RamPump_Gilman_Offline_Refinement_REPORT.md
+6a058774060f2d9f160afc574a2be49c642578c9c7073b400b40364e023f7703  docs/ABEARC_v1.53_RELEASE_NOTES.md
+83552e41d405ff27f12607b8601f39dd5c3e8e64616d9a7f512edada887a881d  docs/AWS_ZENTRA_FINAL_IMPLEMENTATION_REPORT.md
+d48ee7857d946d8ab0fc9df71c6ac1ea9d669e10e7fcc4f34c617a6b604070ac  docs/GILMAN-RAM-PUMP-CATALOG-2026-10-07.json
+b635d727c43b0fc30647f72a74af5400c76e613f353f1475250fcc5b935f74f8  docs/PEACE-CORPS-RAM-PUMP-DESIGN-REFERENCE.json
+53667087f26aefe2763dbd9840e9e7e48efaceb5f20a95789b75c71578c66d21  docs/WEATHER_STATION_INTEGRATION.md
+28f643f2cd2d72b35a732f4604e8ae691fe26ce4b4a50571296bc1725acb243c  output/ram-pump-engineering-figure.png
+a39f87bfbfb845a8ab628dfee6e93444b58d06b977d94c683705579c8a385267  output/ram-pump-profile.png
+e4bd6be7197839cc85961b871b08013e49ef6176909cd6f3ec6ad6a8ca7cda6b  output/ram-pump-ui.png
+476f15b22e80e807a00d21cb396d4b1ae3771ffe6f11c2c639adfd164bd562fd  public/assets/css/map-ram-pump.css
+371a9a88efbaa9a1725ae7d78351bfb728a7bead7a40fa7c3d709c557c977c14  public/assets/css/map-weather.css
+b8b2aef91d6fd79543cce911b6b9b8b25b87b3d3f39b0fd1b064998fd1cb0e19  public/assets/js/21-map-ram-pump-core.js
+6484992ed6e342038b78f41f83b247ff31e0dc5304017c823d2f0d383c460a7f  public/assets/js/22-map-ram-pump.js
+b82b3850b6d85a4b096286bc86721d15827cf78f72e65a642df70683fb5863d1  public/assets/js/23-map-weather.js
+0690ff575513abf4542d94346c5706db7e1692a18722d89ff1c43d3d91babb8e  scripts/check-map-ram-pump.js
+bd537633ed1dec751f3d2bd70e68160460408e608788a3a5dde05be80888f763  scripts/check-weather-stations.js
+b138abd4764e712bf0850b7a6ed8076283a4a6f74edc52261211f53af269e0ef  scripts/test-map-ram-pump-browser.js
+9f1654d0819d35ffbdeb7bec919c4bafc08b6784dc11fac0205cf7a25f6f6be0  scripts/test-map-ram-pump-workflow.js
+8a93701753462441926921c3b8fcde4d9cc53582115732263fa1271a8f31f7d4  scripts/test-weather-provider.js
+10651c9dba874f7384486be6b24f7c39c5680019d0c8d43ee7af255cc32ee2b7  scripts/test-weather-workflow.fixture.js
+c94ff7232454f0e5df78409505f60044d3cbd65df50192a0e5cf16e1e9fc0220  scripts/test-weather-workflow.js
+97ec10a3fefde92b69a79db3122bb603c88faeaff1f327e945247cd88a1b6586  src/backend/config/21-weather.config.js
+1a8f47aecde081414e0256617da1161b613e66ec42b1fd076f11277f919cbac3  src/backend/controllers/21-weather.controller.js
+36000bb25f27a435b0502582c7fdcd47447acf46beae16886d75ab93849d0262  src/backend/migrations/21-weather.migration.js
+1013f1fa21dbbf0ab94e5979aef6712a14fa5cb367b43c4260f647c5195eed2e  src/backend/routes/21-weather.routes.js
+839667547c7b56200cf042245acc29e678c78ba5658ccace1920402abc26136d  src/backend/services/21-weather-analytics.service.js
+d54833dc7ca4f784671b73f8b2c5debf660bbc9b3c3e5289f66289028e44b35e  src/backend/services/21-weather-provider.service.js
+d928d1859237312198125a69db6b43bfd9a5b942b2f10910f15a732fed95dac6  src/backend/services/21-weather-sync.service.js
+95835abe579f17a37a3dac12b5095931b981f4aa97eaac4535d49471641ea681  src/frontend/modals/map-weather.modals.html
+b8b2aef91d6fd79543cce911b6b9b8b25b87b3d3f39b0fd1b064998fd1cb0e19  src/frontend/scripts/21-map-ram-pump-core.js
+6484992ed6e342038b78f41f83b247ff31e0dc5304017c823d2f0d383c460a7f  src/frontend/scripts/22-map-ram-pump.js
+b82b3850b6d85a4b096286bc86721d15827cf78f72e65a642df70683fb5863d1  src/frontend/scripts/23-map-weather.js
+476f15b22e80e807a00d21cb396d4b1ae3771ffe6f11c2c639adfd164bd562fd  src/frontend/styles/map-ram-pump.css
+371a9a88efbaa9a1725ae7d78351bfb728a7bead7a40fa7c3d709c557c977c14  src/frontend/styles/map-weather.css
+
+CHANGED FILES (SHA-256):
+113781c1ee1069b34c8e88b1dcf5d57060fd1e8c22598fac806db8b971b9c8ee  2. Restart_Update ABEACR Server.bat
+063c576dd70edc860c92aae539100298316d6a806a7366354b330edf84410dbb  README.md
+94e547851f862c00756b05fb111b97aada9e0f6ea228fa9ae25eee1697a7e32c  docs/frontend-dom-id-baseline.json
+08f3c3a8b9f4ff33e6ad44c4948d41b4ede6b8888050bdb62f396b49e3b7a031  package-lock.json
+9ecd56db9f69825fbd48e88e30790261378f42fc3699dfb6f3058d5b61351d86  package.json
+c55815423f7286eaf559102fb77afdb237917010b3cbadcb62cca78206c7111a  public/assets/js/06-feedback-users.js
+0a19fffa470bde24ef2b3c6f2b4f0dc66ec3454e2224eb4e52bb76be1f829acd  public/assets/js/12-abearc-map.js
+1987062faf4edef66477934d69acc0590478e9760dfd039d8d34c8de34d25963  public/assets/js/14-map-orthomosaic.js
+4e79cb45cd3415fd8aafe37dad90bb190185ff439cb8821bab35a29ea5617da9  public/assets/js/15-map-print.js
+126bc0a42951cce4bcdd8a8402152673c3f4c8728ac887d23e8e7b1247fd8bf8  public/assets/js/16-map-layouts.js
+ad0a619ff0b9951f501bd475357e4674319659ce282cc5041cb82a16c19778d3  public/assets/vendor/maplibre-gl.js
+ba5e96ac7f0df46ec87e7c34afd8984ffdd5ba786bf652116acdd6733c4cd1c8  public/index.html
+50d17e66c250af169343dab2100a0ad38af06f6c75bbadb4b9f75691191a8327  run-local-server.bat
+9abfdf4ffd823c3e5d0988ef3a47795161742991d46d9662e7964183d8b6c7db  scripts/check-runtime-wiring.js
+a4eff53238c3ce126b135ad4332c703d395453cfd4bd485e55b29c4766d0ef16  src/backend/manifest.json
+b7d09185210f1d7a0c6ad8406a10f9c5c038e1badc097c37a420ea71eb643a4b  src/backend/services/00-shared.service.js
+9dd47e48ca7d5df003ff9bf932d686e270e58d4f284f218c0a15fd45f5b6ed6b  src/backend/startup/00-listen.startup.js
+82307967fd969f0b8194f3e09e5e8b559fe049b915f1f95dde09a9f9024931a1  src/backend/utils/00-core.utils.js
+575d9120fcc6e325e781da095eb626273792d87d93ac49a42a3d6c99a23ea7b4  src/frontend/components/stable-sidebar.html
+1faeec1e1843ac6fa2dfcc71fe9adb88f67ae880fd263120535882b14cdcfd53  src/frontend/layout/head.html
+2d102293fb55fe9c44e63b7902ff0345f1f69ca57ffe54fecf16213a962df8fc  src/frontend/manifest.json
+d102fbc6897277e7be67123a976e2fc2ec45540be6679b47e9d46d0d5d43ca5b  src/frontend/pages/map.page.html
+50e264765fdf99cd6d0c4d768699fe0d6c92bc9362d18a99bea995f0f407f3a1  src/frontend/script-manifest.json
+c55815423f7286eaf559102fb77afdb237917010b3cbadcb62cca78206c7111a  src/frontend/scripts/06-feedback-users.js
+0a19fffa470bde24ef2b3c6f2b4f0dc66ec3454e2224eb4e52bb76be1f829acd  src/frontend/scripts/12-abearc-map.js
+1987062faf4edef66477934d69acc0590478e9760dfd039d8d34c8de34d25963  src/frontend/scripts/14-map-orthomosaic.js
+4e79cb45cd3415fd8aafe37dad90bb190185ff439cb8821bab35a29ea5617da9  src/frontend/scripts/15-map-print.js
+126bc0a42951cce4bcdd8a8402152673c3f4c8728ac887d23e8e7b1247fd8bf8  src/frontend/scripts/16-map-layouts.js
+
+DELETED FILES:
+(none)

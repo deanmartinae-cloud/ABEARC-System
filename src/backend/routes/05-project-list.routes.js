@@ -18,8 +18,8 @@ const CALENDAR_EVENT_TYPES = new Set([
 const MANUAL_CALENDAR_VISIBILITIES = new Set(['personal', 'participants']);
 const LEGACY_CALENDAR_VISIBILITIES = new Set(['abed_wide', 'division', 'global']);
 const CALENDAR_VISIBILITIES = new Set([...MANUAL_CALENDAR_VISIBILITIES, ...LEGACY_CALENDAR_VISIBILITIES]);
-const CALENDAR_RESPONSE_STATUSES = new Set(['pending', 'accepted', 'had_prior_schedule']);
-const CALENDAR_ACTIVE_RESPONSE_STATUSES = new Set(['accepted', 'had_prior_schedule']);
+const CALENDAR_RESPONSE_STATUSES = new Set(['pending', 'accepted', 'had_prior_schedule', 'tentative', 'declined']);
+const CALENDAR_ACTIVE_RESPONSE_STATUSES = new Set(['accepted', 'had_prior_schedule', 'tentative', 'declined']);
 const CALENDAR_TYPE_COLORS = {
   general: '#2563eb',
   meeting: '#2563eb',
@@ -237,11 +237,12 @@ const canCancelCalendarEvent = async (user, event) => {
 
 const getCalendarEventFull = async (eventId) => {
   const event = await dbGet(`
-    SELECT ce.*, ou.username as owner_username, cu.username as created_by_username,
+    SELECT ce.*, mi.asset_name as inventory_name, mi.inventory_code, mi.condition_status as monitoring_status, mi.last_monitoring_date, mi.latitude, mi.longitude, p.status as project_status, p.barangay as project_barangay, p.district as project_district, ou.username as owner_username, cu.username as created_by_username,
            COALESCE(p.name, dp.name) as related_project_name, COALESCE(p.stage, dp.stage) as related_project_stage,
            d.document_type_name as related_document_name, d.stage as related_document_stage,
            dp.stage as document_project_stage
     FROM CalendarEvents ce
+    LEFT JOIN MonitoringInventory mi ON mi.id=ce.related_inventory_id
     LEFT JOIN Users ou ON ou.id = ce.owner_user_id
     LEFT JOIN Users cu ON cu.id = ce.created_by_user_id
     LEFT JOIN Documents d ON d.id = ce.related_document_id
@@ -274,7 +275,6 @@ const normalizeManualCalendarEvent = async (req, event) => {
   const isRespondableParticipant = !!participant
     && !isCreator
     && ['participant', 'optional'].includes(participantRole)
-    && String(participantStatus || 'pending').toLowerCase() === 'pending'
     && String(event.status || 'active') === 'active'
     && !hasPassed;
   return {
@@ -287,11 +287,27 @@ const normalizeManualCalendarEvent = async (req, event) => {
     start: event.start_datetime,
     end: event.end_datetime || null,
     all_day: !!event.all_day,
+    reminder_minutes: parseReminderMinutes(event.reminder_minutes),
+    priority: event.priority || 'normal',
+    meeting_link: event.meeting_link || '',
+    notes: event.notes || '',
+    sync_status: event.sync_status || 'not_configured',
+    recurrence_rule: event.recurrence_rule || '',
+    series_id: event.series_id || null,
+    recurrence_index: event.recurrence_index ?? null,
     event_type: normalizeCalendarType(event.event_type),
     event_type_detail: normalizeCalendarType(event.event_type) === 'other' ? String(event.event_type_detail || '').trim() : '',
     color: event.color || CALENDAR_TYPE_COLORS[normalizeCalendarType(event.event_type)],
     visibility: normalizeCalendarVisibility(event.visibility || 'personal'),
     status: event.status || 'active',
+    inventory_name: event.inventory_name || '',
+    inventory_code: event.inventory_code || '',
+    monitoring_status: event.monitoring_status || '',
+    last_monitoring_date: event.last_monitoring_date || null,
+    latitude: event.latitude, longitude: event.longitude,
+    project_status: event.project_status || '',
+    project_location: [event.project_barangay,event.project_district].filter(Boolean).join(', '),
+    related_inventory_id: event.related_inventory_id || null,
     project_id: event.related_project_id || null,
     project_name: event.related_project_name || '',
     project_stage: event.related_project_stage || event.document_project_stage || '',
@@ -579,4 +595,3 @@ const notifyCalendarUsers = ({ req, event, recipients, type, message, alertKeyBa
   cooldownMinutes,
   dedupeMode: cooldownMinutes > 0 ? 'cooldown' : 'none'
 });
-

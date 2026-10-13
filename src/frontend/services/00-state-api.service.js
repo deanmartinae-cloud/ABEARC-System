@@ -23,8 +23,8 @@
     let stableSidebarCollapsed = localStorage.getItem('abearcSidebarCollapsed') === '1';
     let calendarMonth = new Date().toISOString().slice(0, 7);
     let calendarScope = 'my';
-    let calendarDisplayView = 'month';
-    let calendarSidebarCollapsed = false;
+    let calendarDisplayView = ['month','week','day','agenda'].includes(localStorage.getItem('abearcCalendarView')) ? localStorage.getItem('abearcCalendarView') : 'month';
+    let calendarSidebarCollapsed = window.innerWidth < 768;
     const ALL_MY_TYPE_KEYS = ['project_deadlines', 'meeting', 'training', 'workshop', 'orientation', 'site_inspection', 'site_survey', 'site_validation', 'site_geotagging', 'monitoring', 'procurement', 'document_follow_up', 'project_milestone', 'personal', 'maintenance', 'leave', 'other', 'document_review', 'cancelled'];
     const ALL_ABE_TYPE_KEYS = ['project_deadlines', 'meeting', 'training', 'workshop', 'orientation', 'site_inspection', 'site_survey', 'site_validation', 'site_geotagging', 'monitoring', 'procurement', 'document_follow_up', 'project_milestone', 'maintenance', 'leave', 'other', 'document_review', 'cancelled'];
     let calendarQuickFilterState = { expandedGroup: null, selectedTypes: { my: [...ALL_MY_TYPE_KEYS], abe: [...ALL_ABE_TYPE_KEYS] } };
@@ -113,6 +113,7 @@
     let myDashboardSchedulesCache = [];
     let dashboardScheduleFilter = 'all';
     let calendarReloadTimer = null;
+    let calendarLoadRequestId = 0;
     let calendarUserSearchTimer = null;
     let selectedCalendarUsers = [];
     let calendarUserSearchOpen = false;
@@ -426,7 +427,7 @@
       const src = userAvatarUrl(user);
       const dim = `width:${Number(size)}px;height:${Number(size)}px`;
       const base = `inline-flex shrink-0 items-center justify-center rounded-full bg-cyan-700 dark:bg-cyan-400 text-white dark:text-gray-950 font-black overflow-hidden ${extraClass}`;
-      if (src) return `<span class="${base}" style="${dim}"><img src="${esc(src)}" alt="${esc(displayUsername(user.username || 'User'))}" class="w-full h-full object-cover" onerror="this.remove(); this.parentElement.textContent='${initials}'"></span>`;
+      if (src) return `<span class="${base}" style="${dim}"><img src="${esc(src)}" alt="${esc(displayUsername(user.username || 'User'))}" style="display:block;width:100%;height:100%;object-fit:cover;object-position:center 35%" onerror="this.remove(); this.parentElement.textContent='${initials}'"></span>`;
       return `<span class="${base}" style="${dim}">${initials}</span>`;
     }
     function forceLoginLightMode() {

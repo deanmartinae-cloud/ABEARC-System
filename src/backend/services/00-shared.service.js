@@ -166,7 +166,8 @@ const hydrateNotificationRow = (row = {}, extra = {}) => {
 
 const notificationPriority = (type = '') => {
   const t = String(type || '').toLowerCase();
-  if (t.includes('overdue')) return 'critical';
+  if (t.includes('overdue') || t.includes('weather_station_offline') || t.includes('weather_sensor_error')) return 'critical';
+  if (t.includes('weather_heavy_rainfall') || t.includes('weather_strong_wind') || t.includes('weather_high_temperature') || t.includes('weather_low_temperature') || t.includes('weather_extended_dry_period') || t.includes('weather_missing_data')) return 'warning';
   if (t.includes('due_today') || t.includes('due_tomorrow') || t.includes('due_soon') || t.includes('due_in_5') || t.includes('manual_due_date') || t.includes('unassigned') || t.includes('missing')) return 'warning';
   if (t.includes('for_review') || t.includes('review')) return t.includes('reviewed') ? 'success' : 'review';
   if (t.includes('completed') || t.includes('reviewed') || t.includes('checked')) return 'success';

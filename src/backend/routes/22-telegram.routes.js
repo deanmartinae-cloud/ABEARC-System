@@ -1,0 +1,16 @@
+app.get('/api/telegram/status', requireAnyPrivilege(['view_telegram_integration','manage_telegram_integration','manage_telegram_notifications']), __routeController600);
+app.post('/api/telegram/test-connection', requireAnyPrivilege(['manage_telegram_integration']), __routeController601);
+app.put('/api/telegram/credentials', requireAnyPrivilege(['manage_telegram_integration']), telegramSaveCredentialController);
+app.post('/api/telegram/registration-code', requireAnyPrivilege(['manage_telegram_integration']), __routeController602);
+app.get('/api/telegram/targets', requireAnyPrivilege(['view_telegram_integration','manage_telegram_integration','manage_telegram_notifications']), __routeController603);
+app.patch('/api/telegram/targets/:id', requireAnyPrivilege(['manage_telegram_integration']), __routeController604);
+app.post('/api/telegram/targets/:id/test', requireAnyPrivilege(['manage_telegram_notifications']), __routeController605);
+app.get('/api/telegram/weather-routes', requireAnyPrivilege(['view_telegram_integration','manage_telegram_notifications']), __routeController606);
+app.post('/api/telegram/weather-routes', requireAnyPrivilege(['manage_telegram_notifications']), __routeController607);
+app.delete('/api/telegram/weather-routes/:id', requireAnyPrivilege(['manage_telegram_notifications']), __routeController608);
+app.get('/api/telegram/report-schedules', requireAnyPrivilege(['view_telegram_integration','manage_telegram_notifications']), __routeController609);
+app.post('/api/telegram/report-schedules', requireAnyPrivilege(['manage_telegram_notifications']), __routeController610);
+app.patch('/api/telegram/report-schedules/:id', requireAnyPrivilege(['manage_telegram_notifications']), __routeController611);
+app.delete('/api/telegram/report-schedules/:id', requireAnyPrivilege(['manage_telegram_notifications']), __routeController612);
+app.get('/api/telegram/deliveries', requireAnyPrivilege(['view_telegram_integration','manage_telegram_notifications']), __routeController613);
+app.get('/api/telegram/weather-options', requireAnyPrivilege(['view_telegram_integration','manage_telegram_notifications']), __routeController614);

@@ -1,0 +1,66 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const read=file=>fs.readFileSync(file,'utf8');
+const build=new Function(read('src/backend/services/22-weather-advisory.service.js')+';return weatherBuildCropAdvisories;')();
+const now=Date.parse('2026-10-08T08:00:00+08:00')/1000,station={id:1,timezone:'Asia/Manila',logging_interval_minutes:15};
+const readings=[];
+for(let d=0;d<3;d++)for(let i=0;i<96;i++){
+  const timestamp_utc=Date.parse(`2026-10-${String(5+d).padStart(2,'0')}T00:00:00+08:00`)/1000+i*900;
+  const add=(normalized_key,value,unit,measurement,series_id,port_num)=>readings.push({timestamp_utc,normalized_key,value,unit,measurement,series_id,port_num,quality_status:'valid'});
+  add('leaf_wetness',5,'min','Leaf Wetness',1,4);
+  add('leaf_wetness',15,'min','Leaf Wetness (high)',2,4);
+  add('leaf_wetness',900,'','Wetness Level',3,4);
+  add('soil_water_content',.35-d*.015,'m³/m³','Water Content',4,3);
+  add('soil_water_content',900,'raw','Raw VWC',5,3);
+  add('solar_radiation',300,'W/m²','Solar Radiation',6,2);
+  add('air_temperature',36,'°C','Air Temperature',7,2);
+  add('relative_humidity',92,'%','Relative Humidity',8,2);
+  add('precipitation',.3,'mm','Precipitation',9,2);
+}
+let rows=readings;
+const analytics=vm.createContext({console,WEATHER_DEFAULT_TIMEZONE:'Asia/Manila',WEATHER_MAX_HISTORY_ROWS:10000,dbAll:async()=>rows});
+vm.runInContext(read('src/backend/services/21-weather-analytics.service.js')+';this.agriculture=weatherDailyAgriculture;',analytics);
+const ids=result=>result.advisories.map(a=>a.id);
+const run=(daily,forecast=null)=>build({daily,forecast,station,now});
+(async()=>{
+  const daily=await analytics.agriculture({station,startTs:now-4*86400,endTs:now});
+  assert.equal(daily.length,3);
+  assert.equal(daily[0].leaf_wetness_hours,8,'Duration channels must not be added twice or use raw counts');
+  assert(Math.abs(daily[0].soil_water_content_avg_pct-35)<1e-6,'Fractional VWC must normalize to percent');
+  assert.equal(daily[0].soil_water_completeness_pct,100);
+  assert.equal(daily[0].solar_completeness_pct,100);
+  assert(Math.abs(daily[0].solar_energy_mj_m2-25.65)<1e-6);
+  const result=run(daily);
+  for(const id of ['observed_leaf_wetness','observed_soil_drying','observed_high_solar','observed_wet_humid','observed_hot_drying_soil'])assert(ids(result).includes(id),id);
+  assert.equal(result.advisories[0].priority,95,'Combined triggers must precede simple triggers');
+  assert(result.crop_specific.every(c=>c.recommendations.some(r=>r.kind==='disease')&&c.recommendations.some(r=>r.kind==='dry')));
+  assert(result.crop_specific.every(c=>new Set(c.recommendations.map(r=>r.kind)).size===c.recommendations.length));
+  assert(!daily.some(d=>d.soil_water_change_3day_pp!==undefined),'Building advice must not mutate analytics');
+  for(const changed of [daily.slice(1),daily.map((d,i)=>i===1?{...d,soil_water_completeness_pct:80}:d),daily.map((d,i)=>i===1?{...d,soil_water_series:'another-probe'}:d)]){
+    assert(!ids(run(changed)).includes('observed_soil_drying'));
+    assert(!ids(run(changed)).includes('observed_hot_drying_soil'));
+  }
+  const rising=daily.map((d,i)=>({...d,soil_water_content_avg_pct:30+i*2.5}));
+  assert(ids(run(rising)).includes('observed_soil_wetting'));
+  assert(!ids(run(rising.map(d=>({...d,rainfall_mm:24.9})))).includes('observed_soil_wetting'));
+  const lowSolar=[{date:'2026-10-07',solar_energy_mj_m2:8,solar_completeness_pct:90}];
+  assert(ids(run(lowSolar)).includes('observed_low_solar'));
+  for(const change of [{solar_completeness_pct:89},{solar_completeness_pct:null},{date:'2026-10-08'},{solar_energy_mj_m2:-1}])assert(!ids(run([{...lowSolar[0],...change}])).includes('observed_low_solar'));
+  assert(!ids(run([{date:'2026-10-07',leaf_wetness_hours:6},{date:'2026-10-06',relative_humidity_avg_pct:92}])).includes('observed_wet_humid'),'Combined conditions must occur on the same date');
+  assert(!ids(run([{date:'2026-10-07',leaf_wetness_hours:25}])).includes('observed_leaf_wetness'));
+  const hourly=[1,2].map(i=>({timestamp:now+i*3600,is_day:1,precipitation:.1,precipitation_probability:20,wind_gusts_10m:9.9,temperature_2m:30,shortwave_radiation:200}));
+  const forecast={fetched_at:new Date(now*1000).toISOString(),hourly,daily:[]};
+  const window=run([],forecast);
+  assert(ids(window).includes('forecast_field_window'));assert.equal(window.level,'ROUTINE');
+  assert(window.advisories[0].basis.includes('09:00')&&window.advisories[0].basis.includes('11:00'));
+  for(const change of [{precipitation:null},{precipitation:.11},{precipitation_probability:21},{wind_gusts_10m:10},{temperature_2m:35},{temperature_2m:14},{shortwave_radiation:199},{is_day:0},{timestamp:now+3*3600}])assert(!ids(run([],{...forecast,hourly:[hourly[0],{...hourly[1],...change}]})).includes('forecast_field_window'));
+  assert(!ids(run([],{...forecast,stale:true})).includes('forecast_field_window'));
+  assert(!ids(run([],{...forecast,fetched_at:new Date((now-86401)*1000).toISOString()})).includes('forecast_field_window'));
+  rows=readings.map(r=>r.normalized_key==='soil_water_content'&&r.unit==='m³/m³'?{...r,value:r.value*100,unit:'%'}:r);
+  const percent=await analytics.agriculture({station,startTs:now-4*86400,endTs:now});
+  assert(Math.abs(percent[0].soil_water_content_avg_pct-daily[0].soil_water_content_avg_pct)<1e-6);
+  rows=readings.filter(r=>!['leaf_wetness','soil_water_content','solar_radiation'].includes(r.normalized_key));
+  const missing=await analytics.agriculture({station,startTs:now-4*86400,endTs:now});
+  assert.equal(missing[0].leaf_wetness_hours,null);assert.equal(missing[0].soil_water_content_avg_pct,null);assert.equal(missing[0].solar_energy_mj_m2,null);
+  assert(!run(missing).advisories.some(a=>['leaf_wetness_hours','soil_water_change_3day_pp','solar_energy_mj_m2'].includes(a.metric)));
+  console.log('Sensor advisory checks passed: units, raw/high-channel exclusion, daily coverage, same-probe soil trends, combined triggers, multiple crop actions and fresh daylight windows.');
+})().catch(error=>{console.error(error);process.exitCode=1;});

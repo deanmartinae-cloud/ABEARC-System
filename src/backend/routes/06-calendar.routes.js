@@ -1,3 +1,13 @@
+app.post('/api/calendar/conflicts', requireCalendarScheduling, async (req, res) => {
+  try { res.json({ conflicts: await calendarAllScheduleConflicts(req, req.body || {}) }); }
+  catch (err) { res.status(err.statusCode || 500).json({ error: err.statusCode ? err.message : 'Unable to check availability. Please try again.' }); }
+});
+
+app.post('/api/calendar/availability', requireCalendarScheduling, async (req, res) => {
+  try { res.json({ slots: await calendarAvailableSlots(req, req.body || {}) }); }
+  catch (err) { res.status(err.statusCode || 500).json({ error: err.statusCode ? err.message : 'Unable to find available times. Please try again.' }); }
+});
+
 app.get('/api/calendar/events', requireCalendarView, __routeController101);
 
 app.post('/api/calendar/events', checkPrivilege('create_calendar_event'), __routeController102);
@@ -210,7 +220,7 @@ const runCalendarReminders = async (req = { user: { id: null, username: 'System'
     for (const mins of parseReminderMinutes(event.reminder_minutes)) {
       const due = new Date(start.getTime() - mins * 60000);
       if (due > now || due < new Date(now.getTime() - 10 * 60000)) continue;
-      const key = mins === 0 ? 'event_start' : `${mins}minutes_before`;
+      const key = `${mins === 0 ? 'event_start' : `${mins}minutes_before`}:${event.start_datetime}`;
       const recipients = uniqueIds([event.owner_user_id, ...(await calendarRecipientsForEvent(event.id))]);
       for (const userId of recipients) {
         try {
@@ -242,4 +252,3 @@ app.get('/api/calendar/dues', __routeController125);
 app.get('/api/calendar/details', __routeController126);
 
 app.get('/api/calendar/summary', __routeController127);
-

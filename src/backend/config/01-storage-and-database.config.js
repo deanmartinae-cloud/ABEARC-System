@@ -2,9 +2,9 @@
 // Ensure directories exist
 const isDocker = fs.existsSync('/.dockerenv');
 
-const DATA_DIR = isDocker
+const DATA_DIR = process.env.ABEARC_DATA_DIR || (isDocker
   ? '/data'
-  : path.join(__dirname, 'data');
+  : path.join(__dirname, 'data'));
 
 const TEMP_DIR = path.join(DATA_DIR, 'temp');
 const UPLOADS_DIR = path.join(DATA_DIR, 'uploads');
@@ -25,6 +25,11 @@ const MAP_ZONING_DIR = path.join(DATA_DIR, 'map-zoning');
 const MAP_ZONING_TILE_CACHE_DIR = path.join(MAP_ZONING_DIR, 'tiles');
 const MAP_ZONING_DB_PATH = path.join(MAP_ZONING_DIR, 'zones.db');
 const MAP_ZONING_PACKAGED_DB_PATH = path.join(__dirname, 'src', 'backend', 'assets', 'zones.dbz');
+const MAP_ORTHOMOSAIC_DIR = path.join(DATA_DIR, 'map-orthomosaics');
+const MAP_ORTHOMOSAIC_TEMP_DIR = path.join(MAP_ORTHOMOSAIC_DIR, 'temp');
+const MAP_ELEVATION_DIR = path.join(DATA_DIR, 'map-elevation');
+const MAP_NAMRIA_DTM_DIR = path.join(MAP_ELEVATION_DIR, 'namria');
+const MAP_NAMRIA_DTM_PATH = process.env.NAMRIA_DTM_PATH || path.join(MAP_NAMRIA_DTM_DIR, 'DTM_5m.tif');
 const BACKUPS_DIR = path.join(DATA_DIR, 'backups');
 const DB_PATH = path.join(DATA_DIR, 'data.db');
 const SYSTEM_RESTORE_PASSWORD = 'CAgrO+2026';
@@ -59,6 +64,7 @@ const MAP_MEDIA_EXPLOSION_MAX_RADIUS = Number(process.env.MAP_MEDIA_EXPLOSION_MA
 const MAP_MEDIA_EXPLOSION_MAX_VISIBLE_PHOTOS = Number(process.env.MAP_MEDIA_EXPLOSION_MAX_VISIBLE_PHOTOS || 36);
 const MAP_MEDIA_EXPLOSION_COLLAPSE_PAN_THRESHOLD = Number(process.env.MAP_MEDIA_EXPLOSION_COLLAPSE_PAN_THRESHOLD || 72);
 const MAP_MEDIA_EXPLOSION_COLLAPSE_ZOOM_THRESHOLD = Number(process.env.MAP_MEDIA_EXPLOSION_COLLAPSE_ZOOM_THRESHOLD || 0.35);
+const MAP_ORTHOMOSAIC_MAX_FILE_SIZE_GB = Math.max(1, Number(process.env.MAP_ORTHOMOSAIC_MAX_FILE_SIZE_GB || 8));
 const USER_DRIVE_MIME_BY_EXT = {
   '.pdf': ['application/pdf'],
   '.doc': ['application/msword', 'application/octet-stream'],
@@ -81,7 +87,7 @@ const USER_DRIVE_MIME_BY_EXT = {
 const CALENDAR_TEXT_ATTACHMENT_EXTENSIONS = new Set(['.txt', '.csv']);
 const PDF_EXPORT_EXTENSIONS = ['.pdf', '.png', '.jpg', '.jpeg'];
 
-[DATA_DIR, TEMP_DIR, UPLOADS_DIR, CALENDAR_ATTACHMENTS_DIR, AVATARS_DIR, DOWNLOADS_FORMS_DIR, PROJECT_CLOSURE_ATTACHMENTS_DIR, USER_FEEDBACK_ATTACHMENTS_DIR, PROJECT_DOCUMENTATION_DIR, USER_DRIVE_DIR, MONITORING_ATTACHMENTS_DIR, MAP_MEDIA_ORIGINALS_DIR, MAP_MEDIA_THUMBNAILS_DIR, MAP_MEDIA_TEMP_DIR, MAP_ZONING_TILE_CACHE_DIR, BACKUPS_DIR].forEach(dir => {
+[DATA_DIR, TEMP_DIR, UPLOADS_DIR, CALENDAR_ATTACHMENTS_DIR, AVATARS_DIR, DOWNLOADS_FORMS_DIR, PROJECT_CLOSURE_ATTACHMENTS_DIR, USER_FEEDBACK_ATTACHMENTS_DIR, PROJECT_DOCUMENTATION_DIR, USER_DRIVE_DIR, MONITORING_ATTACHMENTS_DIR, MAP_MEDIA_ORIGINALS_DIR, MAP_MEDIA_THUMBNAILS_DIR, MAP_MEDIA_TEMP_DIR, MAP_ZONING_TILE_CACHE_DIR, MAP_ORTHOMOSAIC_TEMP_DIR, MAP_NAMRIA_DTM_DIR, BACKUPS_DIR].forEach(dir => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
